@@ -2,7 +2,8 @@
     "name": "Dijital Cüzdan",
     "short_name": "Cüzdan",
     "description": "Kişisel finans yönetimi uygulaması",
-    "start_url": "./",
+    "start_url": "/dijitalcuzdan/",
+    "scope": "/dijitalcuzdan/",
     "display": "standalone",
     "background_color": "#F3F4F6",
     "theme_color": "#4F46E5",
@@ -26,14 +27,14 @@
             "name": "Borç Ekle",
             "short_name": "Borç",
             "description": "Yeni borç ekle",
-            "url": "/?action=add_debt",
+            "url": "/dijitalcuzdan/?action=add_debt",
             "icons": [{ "src": "logo.png", "sizes": "192x192" }]
         },
         {
             "name": "Harcama Ekle",
             "short_name": "Harcama",
             "description": "Yeni harcama ekle",
-            "url": "/?action=add_expense",
+            "url": "/dijitalcuzdan/?action=add_expense",
             "icons": [{ "src": "logo.png", "sizes": "192x192" }]
         }
     ]

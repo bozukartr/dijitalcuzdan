@@ -20,8 +20,8 @@ messaging.onBackgroundMessage((payload) => {
     const notificationTitle = payload.notification?.title || 'Dijital Cüzdan';
     const notificationOptions = {
         body: payload.notification?.body || payload.data?.message || 'Yeni bir bildiriminiz var!',
-        icon: './logo.png',
-        badge: './favicon.png',
+        icon: '/dijitalcuzdan/logo.png',
+        badge: '/dijitalcuzdan/favicon.png',
         tag: 'notification-1',
         requireInteraction: true,
         data: payload.data
