@@ -42,14 +42,14 @@
                             payload.notification?.title || 'Dijital Cüzdan',
                             {
                                 body: payload.notification?.body || payload.data?.message || 'Yeni bir bildiriminiz var!',
-                                icon: './logo.png',
-                                badge: './favicon.png'
+                                icon: '/dijitalcuzdan/logo.png',
+                                badge: '/dijitalcuzdan/favicon.png'
                             }
                         );
                     });
                     
                     const currentToken = await messaging.getToken({
-                        vapidKey: 'BDZRnzQEo1hhyXAYWEl2peuFtXrjsY210PKcEYsOu_CctS3El_fHEHSoysk7Ep-4hGVWaTO6rTo-nOVC_BeANOY',
+                        vapidKey: 'BF7BP-Hu60tVM7bVU2QnKk6vDIIWkqDRY5yi7U7rJFQ7AmIbkdTBFVE9Z2qzQDeaD5gmocUZ7Go5OOExtqEHuyY',
                         serviceWorkerRegistration: registration
                     });
 
