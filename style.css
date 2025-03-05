@@ -1,0 +1,981 @@
+:root {
+    --primary-color: #6B7280;
+    --secondary-color: #4B5563;
+    --background-color: #F3F4F6;
+    --card-background: #FFFFFF;
+    --text-color: #1F2937;
+    --border-radius: 12px;
+    --spacing: 16px;
+    --modal-backdrop: rgba(0, 0, 0, 0.5);
+    --delete-btn-bg: #FEE2E2;
+    --delete-btn-color: #DC2626;
+    --delete-btn-hover-color: #B91C1C;
+    --input-border: #E5E7EB;
+}
+
+[data-theme="dark"] {
+    --primary-color: #9CA3AF;
+    --secondary-color: #6B7280;
+    --background-color: #1F2937;
+    --card-background: #374151;
+    --text-color: #F9FAFB;
+    --modal-backdrop: rgba(0, 0, 0, 0.7);
+    --delete-btn-bg: #7F1D1D;
+    --delete-btn-color: #FCA5A5;
+    --delete-btn-hover-color: #FEE2E2;
+    --input-border: #4B5563;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+}
+
+body {
+    background-color: var(--background-color);
+    color: var(--text-color);
+    padding: 16px;
+}
+
+.container {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.dashboard {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--spacing);
+    margin-bottom: var(--spacing);
+}
+
+.card {
+    background: var(--card-background);
+    padding: 20px;
+    border-radius: var(--border-radius);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.card h3 {
+    font-size: 0.9rem;
+    color: var(--primary-color);
+    margin-bottom: 8px;
+}
+
+.amount {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--text-color);
+}
+
+.tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: var(--spacing);
+}
+
+.tab-btn {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    background: var(--card-background);
+    color: var(--primary-color);
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.tab-btn.active {
+    background: var(--primary-color);
+    color: white;
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+.add-section {
+    margin-bottom: var(--spacing);
+}
+
+.add-btn {
+    width: 100%;
+    padding: 12px;
+    background: var(--card-background);
+    border: 2px dashed var(--primary-color);
+    border-radius: var(--border-radius);
+    color: var(--primary-color);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+}
+
+.add-btn:hover {
+    background: var(--background-color);
+}
+
+.cards-container {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing);
+}
+
+.bank-card, .debt-card {
+    background: var(--card-background);
+    padding: 16px;
+    border-radius: var(--border-radius);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.bank-card h3, .debt-card h3 {
+    margin-bottom: 8px;
+    font-size: 1rem;
+}
+
+.iban {
+    font-family: monospace;
+    color: var(--primary-color);
+    padding: 4px 8px;
+    background: var(--background-color);
+    border-radius: 4px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    margin: 8px 0;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--modal-backdrop);
+    align-items: center;
+    justify-content: center;
+}
+
+.modal.active {
+    display: flex;
+}
+
+.modal-content {
+    background: var(--card-background);
+    padding: 24px;
+    border-radius: var(--border-radius);
+    width: 90%;
+    max-width: 400px;
+    border: 1px solid var(--input-border);
+}
+
+.modal-content h2 {
+    margin-bottom: 16px;
+    font-size: 1.2rem;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+input {
+    padding: 12px;
+    border: 1px solid var(--input-border);
+    border-radius: var(--border-radius);
+    font-size: 1rem;
+    background: var(--card-background);
+    color: var(--text-color);
+}
+
+input:focus {
+    background: var(--card-background);
+    border-color: var(--primary-color);
+}
+
+.modal-buttons {
+    display: flex;
+    gap: 8px;
+    margin-top: 16px;
+}
+
+.modal-buttons button {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.cancel-btn {
+    background: var(--background-color);
+    color: var(--text-color);
+}
+
+.save-btn {
+    background: var(--primary-color);
+    color: white;
+}
+
+.due-date {
+    font-size: 0.8rem;
+    color: var(--primary-color);
+    margin-top: 4px;
+}
+
+.checkbox-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.checkbox-container input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+.checkbox-container label {
+    color: var(--text-color);
+    cursor: pointer;
+}
+
+.paid-status {
+    font-size: 0.8rem;
+    color: #059669;
+    margin-top: 4px;
+}
+
+.debt-card {
+    position: relative;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.debt-card:hover {
+    transform: translateY(-2px);
+}
+
+.glass {
+    background: rgba(255, 255, 255, 0.1) !important;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .glass {
+    background: rgba(0, 0, 0, 0.3) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.detail-modal .modal-content {
+    position: relative;
+    padding: 32px 24px;
+    max-width: 340px;
+}
+
+.detail-modal h2 {
+    font-size: 1.5rem;
+    color: var(--text-color);
+    margin-bottom: 24px;
+    padding-right: 24px;
+}
+
+.detail-label {
+    display: block;
+    font-size: 0.9rem;
+    color: var(--primary-color);
+    margin-bottom: 8px;
+}
+
+.iban-display {
+    font-family: monospace;
+    font-size: 1.1rem;
+    padding: 16px;
+    background: var(--background-color);
+    border-radius: var(--border-radius);
+    margin-bottom: 24px;
+    word-break: break-all;
+    color: var(--text-color);
+    text-align: center;
+    letter-spacing: 1px;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.iban-display:hover {
+    background: var(--card-background);
+}
+
+.iban-display .copy-icon {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 20px;
+    color: var(--primary-color);
+    opacity: 0.5;
+}
+
+.iban-display:hover .copy-icon {
+    opacity: 1;
+}
+
+.detail-balance-input {
+    width: 100%;
+    font-size: 1.5rem;
+    padding: 16px;
+    margin: 0 0 24px;
+    text-align: center;
+    font-weight: 500;
+    background: var(--background-color);
+    border: none;
+    color: var(--text-color);
+}
+
+.detail-balance-input:focus {
+    outline: 2px solid var(--primary-color);
+    background: white;
+}
+
+.detail-actions {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.detail-actions .save-btn,
+.detail-actions .delete-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 24px;
+    font-size: 1rem;
+}
+
+.detail-actions .material-icons {
+    font-size: 20px;
+}
+
+.close-btn {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: none;
+    border: none;
+    color: var(--primary-color);
+    cursor: pointer;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+}
+
+.close-btn:hover {
+    background: var(--background-color);
+}
+
+.close-btn .material-icons {
+    font-size: 24px;
+}
+
+.debt-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--background-color);
+}
+
+.debt-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    background: var(--background-color);
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.debt-checkbox:hover {
+    background: #E5E7EB;
+}
+
+.debt-checkbox input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+}
+
+.debt-checkbox label {
+    font-size: 0.9rem;
+    color: var(--primary-color);
+    cursor: pointer;
+}
+
+.delete-btn {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 12px;
+    background: var(--delete-btn-bg);
+    color: var(--delete-btn-color);
+    border: none;
+    border-radius: var(--border-radius);
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.delete-btn:hover {
+    color: var(--delete-btn-hover-color);
+}
+
+.delete-btn .material-icons {
+    font-size: 16px;
+}
+
+.paid-debt {
+    opacity: 0.7;
+}
+
+.paid-debt .amount {
+    text-decoration: line-through;
+    color: var(--primary-color);
+}
+
+.app-logo {
+    display: block;
+    height: 85px;
+    width: auto;
+    margin: 24px auto;
+    object-fit: contain;
+}
+
+.bank-card {
+    position: relative;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+    background: var(--card-background);
+    padding: 24px;
+    border-radius: var(--border-radius);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.bank-card:hover {
+    transform: translateY(-2px);
+}
+
+.bank-card-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+}
+
+.bank-info {
+    flex: 1;
+}
+
+.bank-info h3 {
+    margin-bottom: 12px;
+    font-size: 1.2rem;
+}
+
+.bank-info .amount {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: var(--text-color);
+}
+
+.bank-logo {
+    width: 80px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.9;
+}
+
+.bank-logo img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.iban-display {
+    font-family: monospace;
+    font-size: 0.8rem;
+    padding: 12px;
+    background: var(--background-color);
+    border-radius: var(--border-radius);
+    margin-bottom: 16px;
+    word-break: break-all;
+}
+
+.detail-balance-input {
+    width: 100%;
+    font-size: 1.5rem;
+    padding: 16px;
+    margin: 8px 0;
+    text-align: center;
+    font-weight: bold;
+}
+
+/* Tema değiştirme butonu stilleri */
+.theme-toggle {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: var(--card-background);
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    color: var(--primary-color);
+    transition: all 0.3s ease;
+}
+
+.theme-toggle:hover {
+    transform: scale(1.1);
+}
+
+.theme-toggle .material-icons {
+    font-size: 24px;
+}
+
+[data-theme="dark"] .light-icon,
+[data-theme="light"] .dark-icon {
+    display: none;
+}
+
+.subscription-card {
+    background: var(--card-background);
+    padding: 16px;
+    border-radius: var(--border-radius);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    position: relative;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.subscription-card:hover {
+    transform: translateY(-2px);
+}
+
+.subscription-card h3 {
+    margin-bottom: 8px;
+    font-size: 1rem;
+}
+
+.subscription-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 8px;
+    font-size: 0.9rem;
+    color: var(--primary-color);
+}
+
+.payment-date {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.payment-date .material-icons {
+    font-size: 16px;
+}
+
+.detail-select {
+    width: 100%;
+    padding: 12px;
+    font-size: 1rem;
+    background: var(--background-color);
+    border: 1px solid var(--input-border);
+    border-radius: var(--border-radius);
+    color: var(--text-color);
+    margin-bottom: 24px;
+}
+
+.detail-date-input {
+    width: 100%;
+    padding: 12px;
+    font-size: 1rem;
+    background: var(--background-color);
+    border: 1px solid var(--input-border);
+    border-radius: var(--border-radius);
+    color: var(--text-color);
+    margin-bottom: 24px;
+}
+
+.detail-select:focus,
+.detail-date-input:focus {
+    outline: 2px solid var(--primary-color);
+    background: white;
+}
+
+select {
+    width: 100%;
+    padding: 12px;
+    background: var(--card-background);
+    border: 1px solid var(--input-border);
+    border-radius: var(--border-radius);
+    color: var(--text-color);
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+select:focus {
+    border-color: var(--primary-color);
+    outline: none;
+}
+
+.subscription-card.overdue {
+    border: 2px solid #EF4444;
+}
+
+.subscription-card.overdue .payment-date {
+    color: #EF4444;
+}
+
+.subscription-card.overdue .material-icons {
+    color: #EF4444;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+.expense-categories {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.category-row {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+}
+
+.category-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 12px;
+    background: var(--background-color);
+    border: 1px solid var(--input-border);
+    border-radius: var(--border-radius);
+    color: var(--text-color);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.category-btn:hover {
+    background: var(--card-background);
+    transform: translateY(-2px);
+}
+
+.category-btn.selected {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+.category-btn .material-icons {
+    font-size: 24px;
+}
+
+.expense-card {
+    background: var(--card-background);
+    padding: 12px;
+    border-radius: var(--border-radius);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.expense-card:hover {
+    transform: translateY(-2px);
+}
+
+.expense-card h3 {
+    margin: 0;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+}
+
+.expense-card .material-icons {
+    font-size: 18px;
+    color: var(--primary-color);
+}
+
+.expense-card .amount {
+    margin: 0;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.expense-date {
+    font-size: 0.75rem;
+    color: var(--primary-color);
+    margin: 0;
+    min-width: 85px;
+    text-align: right;
+}
+
+.bank-name {
+    font-size: 0.7rem;
+    opacity: 0.8;
+    display: block;
+    margin-top: 2px;
+}
+
+#expensesList.cards-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 8px;
+}
+
+.card.expenses {
+    background: linear-gradient(135deg, #6366F1 0%, #4F46E5 100%);
+    color: white;
+}
+
+.card.expenses h3 {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+@media (max-width: 768px) {
+    .dashboard {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+    }
+
+    .card h3 {
+        font-size: 0.8rem;
+    }
+
+    .amount {
+        font-size: 1.2rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .dashboard {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+    }
+
+    .bank-logo {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .bank-card {
+        padding: 18px;
+    }
+
+    .bank-info h3 {
+        font-size: 1.1rem;
+        margin-bottom: 10px;
+    }
+
+    .bank-info .amount {
+        font-size: 1.5rem;
+    }
+
+    .bank-card-content {
+        gap: 16px;
+    }
+
+    .card {
+        padding: 12px;
+    }
+
+    .card h3 {
+        font-size: 0.6rem;
+    }
+
+    .amount {
+        font-size: 1rem;
+    }
+}
+
+.bank-buttons {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+    padding: 0 10px;
+}
+
+.bank-select-btn {
+    background: var(--card-background);
+    border: 1px solid var(--input-border);
+    border-radius: var(--border-radius);
+    padding: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    aspect-ratio: 1;
+    width: 100%;
+}
+
+.bank-select-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.bank-select-btn.selected {
+    border: 2px solid var(--primary-color);
+    background: var(--background-color);
+}
+
+.bank-select-btn img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    padding: 4px;
+}
+
+.currency-buttons {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+}
+
+.currency-select-btn {
+    flex: 1;
+    min-width: 80px;
+    background: var(--card-background);
+    border: 1px solid var(--input-border);
+    border-radius: var(--border-radius);
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.currency-select-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.currency-select-btn.selected {
+    border: 2px solid var(--primary-color);
+    background: var(--background-color);
+}
+
+.currency-symbol {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: var(--text-color);
+}
+
+.currency-name {
+    font-size: 0.8rem;
+    color: var(--primary-color);
+}
+
+@media (max-width: 480px) {
+    .bank-buttons {
+        grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+        gap: 8px;
+        padding: 0 5px;
+    }
+    
+    .bank-select-btn {
+        padding: 8px;
+    }
+
+    .currency-buttons {
+        gap: 6px;
+    }
+    
+    .currency-select-btn {
+        min-width: 60px;
+        padding: 6px 12px;
+    }
+    
+    .currency-symbol {
+        font-size: 1rem;
+    }
+    
+    .currency-name {
+        font-size: 0.7rem;
+    }
+}
+
+.logout-btn {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    background: var(--card-background);
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    color: var(--delete-btn-color);
+    transition: all 0.3s ease;
+}
+
+.logout-btn:hover {
+    transform: scale(1.1);
+}
+
+.logout-btn .material-icons {
+    font-size: 24px;
+} 

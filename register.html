@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dijital Cüzdan - Kayıt</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="stylesheet" href="login.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="firebase-config.js"></script>
+</head>
+<body>
+    <div class="login-card">
+        <div class="logo-container">
+            <img src="logo.png" alt="Dijital Cüzdan Logo" class="app-logo">
+        </div>
+        <form id="registerForm" class="login-form">
+            <div class="input-group">
+                <span class="material-icons">person</span>
+                <input type="text" id="username" placeholder="Kullanıcı Adı" required minlength="3">
+            </div>
+            <div class="input-group">
+                <span class="material-icons">lock</span>
+                <input type="password" id="password" placeholder="Şifre" required minlength="6">
+                <button type="button" class="toggle-password">
+                    <span class="material-icons">visibility_off</span>
+                </button>
+            </div>
+            <div class="input-group">
+                <span class="material-icons">lock</span>
+                <input type="password" id="passwordConfirm" placeholder="Şifre Tekrar" required minlength="6">
+                <button type="button" class="toggle-password">
+                    <span class="material-icons">visibility_off</span>
+                </button>
+            </div>
+            <div class="captcha-container">
+                <div id="captchaBox" class="captcha-box"></div>
+                <div class="input-group">
+                    <span class="material-icons">security</span>
+                    <input type="text" id="captchaInput" placeholder="Güvenlik Kodunu Girin" required>
+                </div>
+                <button type="button" id="refreshCaptcha" class="refresh-captcha">
+                    <span class="material-icons">refresh</span>
+                </button>
+            </div>
+            <button type="submit" class="login-btn">
+                <span class="material-icons">person_add</span>
+                Kayıt Ol
+            </button>
+            <p class="register-text">
+                Zaten hesabınız var mı? <a href="index.html">Giriş Yapın</a>
+            </p>
+        </form>
+    </div>
+    <script src="register.js"></script>
+</body>
+</html> 

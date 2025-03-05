@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dijital Cüzdan - Giriş</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="stylesheet" href="login.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="firebase-config.js"></script>
+</head>
+<body>
+    <div class="login-card">
+        <div class="logo-container">
+            <img src="logo.png" alt="Dijital Cüzdan Logo" class="app-logo">
+        </div>
+        <form id="loginForm" class="login-form">
+            <div class="input-group">
+                <span class="material-icons">person</span>
+                <input type="text" id="username" placeholder="Kullanıcı Adı" required>
+            </div>
+            <div class="input-group">
+                <span class="material-icons">lock</span>
+                <input type="password" id="password" placeholder="Şifre" required>
+                <button type="button" class="toggle-password">
+                    <span class="material-icons">visibility_off</span>
+                </button>
+            </div>
+            <div class="remember-forgot">
+                <label class="remember-me">
+                    <input type="checkbox" id="rememberMe">
+                    <span>Beni Hatırla</span>
+                </label>
+                <a href="#" class="forgot-password">Şifremi Unuttum</a>
+            </div>
+            <button type="submit" class="login-btn">
+                <span class="material-icons">login</span>
+                Giriş Yap
+            </button>
+            <p class="register-text">
+                Hesabınız yok mu? <a href="register.html">Hemen Kaydolun</a>
+            </p>
+        </form>
+    </div>
+    <script src="login.js"></script>
+</body>
+</html> 
