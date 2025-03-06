@@ -334,19 +334,83 @@ input:focus {
 
 .detail-balance-input {
     width: 100%;
-    font-size: 1.5rem;
-    padding: 16px;
-    margin: 0 0 24px;
+    font-size: 2rem;
+    padding: 20px;
+    margin: 16px 0;
     text-align: center;
-    font-weight: 500;
+    font-weight: 600;
     background: var(--background-color);
     border: none;
+    border-radius: var(--border-radius);
     color: var(--text-color);
+    transition: all 0.3s ease;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .detail-balance-input:focus {
-    outline: 2px solid var(--primary-color);
-    background: white;
+    outline: none;
+    box-shadow: 0 0 0 2px var(--primary-color);
+    transform: scale(1.02);
+}
+
+.detail-balance-input::placeholder {
+    color: var(--secondary-color);
+    opacity: 0.5;
+}
+
+.amount-input-container {
+    position: relative;
+    margin: 16px 0;
+}
+
+.amount-input-container::before {
+    content: '₺';
+    position: absolute;
+    left: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.5rem;
+    color: var(--primary-color);
+    z-index: 1;
+}
+
+.amount-input {
+    width: 100%;
+    font-size: 1.5rem;
+    padding: 16px 16px 16px 40px;
+    border: 2px solid var(--input-border);
+    border-radius: var(--border-radius);
+    background: var(--card-background);
+    color: var(--text-color);
+    transition: all 0.3s ease;
+    -moz-appearance: textfield;
+}
+
+.amount-input::-webkit-outer-spin-button,
+.amount-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.amount-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+.amount-input::placeholder {
+    color: var(--secondary-color);
+    opacity: 0.5;
+}
+
+/* Dark mode için ek stiller */
+[data-theme="dark"] .amount-input {
+    background: var(--background-color);
+}
+
+[data-theme="dark"] .detail-balance-input {
+    background: var(--background-color);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .detail-actions {
@@ -978,4 +1042,55 @@ select:focus {
 
 .logout-btn .material-icons {
     font-size: 24px;
+}
+
+.subscription-summary {
+    margin: 12px 0;
+    padding: 0 8px;
+}
+
+.summary-card {
+    background: linear-gradient(135deg, #6366F1 0%, #4F46E5 100%);
+    border-radius: var(--border-radius);
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: white;
+    box-shadow: 0 4px 6px rgba(79, 70, 229, 0.1);
+}
+
+.summary-icon {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.summary-icon .material-icons {
+    font-size: 20px;
+}
+
+.summary-info h4 {
+    font-size: 0.8rem;
+    margin: 0;
+    opacity: 0.9;
+}
+
+.summary-amount {
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin: 2px 0;
+}
+
+.summary-period {
+    font-size: 0.7rem;
+    opacity: 0.8;
+}
+
+[data-theme="dark"] .summary-card {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
 } 

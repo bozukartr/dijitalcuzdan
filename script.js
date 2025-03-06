@@ -357,6 +357,17 @@ function renderSubscriptions() {
             </div>
         `;
     }).join('');
+
+    // Toplam abonelik miktarını hesapla ve göster
+    const totalMonthly = subscriptions.reduce((total, subscription) => {
+        if (subscription.period === 'monthly') {
+            return total + subscription.amount;
+        } else { // yearly
+            return total + (subscription.amount / 12); // Yıllık abonelikleri aylığa çevir
+        }
+    }, 0);
+
+    document.getElementById('totalSubscriptionAmount').textContent = formatCurrency(totalMonthly, 'TRY');
     updateTotals();
 }
 
@@ -412,14 +423,14 @@ function showDebtDetail(debtId) {
     if (!debt) return;
 
     const detailTitle = document.getElementById('detailTitle');
-    const detailAmount = document.querySelector('.detail-amount');
-    const detailDueDate = document.querySelector('.detail-due-date');
+    const detailAmount = document.getElementById('debtDetailAmount');
+    const detailDate = document.getElementById('debtDetailDate');
     const detailIsPaid = document.getElementById('detailIsPaid');
     const detailDeleteBtn = document.getElementById('detailDeleteBtn');
 
     detailTitle.textContent = debt.title;
-    detailAmount.textContent = formatCurrency(debt.amount, 'TRY');
-    detailDueDate.textContent = debt.dueDate ? `Son Ödeme: ${formatDate(debt.dueDate)}` : '';
+    detailAmount.value = debt.amount;
+    detailDate.value = debt.dueDate || '';
     detailIsPaid.checked = debt.isPaid;
 
     detailIsPaid.onchange = () => {

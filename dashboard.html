@@ -142,6 +142,18 @@
                     <span class="material-icons">add</span> Abonelik Ekle
                 </button>
             </div>
+            <div class="subscription-summary">
+                <div class="summary-card">
+                    <div class="summary-icon">
+                        <span class="material-icons">payments</span>
+                    </div>
+                    <div class="summary-info">
+                        <h4>Toplam Abonelik</h4>
+                        <p class="summary-amount" id="totalSubscriptionAmount">₺0</p>
+                        <small class="summary-period">Aylık Ödeme</small>
+                    </div>
+                </div>
+            </div>
             <div id="subscriptionsList" class="cards-container"></div>
         </div>
 
@@ -237,7 +249,9 @@
             <h2>Borç Ekle</h2>
             <form id="debtForm">
                 <input type="text" id="debtTitle" placeholder="Borç Başlığı" required>
-                <input type="number" id="debtAmount" placeholder="Borç Miktarı" step="0.01" min="0" required>
+                <div class="amount-input-container">
+                    <input type="number" id="debtAmount" class="amount-input" placeholder="0,00" step="0.01" min="0" required>
+                </div>
                 <input type="date" id="dueDate" placeholder="Son Ödeme Tarihi">
                 <div class="checkbox-container">
                     <input type="checkbox" id="isPaid">
@@ -256,8 +270,12 @@
         <div class="modal-content glass">
             <h2 id="detailTitle"></h2>
             <div class="detail-content">
-                <p class="detail-amount"></p>
-                <p class="detail-due-date"></p>
+                <label class="detail-label">Borç Miktarı</label>
+                <div class="amount-input-container">
+                    <input type="number" id="debtDetailAmount" class="amount-input" placeholder="0,00" step="0.01" min="0" required>
+                </div>
+                <label class="detail-label">Son Ödeme Tarihi</label>
+                <input type="date" id="debtDetailDate" class="detail-date-input">
             </div>
             <div class="detail-actions">
                 <div class="debt-checkbox detail-checkbox">
@@ -288,7 +306,9 @@
                     <span class="material-icons copy-icon">content_copy</span>
                 </div>
                 <label class="detail-label">Güncel Varlık</label>
-                <input type="number" id="bankDetailBalance" placeholder="0,00" step="0.01" min="0" class="detail-balance-input">
+                <div class="amount-input-container">
+                    <input type="number" id="bankDetailBalance" class="amount-input" placeholder="0,00" step="0.01" min="0" required>
+                </div>
             </div>
             <div class="detail-actions">
                 <button class="save-btn" id="bankDetailSave">
@@ -309,7 +329,9 @@
             <h2>Abonelik Ekle</h2>
             <form id="subscriptionForm">
                 <input type="text" id="subscriptionTitle" placeholder="Abonelik Adı" required>
-                <input type="number" id="subscriptionAmount" placeholder="Aylık Ödeme" step="0.01" min="0" required>
+                <div class="amount-input-container">
+                    <input type="number" id="subscriptionAmount" class="amount-input" placeholder="0,00" step="0.01" min="0" required>
+                </div>
                 <select id="subscriptionPeriod" required>
                     <option value="monthly">Aylık</option>
                     <option value="yearly">Yıllık</option>
@@ -332,7 +354,9 @@
             <h2 id="subscriptionDetailTitle"></h2>
             <div class="detail-content">
                 <label class="detail-label">Aylık Ödeme</label>
-                <input type="number" id="subscriptionDetailAmount" placeholder="0,00" step="0.01" min="0" class="detail-balance-input">
+                <div class="amount-input-container">
+                    <input type="number" id="subscriptionDetailAmount" class="amount-input" placeholder="0,00" step="0.01" min="0" required>
+                </div>
                 <label class="detail-label">Ödeme Periyodu</label>
                 <select id="subscriptionDetailPeriod" class="detail-select">
                     <option value="monthly">Aylık</option>
@@ -420,7 +444,9 @@
                     </div>
                 </div>
                 <input type="hidden" id="expenseCategory" required>
-                <input type="number" id="expenseAmount" placeholder="Harcama Miktarı" step="0.01" min="0" required>
+                <div class="amount-input-container">
+                    <input type="number" id="expenseAmount" class="amount-input" placeholder="0,00" step="0.01" min="0" required>
+                </div>
                 <select id="expenseBank" required>
                     <option value="">Ödeme Yapılan Hesap</option>
                 </select>
