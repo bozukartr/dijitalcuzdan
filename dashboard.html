@@ -25,6 +25,12 @@
         // Bildirim izni iste
         async function requestNotificationPermission() {
             try {
+                // Önce bildirim iznini kontrol et
+                if (!('Notification' in window)) {
+                    console.log('Bu tarayıcı bildirim desteği sunmuyor');
+                    return;
+                }
+
                 const permission = await Notification.requestPermission();
                 if (permission === 'granted') {
                     // Service Worker'ı kaydet
@@ -49,39 +55,53 @@
                             }
                         );
                     });
-                    
-                    const currentToken = await messaging.getToken({
-                        vapidKey: 'BPgPVZKVxXOHhxrQWVeVlXHfE9jqe_7_8ze_twQKn_VGlJe12GrXrL8NP6gMpIltmdgHt0mDRu4',
-                        serviceWorkerRegistration: registration
-                    });
 
-                    if (currentToken) {
-                        console.log('FCM Token:', currentToken);
-                        // Token'ı kullanıcının Firestore dokümanına kaydet
-                        const user = firebase.auth().currentUser;
-                        if (user) {
-                            await firebase.firestore()
-                                .collection('users')
-                                .doc(user.displayName)
-                                .update({
-                                    fcmToken: currentToken
-                                });
-                            
-                            console.log('FCM Token Firestore\'a kaydedildi');
+                    try {
+                        const currentToken = await messaging.getToken({
+                            vapidKey: 'BPgPVZKVxXOHhxrQWVeVlXHfE9jqe_7_8ze_twQKn_VGlJe12GrXrL8NP6gMpIltmdgHt0mDRu4',
+                            serviceWorkerRegistration: registration
+                        });
+
+                        if (currentToken) {
+                            console.log('FCM Token alındı');
+                            // Token'ı kullanıcının Firestore dokümanına kaydet
+                            const user = firebase.auth().currentUser;
+                            if (user) {
+                                await firebase.firestore()
+                                    .collection('users')
+                                    .doc(user.displayName)
+                                    .update({
+                                        fcmToken: currentToken,
+                                        lastTokenUpdate: firebase.firestore.FieldValue.serverTimestamp()
+                                    });
+                                
+                                console.log('FCM Token Firestore\'a kaydedildi');
+                            }
+                        } else {
+                            console.log('FCM Token alınamadı');
                         }
-                    } else {
-                        console.log('Token alınamadı');
+                    } catch (tokenError) {
+                        console.error('FCM Token hatası:', tokenError);
                     }
                 } else {
                     console.log('Bildirim izni reddedildi');
                 }
             } catch (error) {
                 console.error('Bildirim izni hatası:', error);
+                // Hata detaylarını göster
+                if (error.code && error.message) {
+                    console.error(`Hata kodu: ${error.code}`);
+                    console.error(`Hata mesajı: ${error.message}`);
+                }
             }
         }
 
         // Sayfa yüklendiğinde bildirim izni iste
-        document.addEventListener('DOMContentLoaded', requestNotificationPermission);
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', requestNotificationPermission);
+        } else {
+            requestNotificationPermission();
+        }
     </script>
 </head>
 <body>

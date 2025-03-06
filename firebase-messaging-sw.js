@@ -7,8 +7,7 @@ firebase.initializeApp({
     projectId: "digitalwallet-45a8a",
     storageBucket: "digitalwallet-45a8a.firebasestorage.app",
     messagingSenderId: "351579695434",
-    appId: "1:351579695434:web:f515645efa80ac6f8db9b3",
-    measurementId: "G-KM6M8QMFPD"
+    appId: "1:351579695434:web:f515645efa80ac6f8db9b3"
 });
 
 const messaging = firebase.messaging();
@@ -23,9 +22,22 @@ messaging.onBackgroundMessage((payload) => {
         icon: '/dijitalcuzdan/applogo.png',
         badge: '/dijitalcuzdan/applogo.png',
         tag: 'notification-1',
-        requireInteraction: true,
-        data: payload.data
+        data: payload.data,
+        actions: [
+            {
+                action: 'open',
+                title: 'Aç'
+            }
+        ]
     };
 
-    return self.registration.showNotification(notificationTitle, notificationOptions);
+    self.registration.showNotification(notificationTitle, notificationOptions);
+});
+
+self.addEventListener('notificationclick', (event) => {
+    event.notification.close();
+    
+    if (event.action === 'open') {
+        clients.openWindow('/dijitalcuzdan/dashboard.html');
+    }
 }); 
