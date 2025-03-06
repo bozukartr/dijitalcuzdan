@@ -23,7 +23,7 @@ function logDebug(message, data) {
 }
 
 // Arka planda bildirim alma
-messaging.onBackgroundMessage((payload) => {
+messaging.onBackgroundMessage(async (payload) => {
     logDebug('Arka planda mesaj alındı:', payload);
 
     // Bildirim verilerini kontrol et
@@ -33,14 +33,20 @@ messaging.onBackgroundMessage((payload) => {
     }
 
     try {
+        const registration = await self.registration;
+        
         const notificationTitle = payload.notification?.title || 'Dijital Cüzdan';
         const notificationOptions = {
             body: payload.notification?.body || payload.data?.message || 'Yeni bir bildiriminiz var!',
-            icon: '/dijitalcuzdan/applogo.png',
-            badge: '/dijitalcuzdan/applogo.png',
+            icon: 'applogo.png',
+            badge: 'applogo.png',
             tag: `notification-${Date.now()}`,
-            data: payload.data,
+            data: {
+                ...payload.data,
+                timestamp: Date.now()
+            },
             requireInteraction: true,
+            renotify: true,
             actions: [
                 {
                     action: 'open',
@@ -51,53 +57,63 @@ messaging.onBackgroundMessage((payload) => {
 
         logDebug('Bildirim gösteriliyor:', { title: notificationTitle, options: notificationOptions });
 
-        return self.registration.showNotification(notificationTitle, notificationOptions);
+        await registration.showNotification(notificationTitle, notificationOptions);
+        logDebug('Bildirim başarıyla gösterildi');
     } catch (error) {
         logDebug('Bildirim gösterme hatası:', error);
+        console.error('Detaylı hata:', error);
     }
 });
 
 // Bildirime tıklama olayı
-self.addEventListener('notificationclick', (event) => {
+self.addEventListener('notificationclick', async (event) => {
     logDebug('Bildirime tıklandı:', event);
     event.notification.close();
 
-    const urlToOpen = new URL('/dijitalcuzdan/dashboard.html', self.location.origin).href;
+    try {
+        const urlToOpen = new URL('dashboard.html', self.location.origin).href;
 
-    const promiseChain = clients.matchAll({
-        type: 'window',
-        includeUncontrolled: true
-    })
-    .then((windowClients) => {
-        let matchingClient = null;
+        const windowClients = await clients.matchAll({
+            type: 'window',
+            includeUncontrolled: true
+        });
 
-        for (let client of windowClients) {
-            if (client.url === urlToOpen) {
-                matchingClient = client;
-                break;
+        // Açık pencere var mı kontrol et
+        for (const client of windowClients) {
+            if (client.url === urlToOpen && 'focus' in client) {
+                logDebug('Mevcut pencere bulundu, odaklanılıyor');
+                await client.focus();
+                return;
             }
         }
 
-        if (matchingClient) {
-            logDebug('Mevcut pencere bulundu, odaklanılıyor');
-            return matchingClient.focus();
-        } else {
-            logDebug('Yeni pencere açılıyor');
-            return clients.openWindow(urlToOpen);
-        }
-    });
-
-    event.waitUntil(promiseChain);
+        // Açık pencere yoksa yeni pencere aç
+        logDebug('Yeni pencere açılıyor');
+        await clients.openWindow(urlToOpen);
+    } catch (error) {
+        logDebug('Pencere açma hatası:', error);
+        console.error('Detaylı hata:', error);
+    }
 });
 
 // Service worker kurulum olayı
 self.addEventListener('install', (event) => {
     logDebug('Service Worker kuruldu');
-    self.skipWaiting();
+    event.waitUntil(self.skipWaiting());
 });
 
 // Service worker aktivasyon olayı
 self.addEventListener('activate', (event) => {
     logDebug('Service Worker aktif edildi');
-    event.waitUntil(clients.claim());
+    event.waitUntil(
+        Promise.all([
+            self.clients.claim(),
+            // Eski önbellekleri temizle
+            caches.keys().then(cacheNames => {
+                return Promise.all(
+                    cacheNames.map(cacheName => caches.delete(cacheName))
+                );
+            })
+        ])
+    );
 }); 
