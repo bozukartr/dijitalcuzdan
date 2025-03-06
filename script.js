@@ -33,9 +33,8 @@ function setupAmountInputs() {
             this.value = value;
         });
 
-        // Mobil klavyede sayısal klavye açılması için
-        input.setAttribute('inputmode', 'numeric');
-        input.setAttribute('pattern', '[0-9]*');
+        // Mobil klavyede decimal klavye açılması için
+        input.setAttribute('inputmode', 'decimal');
     });
 }
 
@@ -264,12 +263,21 @@ bankForm.addEventListener('submit', (e) => {
     bankModal.classList.remove('active');
 });
 
+// Form submit olaylarında virgüllü değerleri parse et
+function parseAmount(value) {
+    if (typeof value === 'string') {
+        return parseFloat(value.replace(',', '.'));
+    }
+    return value;
+}
+
+// Form submit olaylarını güncelle
 debtForm.addEventListener('submit', (e) => {
     e.preventDefault();
     const debt = {
         id: Date.now(),
         title: document.getElementById('debtTitle').value,
-        amount: parseFloat(document.getElementById('debtAmount').value),
+        amount: parseAmount(document.getElementById('debtAmount').value),
         dueDate: document.getElementById('dueDate').value || null,
         isPaid: document.getElementById('isPaid').checked
     };
@@ -285,7 +293,7 @@ subscriptionForm.addEventListener('submit', (e) => {
     const subscription = {
         id: Date.now(),
         title: document.getElementById('subscriptionTitle').value,
-        amount: parseFloat(document.getElementById('subscriptionAmount').value),
+        amount: parseAmount(document.getElementById('subscriptionAmount').value),
         period: document.getElementById('subscriptionPeriod').value,
         paymentDate: document.getElementById('subscriptionDate').value
     };
@@ -299,7 +307,7 @@ subscriptionForm.addEventListener('submit', (e) => {
 expenseForm.addEventListener('submit', (e) => {
     e.preventDefault();
     
-    const amount = parseFloat(document.getElementById('expenseAmount').value);
+    const amount = parseAmount(document.getElementById('expenseAmount').value);
     const bankId = document.getElementById('expenseBank').value;
     
     // Seçilen bankayı bul
@@ -491,7 +499,7 @@ function showBankDetail(bankId) {
     detailBalance.value = bank.balance;
 
     saveBtn.onclick = () => {
-        const newBalance = parseFloat(detailBalance.value);
+        const newBalance = parseAmount(detailBalance.value);
         if (!isNaN(newBalance) && newBalance >= 0) {
             const bankIndex = banks.findIndex(b => b.id === bankId);
             if (bankIndex !== -1) {
@@ -532,7 +540,7 @@ function showSubscriptionDetail(subscriptionId) {
     detailDate.value = subscription.paymentDate;
 
     saveBtn.onclick = () => {
-        const newAmount = parseFloat(detailAmount.value);
+        const newAmount = parseAmount(detailAmount.value);
         if (!isNaN(newAmount) && newAmount >= 0) {
             const index = subscriptions.findIndex(s => s.id === subscriptionId);
             if (index !== -1) {
