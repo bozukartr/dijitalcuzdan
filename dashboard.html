@@ -187,7 +187,7 @@
             <form id="debtForm">
                 <input type="text" id="debtTitle" placeholder="Borç Başlığı" required>
                 <div class="amount-input-container">
-                    <input type="number" id="debtAmount" class="amount-input" placeholder="0,00" step="0.01" min="0" required>
+                    <input type="number" id="debtAmount" class="amount-input" placeholder="0,00" step="0.01" min="0" required inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*">
                 </div>
                 <input type="date" id="dueDate" placeholder="Son Ödeme Tarihi">
                 <div class="checkbox-container">
@@ -209,7 +209,7 @@
             <div class="detail-content">
                 <label class="detail-label">Borç Miktarı</label>
                 <div class="amount-input-container">
-                    <input type="number" id="debtDetailAmount" class="amount-input" placeholder="0,00" step="0.01" min="0" required>
+                    <input type="number" id="debtDetailAmount" class="amount-input" placeholder="0,00" step="0.01" min="0" required inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*">
                 </div>
                 <label class="detail-label">Son Ödeme Tarihi</label>
                 <input type="date" id="debtDetailDate" class="detail-date-input">
@@ -244,7 +244,7 @@
                 </div>
                 <label class="detail-label">Güncel Varlık</label>
                 <div class="amount-input-container">
-                    <input type="number" id="bankDetailBalance" class="amount-input" placeholder="0,00" step="0.01" min="0" required>
+                    <input type="number" id="bankDetailBalance" class="amount-input" placeholder="0,00" step="0.01" min="0" required inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*">
                 </div>
             </div>
             <div class="detail-actions">
@@ -267,7 +267,7 @@
             <form id="subscriptionForm">
                 <input type="text" id="subscriptionTitle" placeholder="Abonelik Adı" required>
                 <div class="amount-input-container">
-                    <input type="number" id="subscriptionAmount" class="amount-input" placeholder="0,00" step="0.01" min="0" required>
+                    <input type="number" id="subscriptionAmount" class="amount-input" placeholder="0,00" step="0.01" min="0" required inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*">
                 </div>
                 <select id="subscriptionPeriod" required>
                     <option value="monthly">Aylık</option>
@@ -292,7 +292,7 @@
             <div class="detail-content">
                 <label class="detail-label">Aylık Ödeme</label>
                 <div class="amount-input-container">
-                    <input type="number" id="subscriptionDetailAmount" class="amount-input" placeholder="0,00" step="0.01" min="0" required>
+                    <input type="number" id="subscriptionDetailAmount" class="amount-input" placeholder="0,00" step="0.01" min="0" required inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*">
                 </div>
                 <label class="detail-label">Ödeme Periyodu</label>
                 <select id="subscriptionDetailPeriod" class="detail-select">
@@ -382,7 +382,7 @@
                 </div>
                 <input type="hidden" id="expenseCategory" required>
                 <div class="amount-input-container">
-                    <input type="number" id="expenseAmount" class="amount-input" placeholder="0,00" step="0.01" min="0" required>
+                    <input type="number" id="expenseAmount" class="amount-input" placeholder="0,00" step="0.01" min="0" required inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*">
                 </div>
                 <select id="expenseBank" required>
                     <option value="">Ödeme Yapılan Hesap</option>
