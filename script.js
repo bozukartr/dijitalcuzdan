@@ -10,6 +10,32 @@ const EXCHANGE_API_URL = 'https://api.exchangerate-api.com/v4/latest/TRY';
 // Döviz kurlarını saklayacağımız global değişken
 let exchangeRates = null;
 
+// Para girişi kontrolü için fonksiyon
+function setupAmountInputs() {
+    document.querySelectorAll('.amount-input').forEach(input => {
+        input.addEventListener('input', function(e) {
+            // Sadece sayılar, virgül ve nokta karakterlerine izin ver
+            let value = this.value.replace(/[^0-9.,]/g, '');
+            
+            // Birden fazla nokta veya virgül varsa ilkini bırak
+            let dotCount = 0;
+            value = value.split('').filter(char => {
+                if (char === '.' || char === ',') {
+                    dotCount++;
+                    return dotCount === 1;
+                }
+                return true;
+            }).join('');
+            
+            // Değeri güncelle
+            this.value = value;
+        });
+
+        // Mobil klavyede sayısal klavye açılması için
+        input.setAttribute('inputmode', 'decimal');
+    });
+}
+
 // Döviz kurlarını güncelleme fonksiyonu
 async function updateExchangeRates() {
     try {
@@ -781,4 +807,15 @@ firebase.auth().onAuthStateChanged((user) => {
         subscriptions = [];
         expenses = [];
     }
-}); 
+});
+
+// DOM yüklendiğinde input kontrollerini başlat
+document.addEventListener('DOMContentLoaded', () => {
+    setupAmountInputs();
+    initTheme();
+});
+
+// Modal açıldığında yeni eklenen inputlar için kontrolleri tekrar başlat
+document.querySelectorAll('.modal').forEach(modal => {
+    modal.addEventListener('shown', setupAmountInputs);
+});
