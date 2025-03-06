@@ -22,6 +22,11 @@ function logDebug(message, data) {
     console.log(`[FCM Debug] ${message}`, data);
 }
 
+// Yol yardımcı fonksiyonu
+function getBasePath() {
+    return self.location.pathname.includes('/dijitalcuzdan/') ? './' : '/dijitalcuzdan/';
+}
+
 // Arka planda bildirim alma
 messaging.onBackgroundMessage(async (payload) => {
     logDebug('Arka planda mesaj alındı:', payload);
@@ -34,16 +39,18 @@ messaging.onBackgroundMessage(async (payload) => {
 
     try {
         const registration = await self.registration;
+        const basePath = getBasePath();
         
         const notificationTitle = payload.notification?.title || 'Dijital Cüzdan';
         const notificationOptions = {
             body: payload.notification?.body || payload.data?.message || 'Yeni bir bildiriminiz var!',
-            icon: 'applogo.png',
-            badge: 'applogo.png',
+            icon: `${basePath}applogo.png`,
+            badge: `${basePath}applogo.png`,
             tag: `notification-${Date.now()}`,
             data: {
                 ...payload.data,
-                timestamp: Date.now()
+                timestamp: Date.now(),
+                basePath: basePath
             },
             requireInteraction: true,
             renotify: true,
@@ -71,7 +78,8 @@ self.addEventListener('notificationclick', async (event) => {
     event.notification.close();
 
     try {
-        const urlToOpen = new URL('dashboard.html', self.location.origin).href;
+        const basePath = event.notification.data?.basePath || getBasePath();
+        const urlToOpen = new URL(`${basePath}dashboard.html`, self.location.origin).href;
 
         const windowClients = await clients.matchAll({
             type: 'window',
@@ -88,7 +96,7 @@ self.addEventListener('notificationclick', async (event) => {
         }
 
         // Açık pencere yoksa yeni pencere aç
-        logDebug('Yeni pencere açılıyor');
+        logDebug('Yeni pencere açılıyor:', urlToOpen);
         await clients.openWindow(urlToOpen);
     } catch (error) {
         logDebug('Pencere açma hatası:', error);
