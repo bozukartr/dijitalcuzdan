@@ -57,13 +57,14 @@
                     });
 
                     try {
+                        // Yeni VAPID anahtarı
                         const currentToken = await messaging.getToken({
-                            vapidKey: 'BPgPVZKVxXOHhxrQWVeVlXHfE9jqe_7_8ze_twQKn_VGlJe12GrXrL8NP6gMpIltmdgHt0mDRu4',
+                            vapidKey: 'BF7BP-Hu60tVM7bVU2QnKk6vDIIWkqDRY5yi7U7rJFQ7AmIbkdTBFVE9Z2qzQDeaD5gmocUZ7Go5OOExtqEHuyY',
                             serviceWorkerRegistration: registration
                         });
 
                         if (currentToken) {
-                            console.log('FCM Token alındı');
+                            console.log('FCM Token alındı:', currentToken);
                             // Token'ı kullanıcının Firestore dokümanına kaydet
                             const user = firebase.auth().currentUser;
                             if (user) {
@@ -82,6 +83,11 @@
                         }
                     } catch (tokenError) {
                         console.error('FCM Token hatası:', tokenError);
+                        // Detaylı hata bilgisi
+                        if (tokenError.code && tokenError.message) {
+                            console.error('Hata kodu:', tokenError.code);
+                            console.error('Hata mesajı:', tokenError.message);
+                        }
                     }
                 } else {
                     console.log('Bildirim izni reddedildi');
