@@ -14,25 +14,28 @@ let exchangeRates = null;
 function setupAmountInputs() {
     document.querySelectorAll('.amount-input').forEach(input => {
         input.addEventListener('input', function(e) {
-            // Sadece sayılar, virgül ve nokta karakterlerine izin ver
-            let value = this.value.replace(/[^0-9.,]/g, '');
+            // Sadece sayılar ve virgül karakterine izin ver
+            let value = this.value.replace(/[^\d,]/g, '');
             
-            // Birden fazla nokta veya virgül varsa ilkini bırak
-            let dotCount = 0;
-            value = value.split('').filter(char => {
-                if (char === '.' || char === ',') {
-                    dotCount++;
-                    return dotCount === 1;
+            // Virgül kontrolü
+            if (value.includes(',')) {
+                const parts = value.split(',');
+                // Sadece bir virgül ve virgülden sonra en fazla 2 basamak
+                if (parts.length > 2) {
+                    value = parts[0] + ',' + parts[1];
                 }
-                return true;
-            }).join('');
+                if (parts[1] && parts[1].length > 2) {
+                    value = parts[0] + ',' + parts[1].substring(0, 2);
+                }
+            }
             
             // Değeri güncelle
             this.value = value;
         });
 
         // Mobil klavyede sayısal klavye açılması için
-        input.setAttribute('inputmode', 'decimal');
+        input.setAttribute('inputmode', 'numeric');
+        input.setAttribute('pattern', '[0-9]*');
     });
 }
 

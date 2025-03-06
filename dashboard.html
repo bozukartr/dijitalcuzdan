@@ -3,15 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Dijital Cüzdan">
     <title>Dijital Cüzdan</title>
     <link rel="icon" type="image/png" href="applogo.png">
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#4F46E5">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Dijital Cüzdan">
     <link rel="apple-touch-icon" href="applogo.png">
     <link rel="apple-touch-icon" sizes="192x192" href="applogo.png">
     <link rel="apple-touch-icon" sizes="512x512" href="applogo.png">
@@ -187,7 +189,7 @@
             <form id="debtForm">
                 <input type="text" id="debtTitle" placeholder="Borç Başlığı" required>
                 <div class="amount-input-container">
-                    <input type="text" id="debtAmount" class="amount-input" placeholder="0,00" required inputmode="decimal">
+                    <input type="text" id="debtAmount" class="amount-input" placeholder="0,00" required inputmode="numeric" pattern="[0-9]*">
                 </div>
                 <input type="date" id="dueDate" placeholder="Son Ödeme Tarihi">
                 <div class="checkbox-container">
@@ -209,7 +211,7 @@
             <div class="detail-content">
                 <label class="detail-label">Borç Miktarı</label>
                 <div class="amount-input-container">
-                    <input type="text" id="debtDetailAmount" class="amount-input" placeholder="0,00" required inputmode="decimal">
+                    <input type="text" id="debtDetailAmount" class="amount-input" placeholder="0,00" required inputmode="numeric" pattern="[0-9]*">
                 </div>
                 <label class="detail-label">Son Ödeme Tarihi</label>
                 <input type="date" id="debtDetailDate" class="detail-date-input">
@@ -244,7 +246,7 @@
                 </div>
                 <label class="detail-label">Güncel Varlık</label>
                 <div class="amount-input-container">
-                    <input type="text" id="bankDetailBalance" class="amount-input" placeholder="0,00" required inputmode="decimal">
+                    <input type="text" id="bankDetailBalance" class="amount-input" placeholder="0,00" required inputmode="numeric" pattern="[0-9]*">
                 </div>
             </div>
             <div class="detail-actions">
@@ -267,7 +269,7 @@
             <form id="subscriptionForm">
                 <input type="text" id="subscriptionTitle" placeholder="Abonelik Adı" required>
                 <div class="amount-input-container">
-                    <input type="text" id="subscriptionAmount" class="amount-input" placeholder="0,00" required inputmode="decimal">
+                    <input type="text" id="subscriptionAmount" class="amount-input" placeholder="0,00" required inputmode="numeric" pattern="[0-9]*">
                 </div>
                 <select id="subscriptionPeriod" required>
                     <option value="monthly">Aylık</option>
@@ -292,7 +294,7 @@
             <div class="detail-content">
                 <label class="detail-label">Aylık Ödeme</label>
                 <div class="amount-input-container">
-                    <input type="text" id="subscriptionDetailAmount" class="amount-input" placeholder="0,00" required inputmode="decimal">
+                    <input type="text" id="subscriptionDetailAmount" class="amount-input" placeholder="0,00" required inputmode="numeric" pattern="[0-9]*">
                 </div>
                 <label class="detail-label">Ödeme Periyodu</label>
                 <select id="subscriptionDetailPeriod" class="detail-select">
@@ -382,7 +384,7 @@
                 </div>
                 <input type="hidden" id="expenseCategory" required>
                 <div class="amount-input-container">
-                    <input type="text" id="expenseAmount" class="amount-input" placeholder="0,00" required inputmode="decimal">
+                    <input type="text" id="expenseAmount" class="amount-input" placeholder="0,00" required inputmode="numeric" pattern="[0-9]*">
                 </div>
                 <select id="expenseBank" required>
                     <option value="">Ödeme Yapılan Hesap</option>
