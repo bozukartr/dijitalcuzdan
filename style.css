@@ -620,6 +620,7 @@ input:focus {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     color: var(--primary-color);
     transition: all 0.3s ease;
+    z-index: 1;
 }
 
 .theme-toggle:hover {
@@ -905,6 +906,28 @@ select:focus {
     .amount {
         font-size: 1rem;
     }
+
+    .settings-btn {
+        width: 35px;
+        height: 35px;
+        padding: 6px;
+        position: absolute;
+        top: 16px;
+        right: 66px;
+    }
+
+    .settings-btn .material-icons {
+        font-size: 20px;
+    }
+
+    .theme-toggle {
+        width: 35px;
+        height: 35px;
+    }
+
+    .theme-toggle .material-icons {
+        font-size: 20px;
+    }
 }
 
 .bank-buttons {
@@ -946,6 +969,7 @@ select:focus {
     padding: 4px;
 }
 
+/* Para birimi seçim butonları */
 .currency-buttons {
     display: flex;
     gap: 8px;
@@ -959,7 +983,7 @@ select:focus {
     background: var(--card-background);
     border: 1px solid var(--input-border);
     border-radius: var(--border-radius);
-    padding: 8px 16px;
+    padding: 8px;
     cursor: pointer;
     transition: all 0.3s ease;
     display: flex;
@@ -986,7 +1010,7 @@ select:focus {
 
 .currency-name {
     font-size: 0.8rem;
-    color: var(--primary-color);
+    color: var(--text-color);
 }
 
 @media (max-width: 480px) {
@@ -1093,4 +1117,271 @@ select:focus {
 
 [data-theme="dark"] .summary-card {
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+}
+
+.subscription-card.paid-subscription .payment-date {
+    color: #059669;
+}
+
+.subscription-card.paid-subscription .material-icons {
+    color: #059669;
+}
+
+.subscription-card.paid-subscription {
+    opacity: 0.8;
+}
+
+.expense-month-selector {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 1rem 0;
+    gap: 1rem;
+}
+
+.expense-month-selector h3 {
+    min-width: 150px;
+    text-align: center;
+    margin: 0;
+    font-size: 1.2rem;
+}
+
+.month-nav-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.3s;
+}
+
+.month-nav-btn:hover {
+    background-color: var(--hover-color);
+}
+
+.month-nav-btn .material-icons {
+    color: var(--text-color);
+}
+
+.settings-btn {
+    background: none;
+    border: none;
+    color: var(--text-color);
+    padding: 8px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    width: 40px;
+    height: 40px;
+    position: relative;
+    z-index: 1;
+}
+
+.settings-btn:hover {
+    background: var(--background-color);
+    transform: rotate(45deg);
+}
+
+.settings-btn .material-icons {
+    font-size: 24px;
+}
+
+@media (max-width: 480px) {
+    .dashboard {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+    }
+
+    .bank-logo {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .bank-card {
+        padding: 18px;
+    }
+
+    .bank-info h3 {
+        font-size: 1.1rem;
+        margin-bottom: 10px;
+    }
+
+    .bank-info .amount {
+        font-size: 1.5rem;
+    }
+
+    .bank-card-content {
+        gap: 16px;
+    }
+
+    .card {
+        padding: 12px;
+    }
+
+    .card h3 {
+        font-size: 0.6rem;
+    }
+
+    .amount {
+        font-size: 1rem;
+    }
+
+    .settings-btn {
+        width: 35px;
+        height: 35px;
+        padding: 6px;
+        position: absolute;
+        top: 16px;
+        right: 66px;
+    }
+
+    .settings-btn .material-icons {
+        font-size: 20px;
+    }
+
+    .theme-toggle {
+        width: 35px;
+        height: 35px;
+    }
+
+    .theme-toggle .material-icons {
+        font-size: 20px;
+    }
+}
+
+.detail-balance {
+    font-size: 2rem;
+    font-weight: 600;
+    text-align: center;
+    padding: 16px;
+    background: var(--background-color);
+    border-radius: var(--border-radius);
+    color: var(--text-color);
+    margin: 16px 0;
+}
+
+.bank-actions {
+    display: flex;
+    gap: 12px;
+    margin: 16px 0;
+}
+
+.action-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px;
+    border: none;
+    border-radius: var(--border-radius);
+    background: var(--card-background);
+    color: var(--text-color);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.add-money-btn {
+    background: #059669;
+    color: white;
+}
+
+.transfer-btn {
+    background: #6366F1;
+    color: white;
+}
+
+.action-btn:hover {
+    transform: translateY(-2px);
+}
+
+.transaction-form {
+    background: var(--background-color);
+    padding: 16px;
+    border-radius: var(--border-radius);
+    margin: 16px 0;
+}
+
+.transaction-form h3 {
+    font-size: 1.1rem;
+    margin-bottom: 16px;
+    color: var(--text-color);
+}
+
+.form-buttons {
+    display: flex;
+    gap: 8px;
+    margin-top: 16px;
+}
+
+.form-buttons button {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    font-weight: 500;
+}
+
+@media (max-width: 480px) {
+    .bank-actions {
+        flex-direction: column;
+    }
+
+    .action-btn {
+        width: 100%;
+    }
+
+    .detail-balance {
+        font-size: 1.5rem;
+        padding: 12px;
+    }
+}
+
+.card-type-buttons {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.card-type-btn {
+    flex: 1;
+    background: var(--card-background);
+    border: 1px solid var(--input-border);
+    border-radius: var(--border-radius);
+    padding: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.card-type-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.card-type-btn.selected {
+    border: 2px solid var(--primary-color);
+    background: var(--background-color);
+}
+
+.card-type-btn .material-icons {
+    font-size: 24px;
+    color: var(--text-color);
+}
+
+.card-type-name {
+    font-size: 0.9rem;
+    color: var(--text-color);
 } 

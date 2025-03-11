@@ -10,6 +10,14 @@ const EXCHANGE_API_URL = 'https://api.exchangerate-api.com/v4/latest/TRY';
 // Döviz kurlarını saklayacağımız global değişken
 let exchangeRates = null;
 
+// Seçili ay için global değişken
+let selectedDate = new Date();
+
+// Global değişkenlere ekle
+let userSettings = {
+    defaultCurrency: 'TRY'
+};
+
 // Para girişi kontrolü için fonksiyon
 function setupAmountInputs() {
     document.querySelectorAll('.amount-input').forEach(input => {
@@ -225,6 +233,15 @@ document.querySelectorAll('.bank-select-btn').forEach(button => {
     });
 });
 
+// Kart tipi seçimi
+document.querySelectorAll('.card-type-btn').forEach(button => {
+    button.addEventListener('click', () => {
+        document.querySelectorAll('.card-type-btn').forEach(btn => btn.classList.remove('selected'));
+        button.classList.add('selected');
+        document.getElementById('cardType').value = button.dataset.type;
+    });
+});
+
 // Form işlemleri
 bankForm.addEventListener('submit', (e) => {
     e.preventDefault();
@@ -246,13 +263,20 @@ bankForm.addEventListener('submit', (e) => {
         alert('Lütfen bir döviz cinsi seçin');
         return;
     }
+
+    const cardType = document.getElementById('cardType').value;
+    if (!cardType) {
+        alert('Lütfen kart tipini seçin');
+        return;
+    }
     
     const bank = {
         id: Date.now(),
         name: bankName,
         iban: formatIBAN(iban),
         balance: 0,
-        currency: currency
+        currency: currency,
+        cardType: cardType // Yeni alan
     };
     
     banks.push(bank);
@@ -260,7 +284,27 @@ bankForm.addEventListener('submit', (e) => {
     renderBanks();
     bankForm.reset();
     document.querySelectorAll('.bank-select-btn').forEach(btn => btn.classList.remove('selected'));
+    document.querySelectorAll('.card-type-btn').forEach(btn => btn.classList.remove('selected'));
     bankModal.classList.remove('active');
+});
+
+// Para birimi seçimi için event listener'ları ekle
+document.querySelectorAll('#debtModal .currency-select-btn').forEach(button => {
+    button.addEventListener('click', function() {
+        document.querySelectorAll('#debtModal .currency-select-btn').forEach(btn => 
+            btn.classList.remove('selected'));
+        this.classList.add('selected');
+        document.getElementById('debtCurrency').value = this.dataset.currency;
+    });
+});
+
+document.querySelectorAll('#subscriptionModal .currency-select-btn').forEach(button => {
+    button.addEventListener('click', function() {
+        document.querySelectorAll('#subscriptionModal .currency-select-btn').forEach(btn => 
+            btn.classList.remove('selected'));
+        this.classList.add('selected');
+        document.getElementById('subscriptionCurrency').value = this.dataset.currency;
+    });
 });
 
 // Form submit olaylarında virgüllü değerleri parse et
@@ -274,33 +318,58 @@ function parseAmount(value) {
 // Form submit olaylarını güncelle
 debtForm.addEventListener('submit', (e) => {
     e.preventDefault();
+    
+    const currency = document.getElementById('debtCurrency').value;
+    if (!currency) {
+        alert('Lütfen bir para birimi seçin');
+        return;
+    }
+    
     const debt = {
         id: Date.now(),
         title: document.getElementById('debtTitle').value,
         amount: parseAmount(document.getElementById('debtAmount').value),
+        currency: currency,
         dueDate: document.getElementById('dueDate').value || null,
         isPaid: document.getElementById('isPaid').checked
     };
+    
     debts.push(debt);
     saveData();
     renderDebts();
     debtForm.reset();
+    document.querySelectorAll('#debtModal .currency-select-btn').forEach(btn => 
+        btn.classList.remove('selected'));
     debtModal.classList.remove('active');
 });
 
+// Abonelik ekleme formunu güncelle
 subscriptionForm.addEventListener('submit', (e) => {
     e.preventDefault();
+    
+    const currency = document.getElementById('subscriptionCurrency').value;
+    if (!currency) {
+        alert('Lütfen bir para birimi seçin');
+        return;
+    }
+    
     const subscription = {
         id: Date.now(),
         title: document.getElementById('subscriptionTitle').value,
         amount: parseAmount(document.getElementById('subscriptionAmount').value),
+        currency: currency,
         period: document.getElementById('subscriptionPeriod').value,
-        paymentDate: document.getElementById('subscriptionDate').value
+        paymentDate: document.getElementById('subscriptionDate').value,
+        lastPaymentDate: null,
+        isPaid: false
     };
+    
     subscriptions.push(subscription);
     saveData();
     renderSubscriptions();
     subscriptionForm.reset();
+    document.querySelectorAll('#subscriptionModal .currency-select-btn').forEach(btn => 
+        btn.classList.remove('selected'));
     subscriptionModal.classList.remove('active');
 });
 
@@ -354,6 +423,7 @@ function renderBanks() {
                 <div class="bank-info">
                     <h3>${bank.name}</h3>
                     <div class="amount">${formatCurrency(bank.balance, bank.currency)}</div>
+                    <small class="card-type">${bank.cardType === 'debit' ? 'Debit Kart' : 'Kredi Kartı'}</small>
                 </div>
                 <div class="bank-logo">
                     <img src="img/${bank.name.toLowerCase().replace(/\s+/g, '').replace(/ı/g, 'i')}.png" alt="${bank.name}">
@@ -368,7 +438,7 @@ function renderDebts() {
     debtsList.innerHTML = debts.map(debt => `
         <div class="debt-card ${debt.isPaid ? 'paid-debt' : ''}" onclick="showDebtDetail(${debt.id})">
             <h3>${debt.title}</h3>
-            <p class="amount">${formatCurrency(debt.amount, 'TRY')}</p>
+            <p class="amount">${formatCurrency(debt.amount, debt.currency)}</p>
             ${debt.dueDate ? `<p class="due-date">Son Ödeme: ${formatDate(debt.dueDate)}</p>` : ''}
         </div>
     `).join('');
@@ -379,40 +449,79 @@ function renderSubscriptions() {
     subscriptionsList.innerHTML = subscriptions.map(subscription => {
         const nextPayment = getNextPaymentDate(subscription);
         const isOverdue = isPaymentOverdue(subscription);
+        const isPaid = subscription.isPaid && subscription.lastPaymentDate;
         
         return `
-            <div class="subscription-card ${isOverdue ? 'overdue' : ''}" onclick="showSubscriptionDetail(${subscription.id})">
+            <div class="subscription-card ${isOverdue ? 'overdue' : ''} ${isPaid ? 'paid-subscription' : ''}" 
+                 onclick="showSubscriptionDetail(${subscription.id})">
                 <h3>${subscription.title}</h3>
-                <p class="amount">${formatCurrency(subscription.amount, 'TRY')}</p>
+                <p class="amount">${formatCurrency(subscription.amount, subscription.currency)}</p>
                 <div class="subscription-info">
                     <span>${subscription.period === 'monthly' ? 'Aylık' : 'Yıllık'}</span>
                     <div class="payment-date">
-                        <span class="material-icons">${isOverdue ? 'warning' : 'event'}</span>
-                        <span>${isOverdue ? 'Ödeme Gecikti!' : 'Sonraki Ödeme: ' + formatDate(nextPayment)}</span>
+                        <span class="material-icons">${isOverdue ? 'warning' : isPaid ? 'check_circle' : 'event'}</span>
+                        <span>${isOverdue ? 'Ödeme Gecikti!' : 
+                               isPaid ? 'Bu Ay Ödendi - Sonraki: ' + formatDate(nextPayment) :
+                               'Sonraki Ödeme: ' + formatDate(nextPayment)}</span>
                     </div>
                 </div>
             </div>
         `;
     }).join('');
 
-    // Toplam abonelik miktarını hesapla ve göster
+    // Toplam abonelik miktarını hesapla ve göster (varsayılan para birimine çevirerek)
     const totalMonthly = subscriptions.reduce((total, subscription) => {
+        const amount = parseFloat(subscription.amount) || 0;
+        const amountInDefaultCurrency = convertCurrency(amount, subscription.currency, userSettings.defaultCurrency);
         if (subscription.period === 'monthly') {
-            return total + subscription.amount;
+            return total + amountInDefaultCurrency;
         } else { // yearly
-            return total + (subscription.amount / 12); // Yıllık abonelikleri aylığa çevir
+            return total + (amountInDefaultCurrency / 12);
         }
     }, 0);
 
-    document.getElementById('totalSubscriptionAmount').textContent = formatCurrency(totalMonthly, 'TRY');
+    document.getElementById('totalSubscriptionAmount').textContent = formatCurrency(totalMonthly, userSettings.defaultCurrency);
     updateTotals();
 }
 
+// Ay seçici butonları için event listener'lar
+document.getElementById('prevMonth').addEventListener('click', () => {
+    selectedDate.setMonth(selectedDate.getMonth() - 1);
+    updateSelectedMonthDisplay();
+    renderExpenses();
+});
+
+document.getElementById('nextMonth').addEventListener('click', () => {
+    selectedDate.setMonth(selectedDate.getMonth() + 1);
+    updateSelectedMonthDisplay();
+    renderExpenses();
+});
+
+// Seçili ayı görüntüleme
+function updateSelectedMonthDisplay() {
+    const options = { year: 'numeric', month: 'long' };
+    document.getElementById('selectedMonth').textContent = selectedDate.toLocaleDateString('tr-TR', options);
+}
+
+// Harcamaları render etme fonksiyonunu güncelle
 function renderExpenses() {
     const expensesList = document.getElementById('expensesList');
     expensesList.innerHTML = '';
     
-    expenses.sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(expense => {
+    // Seçili ayın başlangıç ve bitiş tarihleri
+    const startOfMonth = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
+    const endOfMonth = new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 0);
+    
+    // Seçili aya ait harcamaları filtrele
+    const filteredExpenses = expenses.filter(expense => {
+        const expenseDate = new Date(expense.date);
+        return expenseDate >= startOfMonth && expenseDate <= endOfMonth;
+    });
+    
+    // Harcamaları tarihe göre sırala (en yeni en üstte)
+    filteredExpenses.sort((a, b) => new Date(b.date) - new Date(a.date));
+    
+    filteredExpenses.forEach(expense => {
         const card = document.createElement('div');
         card.className = 'expense-card';
         card.innerHTML = `
@@ -433,6 +542,28 @@ function renderExpenses() {
     });
     
     updateTotalExpenses();
+}
+
+// Toplam harcamaları güncelleme fonksiyonunu güncelle
+function updateTotalExpenses() {
+    // Seçili ayın başlangıç ve bitiş tarihleri
+    const startOfMonth = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
+    const endOfMonth = new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 0);
+    
+    // Seçili aya ait toplam harcama
+    const monthlyTotal = expenses
+        .filter(expense => {
+            const expenseDate = new Date(expense.date);
+            return expenseDate >= startOfMonth && expenseDate <= endOfMonth;
+        })
+        .reduce((sum, expense) => {
+            // Harcama tutarını varsayılan para birimine çevir
+            const amountInDefaultCurrency = convertCurrency(expense.amount, expense.currency, userSettings.defaultCurrency);
+            return sum + amountInDefaultCurrency;
+        }, 0);
+    
+    monthlyExpensesElement.textContent = formatCurrency(monthlyTotal, userSettings.defaultCurrency);
+    updateTotals();
 }
 
 // Borç silme fonksiyonu
@@ -490,26 +621,20 @@ function showBankDetail(bankId) {
 
     const detailTitle = document.getElementById('bankDetailTitle');
     const detailIban = document.getElementById('bankDetailIban');
-    const detailBalance = document.getElementById('bankDetailBalance');
-    const saveBtn = document.getElementById('bankDetailSave');
+    const detailBalance = document.getElementById('bankDetailBalanceDisplay');
     const deleteBtn = document.getElementById('bankDetailDelete');
+    currentBankId = bankId; // Global değişken olarak sakla
 
     detailTitle.textContent = bank.name;
     detailIban.textContent = formatIBAN(bank.iban);
-    detailBalance.value = bank.balance;
+    detailBalance.textContent = formatCurrency(bank.balance, bank.currency);
 
-    saveBtn.onclick = () => {
-        const newBalance = parseAmount(detailBalance.value);
-        if (!isNaN(newBalance) && newBalance >= 0) {
-            const bankIndex = banks.findIndex(b => b.id === bankId);
-            if (bankIndex !== -1) {
-                banks[bankIndex].balance = newBalance;
-                saveData();
-                renderBanks();
-                bankDetailModal.classList.remove('active');
-            }
-        }
-    };
+    // Transfer için diğer bankaları listele
+    const targetBankSelect = document.getElementById('targetBank');
+    targetBankSelect.innerHTML = '<option value="">Hedef Hesap Seçin</option>' +
+        banks.filter(b => b.id !== bankId)
+            .map(b => `<option value="${b.id}">${b.name} (${formatCurrency(b.balance, b.currency)})</option>`)
+            .join('');
 
     deleteBtn.onclick = () => {
         if (confirm('Bu bankayı silmek istediğinizden emin misiniz?')) {
@@ -521,8 +646,103 @@ function showBankDetail(bankId) {
     };
 
     bankDetailModal.classList.add('active');
+    hideAddMoneyForm();
+    hideTransferForm();
 }
 
+// Para ekleme formunu göster
+function showAddMoneyForm() {
+    document.getElementById('addMoneyForm').style.display = 'block';
+    document.getElementById('transferForm').style.display = 'none';
+    document.getElementById('addAmount').value = '';
+}
+
+// Para ekleme formunu gizle
+function hideAddMoneyForm() {
+    document.getElementById('addMoneyForm').style.display = 'none';
+}
+
+// Transfer formunu göster
+function showTransferForm() {
+    document.getElementById('transferForm').style.display = 'block';
+    document.getElementById('addMoneyForm').style.display = 'none';
+    document.getElementById('transferAmount').value = '';
+}
+
+// Transfer formunu gizle
+function hideTransferForm() {
+    document.getElementById('transferForm').style.display = 'none';
+}
+
+// Para ekleme işlemi
+function addMoney() {
+    const amount = parseAmount(document.getElementById('addAmount').value);
+    if (!amount || amount <= 0) {
+        alert('Lütfen geçerli bir miktar girin');
+        return;
+    }
+
+    const bankIndex = banks.findIndex(b => b.id === currentBankId);
+    if (bankIndex === -1) return;
+
+    banks[bankIndex].balance += amount;
+    saveData();
+    renderBanks();
+    showBankDetail(currentBankId); // Detay görünümünü güncelle
+    hideAddMoneyForm();
+}
+
+// Para transferi işlemi
+function transferMoney() {
+    const amount = parseAmount(document.getElementById('transferAmount').value);
+    const targetBankId = document.getElementById('targetBank').value;
+
+    if (!amount || amount <= 0) {
+        alert('Lütfen geçerli bir miktar girin');
+        return;
+    }
+
+    if (!targetBankId) {
+        alert('Lütfen hedef hesap seçin');
+        return;
+    }
+
+    const sourceBankIndex = banks.findIndex(b => b.id === currentBankId);
+    const targetBankIndex = banks.findIndex(b => b.id === parseInt(targetBankId));
+
+    if (sourceBankIndex === -1 || targetBankIndex === -1) return;
+
+    const sourceBank = banks[sourceBankIndex];
+    const targetBank = banks[targetBankIndex];
+
+    if (sourceBank.balance < amount) {
+        alert('Yetersiz bakiye');
+        return;
+    }
+
+    // Para birimlerini kontrol et ve gerekirse dönüşüm yap
+    let transferAmount = amount;
+    if (sourceBank.currency !== targetBank.currency) {
+        // Önce TRY'ye çevir
+        const amountInTRY = convertToTRY(amount, sourceBank.currency);
+        // Hedef para birimine çevir
+        transferAmount = convertCurrency(amountInTRY, 'TRY', targetBank.currency);
+    }
+
+    // Transfer işlemini gerçekleştir
+    sourceBank.balance -= amount;
+    targetBank.balance += transferAmount;
+
+    saveData();
+    renderBanks();
+    showBankDetail(currentBankId); // Detay görünümünü güncelle
+    hideTransferForm();
+}
+
+// Global değişken olarak currentBankId'yi tanımla
+let currentBankId = null;
+
+// Abonelik detay modalını güncelle
 function showSubscriptionDetail(subscriptionId) {
     const subscription = subscriptions.find(s => s.id === subscriptionId);
     if (!subscription) return;
@@ -531,6 +751,7 @@ function showSubscriptionDetail(subscriptionId) {
     const detailAmount = document.getElementById('subscriptionDetailAmount');
     const detailPeriod = document.getElementById('subscriptionDetailPeriod');
     const detailDate = document.getElementById('subscriptionDetailDate');
+    const detailPaid = document.getElementById('subscriptionDetailPaid');
     const saveBtn = document.getElementById('subscriptionDetailSave');
     const deleteBtn = document.getElementById('subscriptionDetailDelete');
 
@@ -538,18 +759,24 @@ function showSubscriptionDetail(subscriptionId) {
     detailAmount.value = subscription.amount;
     detailPeriod.value = subscription.period;
     detailDate.value = subscription.paymentDate;
+    detailPaid.checked = subscription.isPaid;
 
     saveBtn.onclick = () => {
         const newAmount = parseAmount(detailAmount.value);
         if (!isNaN(newAmount) && newAmount >= 0) {
             const index = subscriptions.findIndex(s => s.id === subscriptionId);
             if (index !== -1) {
+                const isPaidChanged = detailPaid.checked !== subscriptions[index].isPaid;
+                
                 subscriptions[index] = {
                     ...subscriptions[index],
                     amount: newAmount,
                     period: detailPeriod.value,
-                    paymentDate: detailDate.value
+                    paymentDate: detailDate.value,
+                    isPaid: detailPaid.checked,
+                    lastPaymentDate: isPaidChanged && detailPaid.checked ? new Date().toISOString() : subscriptions[index].lastPaymentDate
                 };
+                
                 saveData();
                 renderSubscriptions();
                 subscriptionDetailModal.classList.remove('active');
@@ -569,80 +796,89 @@ function showSubscriptionDetail(subscriptionId) {
     subscriptionDetailModal.classList.add('active');
 }
 
-// Yardımcı fonksiyonlar
+// Sonraki ödeme tarihini hesaplama fonksiyonunu güncelle
 function getNextPaymentDate(subscription) {
-    const paymentDate = new Date(subscription.paymentDate);
     const today = new Date();
-    const nextPayment = new Date(paymentDate);
+    let baseDate;
 
-    // Ayın gününü ayarla
-    nextPayment.setDate(paymentDate.getDate());
+    // Eğer son ödeme yapıldıysa, son ödeme tarihini baz al
+    if (subscription.lastPaymentDate && subscription.isPaid) {
+        baseDate = new Date(subscription.lastPaymentDate);
+    } else {
+        baseDate = new Date(subscription.paymentDate);
+    }
 
-    // Eğer bu ayki ödeme tarihi geçtiyse, sonraki aya geç
-    if (today > nextPayment) {
-        nextPayment.setMonth(nextPayment.getMonth() + 1);
+    const nextPayment = new Date(baseDate);
+
+    if (subscription.period === 'monthly') {
+        // Aylık abonelik için
+        while (nextPayment < today) {
+            nextPayment.setMonth(nextPayment.getMonth() + 1);
+        }
+    } else {
+        // Yıllık abonelik için
+        while (nextPayment < today) {
+            nextPayment.setFullYear(nextPayment.getFullYear() + 1);
+        }
     }
 
     return nextPayment;
 }
 
+// Ödeme gecikme kontrolünü güncelle
 function isPaymentOverdue(subscription) {
     const today = new Date();
-    const paymentDate = new Date(subscription.paymentDate);
-    const currentMonth = today.getMonth();
-    const currentYear = today.getFullYear();
+    const nextPayment = getNextPaymentDate(subscription);
     
-    // Ödeme gününü bu ay için ayarla
-    const thisMonthPayment = new Date(currentYear, currentMonth, paymentDate.getDate());
+    // Eğer bu ay ödendiyse, gecikme yok
+    if (subscription.isPaid && subscription.lastPaymentDate) {
+        const lastPayment = new Date(subscription.lastPaymentDate);
+        const currentMonth = today.getMonth();
+        const currentYear = today.getFullYear();
+        const paymentMonth = lastPayment.getMonth();
+        const paymentYear = lastPayment.getFullYear();
+        
+        // Aynı ay içindeyse veya gelecek bir tarihse gecikme yok
+        if ((currentYear === paymentYear && currentMonth === paymentMonth) || 
+            lastPayment > today) {
+            return false;
+        }
+    }
     
-    // Eğer bugün, bu ayki ödeme gününden sonraysa, ödeme gecikmiş demektir
-    return today > thisMonthPayment;
+    return today > nextPayment;
 }
 
 function updateTotals() {
     const today = new Date();
     
-    // Ödenmemiş borçların toplamı
+    // Ödenmemiş borçların toplamını varsayılan para birimine çevir
     const totalDebt = debts
         .filter(debt => !debt.isPaid)
-        .reduce((sum, debt) => sum + debt.amount, 0);
+        .reduce((sum, debt) => {
+            const amountInDefaultCurrency = convertCurrency(debt.amount, debt.currency, userSettings.defaultCurrency);
+            return sum + amountInDefaultCurrency;
+        }, 0);
     
-    // Vadesi geçmiş aboneliklerin toplamı
+    // Vadesi geçmiş ve ödenmemiş aboneliklerin toplamını varsayılan para birimine çevir
     const overdueSubscriptions = subscriptions
-        .filter(s => isPaymentOverdue(s))
+        .filter(s => isPaymentOverdue(s) && !s.isPaid)
         .reduce((sum, s) => {
+            const amountInDefaultCurrency = convertCurrency(s.amount, s.currency, userSettings.defaultCurrency);
             if (s.period === 'monthly') {
-                return sum + s.amount;
+                return sum + amountInDefaultCurrency;
             } else { // yearly
-                return sum + (s.amount / 12);
+                return sum + (amountInDefaultCurrency / 12);
             }
         }, 0);
     
-    // Tüm varlıkları TL'ye çevir
-    const totalAssetsInTRY = calculateTotalAssetsInTRY();
+    // Tüm varlıkları varsayılan para birimine çevir
+    const totalAssetsInDefaultCurrency = calculateTotalAssetsInCurrency(userSettings.defaultCurrency);
     
-    totalDebtElement.textContent = formatCurrency(totalDebt + overdueSubscriptions, 'TRY');
-    totalAssetsElement.textContent = formatCurrency(totalAssetsInTRY - totalDebt, 'TRY');
-}
-
-function updateTotalExpenses() {
-    const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
+    // Toplam borcu varsayılan para biriminde göster
+    const totalDebtInDefaultCurrency = totalDebt + overdueSubscriptions;
     
-    // Aylık harcamaları hesapla
-    const now = new Date();
-    const currentMonth = now.getMonth();
-    const currentYear = now.getFullYear();
-    
-    const monthlyTotal = expenses
-        .filter(expense => {
-            const expenseDate = new Date(expense.date);
-            return expenseDate.getMonth() === currentMonth && 
-                   expenseDate.getFullYear() === currentYear;
-        })
-        .reduce((sum, expense) => sum + expense.amount, 0);
-    
-    monthlyExpensesElement.textContent = formatCurrency(monthlyTotal, 'TRY');
-    updateTotals();
+    totalDebtElement.textContent = formatCurrency(totalDebtInDefaultCurrency, userSettings.defaultCurrency);
+    totalAssetsElement.textContent = formatCurrency(totalAssetsInDefaultCurrency - totalDebtInDefaultCurrency, userSettings.defaultCurrency);
 }
 
 // Verileri kaydetme fonksiyonu
@@ -657,6 +893,7 @@ async function saveData() {
             debts: debts,
             subscriptions: subscriptions,
             expenses: expenses,
+            settings: userSettings,
             lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
         });
     } catch (error) {
@@ -677,6 +914,7 @@ async function loadData() {
             debts = data.debts || [];
             subscriptions = data.subscriptions || [];
             expenses = data.expenses || [];
+            userSettings = data.settings || { defaultCurrency: 'TRY' };
             
             // Verileri görüntüle
             renderBanks();
@@ -736,6 +974,7 @@ function showExpenseDetail(expense) {
     const expenseDetailTitle = document.getElementById('expenseDetailTitle');
     const detailAmount = document.querySelector('#expenseDetailModal .detail-amount');
     const detailDate = document.querySelector('#expenseDetailModal .expense-detail-date');
+    const expenseDetailModal = document.getElementById('expenseDetailModal');
     
     expenseDetailTitle.textContent = expense.title;
     detailAmount.textContent = formatCurrency(expense.amount, expense.currency);
@@ -755,11 +994,18 @@ function showExpenseDetail(expense) {
             saveData();
             renderExpenses();
             renderBanks(); // Banka bakiyelerini güncelle
-            expenseDetailModal.style.display = 'none';
+            expenseDetailModal.classList.remove('active');
         }
     };
     
-    expenseDetailModal.style.display = 'flex';
+    // Modal'ı göster
+    expenseDetailModal.classList.add('active');
+    
+    // Kapatma butonuna tıklama olayını ekle
+    const closeBtn = expenseDetailModal.querySelector('.close-btn');
+    closeBtn.onclick = () => {
+        expenseDetailModal.classList.remove('active');
+    };
 }
 
 // Başlangıç render
@@ -807,12 +1053,92 @@ document.getElementById('logoutBtn').addEventListener('click', () => {
     }
 });
 
-// Firebase Auth state değişikliğini dinle
-firebase.auth().onAuthStateChanged((user) => {
+// Kullanıcı ayarları modalı
+document.getElementById('settingsBtn').addEventListener('click', () => {
+    document.getElementById('settingsModal').classList.add('active');
+    // Mevcut varsayılan para birimini seç
+    document.querySelectorAll('#settingsModal .currency-select-btn').forEach(btn => {
+        if (btn.dataset.currency === userSettings.defaultCurrency) {
+            btn.classList.add('selected');
+        } else {
+            btn.classList.remove('selected');
+        }
+    });
+});
+
+// Para birimi seçimi için event listener
+document.querySelectorAll('#settingsModal .currency-select-btn').forEach(button => {
+    button.addEventListener('click', function() {
+        document.querySelectorAll('#settingsModal .currency-select-btn').forEach(btn => 
+            btn.classList.remove('selected'));
+        this.classList.add('selected');
+        document.getElementById('defaultCurrency').value = this.dataset.currency;
+    });
+});
+
+// Ayarları kaydet
+document.getElementById('settingsForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const newDefaultCurrency = document.getElementById('defaultCurrency').value || 'TRY';
+    userSettings.defaultCurrency = newDefaultCurrency;
+    
+    // Firestore'a kaydet
+    const user = firebase.auth().currentUser;
     if (user) {
-        loadData(); // Kullanıcı girişi yapıldığında verileri yükle
+        try {
+            await firebase.firestore().collection('users').doc(user.uid).update({
+                settings: userSettings
+            });
+            document.getElementById('settingsModal').classList.remove('active');
+            // Tüm görünümleri güncelle
+            updateTotals();
+            renderExpenses(); // Harcamaları yeniden render et
+        } catch (error) {
+            console.error('Ayarlar kaydedilemedi:', error);
+        }
+    }
+});
+
+// Kullanıcı ayarlarını yükle
+async function loadUserSettings() {
+    const user = firebase.auth().currentUser;
+    if (user) {
+        try {
+            const doc = await firebase.firestore().collection('users').doc(user.uid).get();
+            if (doc.exists && doc.data().settings) {
+                userSettings = doc.data().settings;
+            }
+        } catch (error) {
+            console.error('Ayarlar yüklenemedi:', error);
+        }
+    }
+}
+
+// Para birimi dönüştürme fonksiyonunu güncelle
+function convertCurrency(amount, fromCurrency, toCurrency) {
+    if (!exchangeRates || fromCurrency === toCurrency) return amount;
+    
+    // Önce TRY'ye çevir
+    const amountInTRY = amount * exchangeRates[fromCurrency];
+    
+    // Sonra hedef para birimine çevir
+    return amountInTRY / exchangeRates[toCurrency];
+}
+
+// Toplam varlıkları hesaplama fonksiyonunu güncelle
+function calculateTotalAssetsInCurrency(targetCurrency) {
+    return banks.reduce((total, bank) => {
+        const amountInTargetCurrency = convertCurrency(bank.balance, bank.currency, targetCurrency);
+        return total + amountInTargetCurrency;
+    }, 0);
+}
+
+// Firebase Auth state değişikliğini dinle ve ayarları yükle
+firebase.auth().onAuthStateChanged(async (user) => {
+    if (user) {
+        await loadUserSettings(); // Önce ayarları yükle
+        await loadData(); // Sonra verileri yükle
     } else {
-        // Kullanıcı çıkış yaptığında verileri temizle
         banks = [];
         debts = [];
         subscriptions = [];
@@ -824,6 +1150,7 @@ firebase.auth().onAuthStateChanged((user) => {
 document.addEventListener('DOMContentLoaded', () => {
     setupAmountInputs();
     initTheme();
+    updateSelectedMonthDisplay();
 });
 
 // Modal açıldığında yeni eklenen inputlar için kontrolleri tekrar başlat
