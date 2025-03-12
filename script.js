@@ -194,48 +194,58 @@ document.querySelectorAll('.tab-btn').forEach(button => {
     });
 });
 
-// Para birimi seçimi için yardımcı fonksiyon
-function setupCurrencySelection(modalId) {
-    const modal = document.getElementById(modalId);
-    const currencyButtons = modal.querySelectorAll('.currency-select-btn');
-    const currencyInput = modal.querySelector('input[type="hidden"]');
+// Modal işlemleri
+document.getElementById('addBankBtn').addEventListener('click', () => {
+    const bankModal = document.getElementById('bankModal');
+    bankModal.classList.add('active');
+
+    // Para birimi seçimi için event listener'ları ekle
+    const currencyButtons = document.querySelectorAll('#bankModal .currency-select-btn');
+    const bankCurrencyInput = document.getElementById('bankCurrency');
 
     currencyButtons.forEach(button => {
+        // Önceki event listener'ları temizle
+        button.replaceWith(button.cloneNode(true));
+    });
+
+    // Yeni event listener'ları ekle
+    document.querySelectorAll('#bankModal .currency-select-btn').forEach(button => {
         button.addEventListener('click', () => {
-            // Diğer butonlardan selected sınıfını kaldır
             currencyButtons.forEach(btn => btn.classList.remove('selected'));
-            // Tıklanan butona selected sınıfını ekle
             button.classList.add('selected');
-            // Hidden input'a seçilen para birimini kaydet
-            currencyInput.value = button.dataset.currency;
-            console.log(`Para birimi seçildi (${modalId}):`, button.dataset.currency);
+            bankCurrencyInput.value = button.dataset.currency;
+            console.log('Seçilen para birimi:', bankCurrencyInput.value);
         });
     });
-}
+});
 
-// Modal açma işleyicisi
-function setupModalOpeners() {
-    // Banka modalı
-    document.getElementById('addBankBtn').addEventListener('click', () => {
-        const bankModal = document.getElementById('bankModal');
-        bankModal.classList.add('active');
-        setupCurrencySelection('bankModal');
-    });
+document.getElementById('addDebtBtn').addEventListener('click', () => {
+    debtModal.classList.add('active');
+});
 
-    // Borç modalı
-    document.getElementById('addDebtBtn').addEventListener('click', () => {
-        const debtModal = document.getElementById('debtModal');
-        debtModal.classList.add('active');
-        setupCurrencySelection('debtModal');
-    });
+document.getElementById('addSubscriptionBtn').addEventListener('click', () => {
+    subscriptionModal.classList.add('active');
+});
 
-    // Abonelik modalı
-    document.getElementById('addSubscriptionBtn').addEventListener('click', () => {
-        const subscriptionModal = document.getElementById('subscriptionModal');
-        subscriptionModal.classList.add('active');
-        setupCurrencySelection('subscriptionModal');
+document.getElementById('addExpenseBtn').addEventListener('click', () => {
+    // Banka seçeneklerini güncelle
+    const bankSelect = document.getElementById('expenseBank');
+    bankSelect.innerHTML = '<option value="">Ödeme Yapılan Hesap</option>' +
+        banks.map(bank => `
+            <option value="${bank.id}">${bank.name} (${formatCurrency(bank.balance, bank.currency)})</option>
+        `).join('');
+    
+    expenseModal.classList.add('active');
+});
+
+document.querySelectorAll('.cancel-btn').forEach(button => {
+    button.addEventListener('click', () => {
+        bankModal.classList.remove('active');
+        debtModal.classList.remove('active');
+        subscriptionModal.classList.remove('active');
+        expenseModal.classList.remove('active');
     });
-}
+});
 
 // Banka seçimi
 document.querySelectorAll('.bank-select-btn').forEach(button => {
@@ -280,13 +290,12 @@ document.getElementById('bankForm').addEventListener('submit', async (e) => {
     }
 
     const bank = {
-        id: Date.now().toString(),
+        id: Date.now(),
         name: bankName,
         iban: formatIBAN(iban),
         balance: 0,
         currency: currency,
-        cardType: cardType,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        cardType: cardType
     };
 
     banks.push(bank);
@@ -299,6 +308,25 @@ document.getElementById('bankForm').addEventListener('submit', async (e) => {
     document.querySelectorAll('#bankModal .bank-select-btn').forEach(btn => btn.classList.remove('selected'));
     document.querySelectorAll('#bankModal .currency-select-btn').forEach(btn => btn.classList.remove('selected'));
     document.querySelectorAll('#bankModal .card-type-btn').forEach(btn => btn.classList.remove('selected'));
+});
+
+// Para birimi seçimi için event listener'ları ekle
+document.querySelectorAll('#debtModal .currency-select-btn').forEach(button => {
+    button.addEventListener('click', function() {
+        document.querySelectorAll('#debtModal .currency-select-btn').forEach(btn => 
+            btn.classList.remove('selected'));
+        this.classList.add('selected');
+        document.getElementById('debtCurrency').value = this.dataset.currency;
+    });
+});
+
+document.querySelectorAll('#subscriptionModal .currency-select-btn').forEach(button => {
+    button.addEventListener('click', function() {
+        document.querySelectorAll('#subscriptionModal .currency-select-btn').forEach(btn => 
+            btn.classList.remove('selected'));
+        this.classList.add('selected');
+        document.getElementById('subscriptionCurrency').value = this.dataset.currency;
+    });
 });
 
 // Form submit olaylarında virgüllü değerleri parse et
@@ -877,58 +905,69 @@ function updateTotals() {
 
 // Verileri kaydetme fonksiyonu
 async function saveData() {
+    const user = firebase.auth().currentUser;
+    if (!user) return;
+
     try {
-        const user = firebase.auth().currentUser;
-        if (!user) {
-            throw new Error('Kullanıcı oturum açmamış');
-        }
-
-        const userDocRef = firebase.firestore().collection('users').doc(user.uid);
-
-        // Bankaları kaydet
-        const banksRef = userDocRef.collection('banks');
-        for (const bank of banks) {
-            await banksRef.doc(bank.id.toString()).set(bank);
-        }
-
-        console.log('Veriler başarıyla kaydedildi');
+        // Firestore'a kaydet
+        await firebase.firestore().collection('users').doc(user.uid).set({
+            banks: banks,
+            debts: debts,
+            subscriptions: subscriptions,
+            expenses: expenses,
+            settings: userSettings,
+            lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+        });
     } catch (error) {
         console.error('Veri kaydetme hatası:', error);
-        throw error;
     }
 }
 
 // Verileri yükleme fonksiyonu
 async function loadData() {
     try {
-        const user = firebase.auth().currentUser;
-        if (!user) {
+        if (!currentUser) {
             throw new Error('Kullanıcı oturum açmamış');
         }
 
-        const userDocRef = firebase.firestore().collection('users').doc(user.uid);
-
+        const userDocRef = firebase.firestore().collection('users').doc(currentUser.uid);
+        
         // Bankaları yükle
         const banksSnapshot = await userDocRef.collection('banks').get();
-        banks = banksSnapshot.docs.map(doc => doc.data());
+        banks = banksSnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        }));
 
-        // Ayarları yükle
-        const userDoc = await userDocRef.get();
-        if (userDoc.exists) {
-            const userData = userDoc.data();
-            userSettings = userData.settings || { defaultCurrency: 'TRY' };
-        }
+        // Borçları yükle
+        const debtsSnapshot = await userDocRef.collection('debts').get();
+        debts = debtsSnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        }));
+
+        // Abonelikleri yükle
+        const subscriptionsSnapshot = await userDocRef.collection('subscriptions').get();
+        subscriptions = subscriptionsSnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        }));
+
+        // Harcamaları yükle
+        const expensesSnapshot = await userDocRef.collection('expenses').get();
+        expenses = expensesSnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        }));
 
         // Arayüzü güncelle
         renderBanks();
+        renderDebts();
+        renderSubscriptions();
+        renderExpenses();
         updateTotals();
-
-        console.log('Veriler başarıyla yüklendi');
     } catch (error) {
         console.error('Veri yükleme hatası:', error);
-        // Varsayılan değerleri kullan
-        banks = [];
-        userSettings = { defaultCurrency: 'TRY' };
     }
 }
 
