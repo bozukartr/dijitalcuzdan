@@ -245,50 +245,68 @@ document.querySelectorAll('.card-type-btn').forEach(button => {
     });
 });
 
-// Form işlemleri
-bankForm.addEventListener('submit', (e) => {
+// Banka modalı için event listener'lar
+document.getElementById('bankModal').addEventListener('shown', () => {
+    // Para birimi seçimi için event listener
+    const currencyButtons = document.querySelectorAll('#bankModal .currency-select-btn');
+    const bankCurrencyInput = document.getElementById('bankCurrency');
+
+    currencyButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            // Diğer butonlardan selected sınıfını kaldır
+            currencyButtons.forEach(btn => btn.classList.remove('selected'));
+            // Tıklanan butona selected sınıfını ekle
+            button.classList.add('selected');
+            // Hidden input'a seçilen para birimini kaydet
+            bankCurrencyInput.value = button.dataset.currency;
+            console.log('Seçilen para birimi:', bankCurrencyInput.value);
+        });
+    });
+});
+
+// Banka formu submit olayı
+document.getElementById('bankForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     
     const bankName = document.getElementById('bankName').value;
+    const iban = document.getElementById('iban').value;
+    const currency = document.getElementById('bankCurrency').value;
+    const cardType = document.getElementById('cardType').value;
+
     if (!bankName) {
         alert('Lütfen bir banka seçin');
         return;
     }
-    
-    const iban = document.getElementById('iban').value;
-    if (iban.replace(/[^\d]/g, '').length < 24) {
-        alert('Lütfen geçerli bir IBAN girin');
-        return;
-    }
-    
-    const currency = document.getElementById('bankCurrency').value;
+
     if (!currency) {
-        alert('Lütfen bir döviz cinsi seçin');
+        alert('Lütfen bir para birimi seçin');
         return;
     }
 
-    const cardType = document.getElementById('cardType').value;
     if (!cardType) {
-        alert('Lütfen kart tipini seçin');
+        alert('Lütfen bir kart tipi seçin');
         return;
     }
-    
+
     const bank = {
         id: Date.now(),
         name: bankName,
         iban: formatIBAN(iban),
         balance: 0,
         currency: currency,
-        cardType: cardType // Yeni alan
+        cardType: cardType
     };
-    
+
     banks.push(bank);
-    saveData();
+    await saveData();
     renderBanks();
-    bankForm.reset();
-    document.querySelectorAll('.bank-select-btn').forEach(btn => btn.classList.remove('selected'));
-    document.querySelectorAll('.card-type-btn').forEach(btn => btn.classList.remove('selected'));
-    bankModal.classList.remove('active');
+    document.getElementById('bankModal').classList.remove('active');
+    document.getElementById('bankForm').reset();
+
+    // Form temizlendikten sonra seçili butonların selected sınıfını kaldır
+    document.querySelectorAll('#bankModal .bank-select-btn').forEach(btn => btn.classList.remove('selected'));
+    document.querySelectorAll('#bankModal .currency-select-btn').forEach(btn => btn.classList.remove('selected'));
+    document.querySelectorAll('#bankModal .card-type-btn').forEach(btn => btn.classList.remove('selected'));
 });
 
 // Para birimi seçimi için event listener'ları ekle
