@@ -18,6 +18,9 @@ let userSettings = {
     defaultCurrency: 'TRY'
 };
 
+// Global değişken olarak kullanıcı bilgisini tut
+let currentUser = null;
+
 // Para girişi kontrolü için fonksiyon
 function setupAmountInputs() {
     document.querySelectorAll('.amount-input').forEach(input => {
@@ -1101,17 +1104,74 @@ document.getElementById('settingsForm').addEventListener('submit', async (e) => 
     }
 });
 
-// Kullanıcı ayarlarını yükle
+// Firebase Auth state değişikliğini dinle ve ayarları yükle
+firebase.auth().onAuthStateChanged(async (user) => {
+    if (user) {
+        currentUser = user;
+        await loadUserSettings(); // Önce ayarları yükle
+        await loadData(); // Sonra verileri yükle
+    } else {
+        currentUser = null;
+        banks = [];
+        debts = [];
+        subscriptions = [];
+        expenses = [];
+        userSettings = { defaultCurrency: 'TRY' };
+    }
+});
+
+// DOM yüklendiğinde input kontrollerini başlat
+document.addEventListener('DOMContentLoaded', () => {
+    setupAmountInputs();
+    initTheme();
+    updateSelectedMonthDisplay();
+});
+
+// Modal açıldığında yeni eklenen inputlar için kontrolleri tekrar başlat
+document.querySelectorAll('.modal').forEach(modal => {
+    modal.addEventListener('shown', setupAmountInputs);
+});
+
+async function saveUserSettings() {
+    try {
+        if (!currentUser) {
+            throw new Error('Kullanıcı oturum açmamış');
+        }
+
+        // Önce kullanıcı dokümanını oluştur
+        const userDocRef = firebase.firestore().collection('users').doc(currentUser.uid);
+        await userDocRef.set({
+            email: currentUser.email,
+            lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+
+        // Sonra ayarları kaydet
+        const userSettingsRef = userDocRef.collection('settings').doc('preferences');
+        await userSettingsRef.set({
+            defaultCurrency: userSettings.defaultCurrency,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+
+        // Başarılı kayıt sonrası totalleri güncelle
+        updateTotals();
+        renderExpenses();
+    } catch (error) {
+        console.error('Ayarlar kaydedilemedi:', error);
+        throw error;
+    }
+}
+
 async function loadUserSettings() {
     try {
-        const user = firebase.auth().currentUser;
-        if (!user) {
+        if (!currentUser) {
             throw new Error('Kullanıcı oturum açmamış');
         }
 
         const userSettingsRef = firebase.firestore()
-            .collection('userSettings')
-            .doc(user.uid);
+            .collection('users')
+            .doc(currentUser.uid)
+            .collection('settings')
+            .doc('preferences');
 
         const doc = await userSettingsRef.get();
         
@@ -1160,55 +1220,4 @@ function calculateTotalAssetsInCurrency(targetCurrency) {
         const amountInTargetCurrency = convertCurrency(bank.balance, bank.currency, targetCurrency);
         return total + amountInTargetCurrency;
     }, 0);
-}
-
-// Firebase Auth state değişikliğini dinle ve ayarları yükle
-firebase.auth().onAuthStateChanged(async (user) => {
-    if (user) {
-        await loadUserSettings(); // Önce ayarları yükle
-        await loadData(); // Sonra verileri yükle
-    } else {
-        banks = [];
-        debts = [];
-        subscriptions = [];
-        expenses = [];
-    }
-});
-
-// DOM yüklendiğinde input kontrollerini başlat
-document.addEventListener('DOMContentLoaded', () => {
-    setupAmountInputs();
-    initTheme();
-    updateSelectedMonthDisplay();
-});
-
-// Modal açıldığında yeni eklenen inputlar için kontrolleri tekrar başlat
-document.querySelectorAll('.modal').forEach(modal => {
-    modal.addEventListener('shown', setupAmountInputs);
-});
-
-async function saveUserSettings() {
-    try {
-        const user = firebase.auth().currentUser;
-        if (!user) {
-            throw new Error('Kullanıcı oturum açmamış');
-        }
-
-        // Kullanıcı ayarları koleksiyonunu kullan
-        const userSettingsRef = firebase.firestore()
-            .collection('userSettings')
-            .doc(user.uid);
-
-        await userSettingsRef.set({
-            defaultCurrency: userSettings.defaultCurrency,
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-
-        // Başarılı kayıt sonrası totalleri güncelle
-        updateTotals();
-        renderExpenses();
-    } catch (error) {
-        console.error('Ayarlar kaydedilemedi:', error);
-        throw error;
-    }
 }
