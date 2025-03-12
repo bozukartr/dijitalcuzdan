@@ -906,25 +906,47 @@ async function saveData() {
 
 // Verileri yükleme fonksiyonu
 async function loadData() {
-    const user = firebase.auth().currentUser;
-    if (!user) return;
-
     try {
-        const doc = await firebase.firestore().collection('users').doc(user.uid).get();
-        if (doc.exists) {
-            const data = doc.data();
-            banks = data.banks || [];
-            debts = data.debts || [];
-            subscriptions = data.subscriptions || [];
-            expenses = data.expenses || [];
-            userSettings = data.settings || { defaultCurrency: 'TRY' };
-            
-            // Verileri görüntüle
-            renderBanks();
-            renderDebts();
-            renderSubscriptions();
-            renderExpenses();
+        if (!currentUser) {
+            throw new Error('Kullanıcı oturum açmamış');
         }
+
+        const userDocRef = firebase.firestore().collection('users').doc(currentUser.uid);
+        
+        // Bankaları yükle
+        const banksSnapshot = await userDocRef.collection('banks').get();
+        banks = banksSnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        }));
+
+        // Borçları yükle
+        const debtsSnapshot = await userDocRef.collection('debts').get();
+        debts = debtsSnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        }));
+
+        // Abonelikleri yükle
+        const subscriptionsSnapshot = await userDocRef.collection('subscriptions').get();
+        subscriptions = subscriptionsSnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        }));
+
+        // Harcamaları yükle
+        const expensesSnapshot = await userDocRef.collection('expenses').get();
+        expenses = expensesSnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        }));
+
+        // Arayüzü güncelle
+        renderBanks();
+        renderDebts();
+        renderSubscriptions();
+        renderExpenses();
+        updateTotals();
     } catch (error) {
         console.error('Veri yükleme hatası:', error);
     }
@@ -1011,38 +1033,48 @@ function showExpenseDetail(expense) {
     };
 }
 
-// Başlangıç render
-renderBanks();
-renderDebts();
-renderSubscriptions();
-renderExpenses();
-
-// Döviz seçimi için event listener
-const currencyButtons = document.querySelectorAll('.currency-select-btn');
-const bankCurrencyInput = document.getElementById('bankCurrency');
-
-currencyButtons.forEach(button => {
-    button.addEventListener('click', function() {
-        currencyButtons.forEach(btn => btn.classList.remove('selected'));
-        this.classList.add('selected');
-        bankCurrencyInput.value = this.dataset.currency;
-    });
-});
-
-// Uygulama başlangıcında döviz kurlarını güncelle
+// Uygulama başlatma
 async function initializeApp() {
-    await updateExchangeRates();
-    // Her saat başı kurları güncelle
-    setInterval(updateExchangeRates, 3600000);
-    
-    renderBanks();
-    renderDebts();
-    renderSubscriptions();
-    renderExpenses();
-}
+    try {
+        // Döviz kurlarını güncelle
+        await updateExchangeRates();
+        
+        // Firebase Auth durumunu kontrol et
+        firebase.auth().onAuthStateChanged(async (user) => {
+            if (user) {
+                console.log('Oturum açık:', user.uid);
+                currentUser = user;
+                
+                try {
+                    // Kullanıcı dokümanını oluştur veya güncelle
+                    const userDocRef = firebase.firestore().collection('users').doc(user.uid);
+                    await userDocRef.set({
+                        email: user.email,
+                        lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+                    }, { merge: true });
 
-// Başlangıç render işlemlerini güncelle
-document.addEventListener('DOMContentLoaded', initializeApp);
+                    // Ayarları yükle
+                    await loadUserSettings();
+                    
+                    // Verileri yükle
+                    await loadData();
+                    
+                    // Arayüzü güncelle
+                    updateTotals();
+                    renderExpenses();
+                } catch (error) {
+                    console.error('Uygulama başlatma hatası:', error);
+                }
+            } else {
+                console.log('Oturum kapalı');
+                currentUser = null;
+                window.location.href = 'index.html';
+            }
+        });
+    } catch (error) {
+        console.error('Uygulama başlatma hatası:', error);
+    }
+}
 
 // Çıkış yap butonu olayı
 document.getElementById('logoutBtn').addEventListener('click', () => {
@@ -1104,55 +1136,23 @@ document.getElementById('settingsForm').addEventListener('submit', async (e) => 
     }
 });
 
-// Firebase Auth state değişikliğini dinle ve ayarları yükle
-firebase.auth().onAuthStateChanged(async (user) => {
-    if (user) {
-        currentUser = user;
-        await loadUserSettings(); // Önce ayarları yükle
-        await loadData(); // Sonra verileri yükle
-    } else {
-        currentUser = null;
-        banks = [];
-        debts = [];
-        subscriptions = [];
-        expenses = [];
-        userSettings = { defaultCurrency: 'TRY' };
-    }
-});
-
-// DOM yüklendiğinde input kontrollerini başlat
-document.addEventListener('DOMContentLoaded', () => {
-    setupAmountInputs();
-    initTheme();
-    updateSelectedMonthDisplay();
-});
-
-// Modal açıldığında yeni eklenen inputlar için kontrolleri tekrar başlat
-document.querySelectorAll('.modal').forEach(modal => {
-    modal.addEventListener('shown', setupAmountInputs);
-});
-
 async function saveUserSettings() {
     try {
         if (!currentUser) {
             throw new Error('Kullanıcı oturum açmamış');
         }
 
-        // Önce kullanıcı dokümanını oluştur
         const userDocRef = firebase.firestore().collection('users').doc(currentUser.uid);
-        await userDocRef.set({
-            email: currentUser.email,
-            lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-        }, { merge: true });
-
-        // Sonra ayarları kaydet
-        const userSettingsRef = userDocRef.collection('settings').doc('preferences');
-        await userSettingsRef.set({
+        
+        // Ayarları kaydet
+        await userDocRef.collection('settings').doc('preferences').set({
             defaultCurrency: userSettings.defaultCurrency,
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         }, { merge: true });
 
-        // Başarılı kayıt sonrası totalleri güncelle
+        console.log('Ayarlar başarıyla kaydedildi');
+        
+        // Arayüzü güncelle
         updateTotals();
         renderExpenses();
     } catch (error) {
@@ -1167,34 +1167,28 @@ async function loadUserSettings() {
             throw new Error('Kullanıcı oturum açmamış');
         }
 
-        const userSettingsRef = firebase.firestore()
+        const settingsDoc = await firebase.firestore()
             .collection('users')
             .doc(currentUser.uid)
             .collection('settings')
-            .doc('preferences');
+            .doc('preferences')
+            .get();
 
-        const doc = await userSettingsRef.get();
-        
-        if (doc.exists) {
+        if (settingsDoc.exists) {
             userSettings = {
-                defaultCurrency: doc.data().defaultCurrency || 'TRY'
+                defaultCurrency: settingsDoc.data().defaultCurrency || 'TRY'
             };
+            console.log('Ayarlar yüklendi:', userSettings);
         } else {
             // Varsayılan ayarları kaydet
-            await userSettingsRef.set({
-                defaultCurrency: 'TRY',
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
             userSettings = { defaultCurrency: 'TRY' };
+            await saveUserSettings();
+            console.log('Varsayılan ayarlar oluşturuldu');
         }
 
         // Ayarlar modalındaki seçili para birimini güncelle
         document.querySelectorAll('#settingsModal .currency-select-btn').forEach(btn => {
-            if (btn.dataset.currency === userSettings.defaultCurrency) {
-                btn.classList.add('selected');
-            } else {
-                btn.classList.remove('selected');
-            }
+            btn.classList.toggle('selected', btn.dataset.currency === userSettings.defaultCurrency);
         });
 
     } catch (error) {
@@ -1221,3 +1215,11 @@ function calculateTotalAssetsInCurrency(targetCurrency) {
         return total + amountInTargetCurrency;
     }, 0);
 }
+
+// DOM yüklendiğinde uygulamayı başlat
+document.addEventListener('DOMContentLoaded', () => {
+    initializeApp();
+    setupAmountInputs();
+    initTheme();
+    updateSelectedMonthDisplay();
+});
