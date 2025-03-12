@@ -1066,6 +1066,11 @@ document.getElementById('settingsBtn').addEventListener('click', () => {
     });
 });
 
+// Ayarlar modalındaki iptal butonuna tıklandığında modalı kapat
+document.querySelector('#settingsModal .cancel-btn').addEventListener('click', () => {
+    document.getElementById('settingsModal').classList.remove('active');
+});
+
 // Para birimi seçimi için event listener
 document.querySelectorAll('#settingsModal .currency-select-btn').forEach(button => {
     button.addEventListener('click', function() {
@@ -1079,38 +1084,62 @@ document.querySelectorAll('#settingsModal .currency-select-btn').forEach(button 
 // Ayarları kaydet
 document.getElementById('settingsForm').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const newDefaultCurrency = document.getElementById('defaultCurrency').value || 'TRY';
-    userSettings.defaultCurrency = newDefaultCurrency;
+    const defaultCurrency = document.getElementById('defaultCurrency').value;
     
-    // Firestore'a kaydet
-    const user = firebase.auth().currentUser;
-    if (user) {
-        try {
-            await firebase.firestore().collection('users').doc(user.uid).update({
-                settings: userSettings
-            });
-            document.getElementById('settingsModal').classList.remove('active');
-            // Tüm görünümleri güncelle
-            updateTotals();
-            renderExpenses(); // Harcamaları yeniden render et
-        } catch (error) {
-            console.error('Ayarlar kaydedilemedi:', error);
-        }
+    if (!defaultCurrency) {
+        alert('Lütfen varsayılan para birimini seçin');
+        return;
+    }
+
+    userSettings.defaultCurrency = defaultCurrency;
+    
+    try {
+        await saveUserSettings();
+        document.getElementById('settingsModal').classList.remove('active');
+    } catch (error) {
+        alert('Ayarlar kaydedilirken bir hata oluştu');
     }
 });
 
 // Kullanıcı ayarlarını yükle
 async function loadUserSettings() {
-    const user = firebase.auth().currentUser;
-    if (user) {
-        try {
-            const doc = await firebase.firestore().collection('users').doc(user.uid).get();
-            if (doc.exists && doc.data().settings) {
-                userSettings = doc.data().settings;
-            }
-        } catch (error) {
-            console.error('Ayarlar yüklenemedi:', error);
+    try {
+        const user = firebase.auth().currentUser;
+        if (!user) {
+            throw new Error('Kullanıcı oturum açmamış');
         }
+
+        const userSettingsRef = firebase.firestore()
+            .collection('userSettings')
+            .doc(user.uid);
+
+        const doc = await userSettingsRef.get();
+        
+        if (doc.exists) {
+            userSettings = {
+                defaultCurrency: doc.data().defaultCurrency || 'TRY'
+            };
+        } else {
+            // Varsayılan ayarları kaydet
+            await userSettingsRef.set({
+                defaultCurrency: 'TRY',
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            userSettings = { defaultCurrency: 'TRY' };
+        }
+
+        // Ayarlar modalındaki seçili para birimini güncelle
+        document.querySelectorAll('#settingsModal .currency-select-btn').forEach(btn => {
+            if (btn.dataset.currency === userSettings.defaultCurrency) {
+                btn.classList.add('selected');
+            } else {
+                btn.classList.remove('selected');
+            }
+        });
+
+    } catch (error) {
+        console.error('Kullanıcı ayarları yüklenemedi:', error);
+        userSettings = { defaultCurrency: 'TRY' };
     }
 }
 
@@ -1157,3 +1186,29 @@ document.addEventListener('DOMContentLoaded', () => {
 document.querySelectorAll('.modal').forEach(modal => {
     modal.addEventListener('shown', setupAmountInputs);
 });
+
+async function saveUserSettings() {
+    try {
+        const user = firebase.auth().currentUser;
+        if (!user) {
+            throw new Error('Kullanıcı oturum açmamış');
+        }
+
+        // Kullanıcı ayarları koleksiyonunu kullan
+        const userSettingsRef = firebase.firestore()
+            .collection('userSettings')
+            .doc(user.uid);
+
+        await userSettingsRef.set({
+            defaultCurrency: userSettings.defaultCurrency,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        // Başarılı kayıt sonrası totalleri güncelle
+        updateTotals();
+        renderExpenses();
+    } catch (error) {
+        console.error('Ayarlar kaydedilemedi:', error);
+        throw error;
+    }
+}
