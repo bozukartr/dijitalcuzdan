@@ -196,7 +196,27 @@ document.querySelectorAll('.tab-btn').forEach(button => {
 
 // Modal işlemleri
 document.getElementById('addBankBtn').addEventListener('click', () => {
+    const bankModal = document.getElementById('bankModal');
     bankModal.classList.add('active');
+
+    // Para birimi seçimi için event listener'ları ekle
+    const currencyButtons = document.querySelectorAll('#bankModal .currency-select-btn');
+    const bankCurrencyInput = document.getElementById('bankCurrency');
+
+    currencyButtons.forEach(button => {
+        // Önceki event listener'ları temizle
+        button.replaceWith(button.cloneNode(true));
+    });
+
+    // Yeni event listener'ları ekle
+    document.querySelectorAll('#bankModal .currency-select-btn').forEach(button => {
+        button.addEventListener('click', () => {
+            currencyButtons.forEach(btn => btn.classList.remove('selected'));
+            button.classList.add('selected');
+            bankCurrencyInput.value = button.dataset.currency;
+            console.log('Seçilen para birimi:', bankCurrencyInput.value);
+        });
+    });
 });
 
 document.getElementById('addDebtBtn').addEventListener('click', () => {
@@ -242,25 +262,6 @@ document.querySelectorAll('.card-type-btn').forEach(button => {
         document.querySelectorAll('.card-type-btn').forEach(btn => btn.classList.remove('selected'));
         button.classList.add('selected');
         document.getElementById('cardType').value = button.dataset.type;
-    });
-});
-
-// Banka modalı için event listener'lar
-document.getElementById('bankModal').addEventListener('shown', () => {
-    // Para birimi seçimi için event listener
-    const currencyButtons = document.querySelectorAll('#bankModal .currency-select-btn');
-    const bankCurrencyInput = document.getElementById('bankCurrency');
-
-    currencyButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            // Diğer butonlardan selected sınıfını kaldır
-            currencyButtons.forEach(btn => btn.classList.remove('selected'));
-            // Tıklanan butona selected sınıfını ekle
-            button.classList.add('selected');
-            // Hidden input'a seçilen para birimini kaydet
-            bankCurrencyInput.value = button.dataset.currency;
-            console.log('Seçilen para birimi:', bankCurrencyInput.value);
-        });
     });
 });
 
