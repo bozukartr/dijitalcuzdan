@@ -169,39 +169,82 @@ body {
     margin: 8px 0;
 }
 
+/* Mobil "bottom sheet" deseni: modallar alttan yukarı kayar,
+   üst köşeleri yuvarlak ve bir tutma çubuğu (grabber) içerir. */
 .modal {
     display: none;
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    inset: 0;
     background: var(--modal-backdrop);
-    align-items: center;
+    align-items: flex-end;
     justify-content: center;
-    /* Mobilde uzun modallar (banka/harcama ekleme) ekrana sığmadığında
-       modalın kendisi kaydırılabilsin; güvenli alan kadar iç boşluk bırak. */
-    padding: max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
 }
 
 .modal.active {
     display: flex;
+    animation: modalBackdropIn 0.25s ease forwards;
+}
+
+@keyframes modalBackdropIn {
+    from { background: rgba(0, 0, 0, 0); }
 }
 
 .modal-content {
     background: var(--card-background);
-    padding: 20px;
-    border-radius: var(--border-radius);
-    width: 90%;
-    max-width: 400px;
-    border: 1px solid var(--input-border);
-    box-shadow: var(--shadow-md);
-    /* İçerik ekran boyunu aşarsa modal içinde kaydırılabilir olsun;
-       böylece Kaydet/İptal butonlarına her zaman ulaşılabilir. */
-    max-height: calc(100dvh - 32px);
+    padding: 24px 20px calc(20px + env(safe-area-inset-bottom));
+    border-radius: 22px 22px 0 0;
+    width: 100%;
+    max-width: 520px;
+    border: none;
+    box-shadow: 0 -8px 30px rgba(17, 24, 39, 0.18);
+    /* Uzun içerik (banka/harcama ekleme) sheet içinde kaydırılabilir olsun;
+       Kaydet/İptal butonlarına her zaman ulaşılabilir. */
+    max-height: 92dvh;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    position: relative;
+    animation: sheetUp 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes sheetUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+}
+
+/* Tutma çubuğu (grabber) */
+.modal-content::before {
+    content: '';
+    display: block;
+    width: 40px;
+    height: 4px;
+    border-radius: 999px;
+    background: var(--input-border);
+    margin: -8px auto 16px;
+}
+
+/* Geniş ekranlarda klasik ortalanmış diyalog görünümü */
+@media (min-width: 600px) {
+    .modal {
+        align-items: center;
+        padding: 20px;
+    }
+
+    .modal-content {
+        max-width: 420px;
+        border-radius: var(--border-radius);
+        border: 1px solid var(--input-border);
+        box-shadow: var(--shadow-md);
+        max-height: calc(100dvh - 40px);
+        animation: dialogIn 0.2s ease;
+    }
+
+    .modal-content::before {
+        display: none;
+    }
+}
+
+@keyframes dialogIn {
+    from { opacity: 0; transform: translateY(8px) scale(0.98); }
 }
 
 .modal-content h2 {
@@ -293,28 +336,24 @@ input:focus {
     transform: translateY(-2px);
 }
 
+/* .glass artık okunabilirlik için opak kart zemini kullanır
+   (eski yarı saydam efekt metin kontrastını düşürüyordu). */
 .glass {
-    background: rgba(255, 255, 255, 0.1) !important;
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-[data-theme="dark"] .glass {
-    background: rgba(0, 0, 0, 0.3) !important;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.detail-modal .modal-content {
-    position: relative;
-    padding: 32px 24px;
-    max-width: 340px;
+    background: var(--card-background);
 }
 
 .detail-modal h2 {
-    font-size: 1.5rem;
+    font-size: 1.35rem;
     color: var(--text-color);
-    margin-bottom: 24px;
-    padding-right: 24px;
+    margin-bottom: 20px;
+    padding-right: 32px;
+}
+
+@media (min-width: 600px) {
+    .detail-modal .modal-content {
+        max-width: 360px;
+        padding: 28px 24px;
+    }
 }
 
 .detail-label {
@@ -322,6 +361,15 @@ input:focus {
     font-size: 0.9rem;
     color: var(--primary-color);
     margin-bottom: 8px;
+}
+
+/* Modal form alanı etiketi */
+.field-label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--muted-color);
+    margin-bottom: -4px;
 }
 
 .iban-display {
@@ -864,10 +912,9 @@ select:focus {
 
 .bank-buttons {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
-    gap: 12px;
-    margin-bottom: 20px;
-    padding: 0 10px;
+    grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+    gap: 8px;
+    margin-bottom: 0;
 }
 
 .bank-select-btn {
@@ -905,13 +952,13 @@ select:focus {
 .currency-buttons {
     display: flex;
     gap: 8px;
-    margin-bottom: 16px;
+    margin-bottom: 0;
     flex-wrap: wrap;
 }
 
 .currency-select-btn {
     flex: 1;
-    min-width: 80px;
+    min-width: 64px;
     background: var(--card-background);
     border: 1px solid var(--input-border);
     border-radius: var(--border-radius);
@@ -947,11 +994,10 @@ select:focus {
 
 @media (max-width: 480px) {
     .bank-buttons {
-        grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
         gap: 8px;
-        padding: 0 5px;
     }
-    
+
     .bank-select-btn {
         padding: 8px;
     }
@@ -1214,7 +1260,7 @@ select:focus {
 .card-type-buttons {
     display: flex;
     gap: 8px;
-    margin-bottom: 16px;
+    margin-bottom: 0;
 }
 
 .card-type-btn {

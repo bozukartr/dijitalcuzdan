@@ -1172,10 +1172,52 @@ firebase.auth().onAuthStateChanged(async (user) => {
     }
 });
 
+// Bottom sheet modalları aşağı kaydırarak kapatma (native mobil his)
+function setupSheetGestures() {
+    document.querySelectorAll('.modal').forEach(modal => {
+        const content = modal.querySelector('.modal-content');
+        if (!content) return;
+
+        let startY = 0;
+        let deltaY = 0;
+        let dragging = false;
+
+        content.addEventListener('touchstart', (e) => {
+            // Sadece dar ekranda (sheet modu) ve içerik en üstteyken sürüklemeye izin ver
+            if (window.innerWidth >= 600 || content.scrollTop > 0) return;
+            startY = e.touches[0].clientY;
+            deltaY = 0;
+            dragging = true;
+            content.style.transition = 'none';
+        }, { passive: true });
+
+        content.addEventListener('touchmove', (e) => {
+            if (!dragging) return;
+            deltaY = e.touches[0].clientY - startY;
+            // Yalnızca aşağı yönde hareket
+            if (deltaY > 0) {
+                content.style.transform = `translateY(${deltaY}px)`;
+            }
+        }, { passive: true });
+
+        content.addEventListener('touchend', () => {
+            if (!dragging) return;
+            dragging = false;
+            content.style.transition = 'transform 0.25s ease';
+            content.style.transform = '';
+            // Yeterince aşağı çekildiyse modalı kapat
+            if (deltaY > 110) {
+                modal.classList.remove('active');
+            }
+        });
+    });
+}
+
 // DOM yüklendiğinde input kontrollerini başlat
 document.addEventListener('DOMContentLoaded', () => {
     setupAmountInputs();
     initTheme();
     updateSelectedMonthDisplay();
+    setupSheetGestures();
 });
 

@@ -126,6 +126,7 @@
             </button>
             <h2>Banka Ekle</h2>
             <form id="bankForm">
+                <label class="field-label">Banka Seçin</label>
                 <div class="bank-buttons">
                     <button type="button" class="bank-select-btn" data-bank="Ziraat Bankası">
                         <img src="img/ziraatbankasi.png" alt="Ziraat Bankası">
@@ -162,7 +163,9 @@
                     </button>
                 </div>
                 <input type="hidden" id="bankName" required>
-                <input type="text" id="iban" placeholder="IBAN" required>
+                <label class="field-label">IBAN</label>
+                <input type="text" id="iban" placeholder="TR00 0000 0000 0000 0000 0000 00" required inputmode="numeric">
+                <label class="field-label">Kart Tipi</label>
                 <div class="card-type-buttons">
                     <button type="button" class="card-type-btn" data-type="debit">
                         <span class="material-icons">credit_card</span>
@@ -174,6 +177,7 @@
                     </button>
                 </div>
                 <input type="hidden" id="cardType" required>
+                <label class="field-label">Para Birimi</label>
                 <div class="currency-buttons">
                     <button type="button" class="currency-select-btn" data-currency="TRY">
                         <span class="currency-symbol">₺</span>
