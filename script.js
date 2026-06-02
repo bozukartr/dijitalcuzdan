@@ -72,14 +72,6 @@ function convertToTRY(amount, currency) {
     return amount * exchangeRates[currency];
 }
 
-// Toplam varlıkları TL cinsinden hesaplama
-function calculateTotalAssetsInTRY() {
-    return banks.reduce((total, bank) => {
-        const amountInTRY = convertToTRY(bank.balance, bank.currency);
-        return total + amountInTRY;
-    }, 0);
-}
-
 // Tema yönetimi
 function initTheme() {
     const savedTheme = localStorage.getItem('theme') || 'light';
@@ -119,8 +111,6 @@ const subscriptionForm = document.getElementById('subscriptionForm');
 const expenseForm = document.getElementById('expenseForm');
 const expenseDetailModal = document.getElementById('expenseDetailModal');
 const expenseDetailTitle = document.getElementById('expenseDetailTitle');
-const expenseDetailAmount = document.getElementById('expenseDetailAmount');
-const expenseDetailDate = document.getElementById('expenseDetailDate');
 const expenseDetailDelete = document.getElementById('expenseDetailDelete');
 const monthlyExpensesElement = document.getElementById('monthlyExpenses');
 
@@ -415,8 +405,22 @@ expenseForm.addEventListener('submit', (e) => {
     expenseModal.classList.remove('active');
 });
 
+// Liste boşken gösterilecek bilgilendirme ekranı
+function emptyState(icon, text) {
+    return `
+        <div class="empty-state">
+            <span class="material-icons">${icon}</span>
+            <p>${text}</p>
+        </div>`;
+}
+
 // Render fonksiyonları
 function renderBanks() {
+    if (banks.length === 0) {
+        banksList.innerHTML = emptyState('account_balance', 'Henüz hesap eklenmedi');
+        updateTotals();
+        return;
+    }
     banksList.innerHTML = banks.map(bank => `
         <div class="bank-card" data-iban="${bank.iban}" onclick="showBankDetail(${bank.id})">
             <div class="bank-card-content">
@@ -435,6 +439,11 @@ function renderBanks() {
 }
 
 function renderDebts() {
+    if (debts.length === 0) {
+        debtsList.innerHTML = emptyState('credit_card_off', 'Henüz borç eklenmedi');
+        updateTotals();
+        return;
+    }
     debtsList.innerHTML = debts.map(debt => `
         <div class="debt-card ${debt.isPaid ? 'paid-debt' : ''}" onclick="showDebtDetail(${debt.id})">
             <h3>${debt.title}</h3>
@@ -446,6 +455,12 @@ function renderDebts() {
 }
 
 function renderSubscriptions() {
+    if (subscriptions.length === 0) {
+        subscriptionsList.innerHTML = emptyState('subscriptions', 'Henüz abonelik eklenmedi');
+        document.getElementById('totalSubscriptionAmount').textContent = formatCurrency(0, userSettings.defaultCurrency);
+        updateTotals();
+        return;
+    }
     subscriptionsList.innerHTML = subscriptions.map(subscription => {
         const nextPayment = getNextPaymentDate(subscription);
         const isOverdue = isPaymentOverdue(subscription);
@@ -521,6 +536,12 @@ function renderExpenses() {
     // Harcamaları tarihe göre sırala (en yeni en üstte)
     filteredExpenses.sort((a, b) => new Date(b.date) - new Date(a.date));
     
+    if (filteredExpenses.length === 0) {
+        expensesList.innerHTML = emptyState('receipt_long', 'Bu ay harcama kaydı yok');
+        updateTotalExpenses();
+        return;
+    }
+
     filteredExpenses.forEach(expense => {
         const card = document.createElement('div');
         card.className = 'expense-card';
@@ -1151,14 +1172,52 @@ firebase.auth().onAuthStateChanged(async (user) => {
     }
 });
 
+// Bottom sheet modalları aşağı kaydırarak kapatma (native mobil his)
+function setupSheetGestures() {
+    document.querySelectorAll('.modal').forEach(modal => {
+        const content = modal.querySelector('.modal-content');
+        if (!content) return;
+
+        let startY = 0;
+        let deltaY = 0;
+        let dragging = false;
+
+        content.addEventListener('touchstart', (e) => {
+            // Sadece dar ekranda (sheet modu) ve içerik en üstteyken sürüklemeye izin ver
+            if (window.innerWidth >= 600 || content.scrollTop > 0) return;
+            startY = e.touches[0].clientY;
+            deltaY = 0;
+            dragging = true;
+            content.style.transition = 'none';
+        }, { passive: true });
+
+        content.addEventListener('touchmove', (e) => {
+            if (!dragging) return;
+            deltaY = e.touches[0].clientY - startY;
+            // Yalnızca aşağı yönde hareket
+            if (deltaY > 0) {
+                content.style.transform = `translateY(${deltaY}px)`;
+            }
+        }, { passive: true });
+
+        content.addEventListener('touchend', () => {
+            if (!dragging) return;
+            dragging = false;
+            content.style.transition = 'transform 0.25s ease';
+            content.style.transform = '';
+            // Yeterince aşağı çekildiyse modalı kapat
+            if (deltaY > 110) {
+                modal.classList.remove('active');
+            }
+        });
+    });
+}
+
 // DOM yüklendiğinde input kontrollerini başlat
 document.addEventListener('DOMContentLoaded', () => {
     setupAmountInputs();
     initTheme();
     updateSelectedMonthDisplay();
+    setupSheetGestures();
 });
 
-// Modal açıldığında yeni eklenen inputlar için kontrolleri tekrar başlat
-document.querySelectorAll('.modal').forEach(modal => {
-    modal.addEventListener('shown', setupAmountInputs);
-});
