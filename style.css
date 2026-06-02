@@ -1,12 +1,17 @@
 :root {
-    --primary-color: #6B7280;
-    --secondary-color: #4B5563;
+    /* Marka rengi giriş ekranıyla birleştirildi: indigo */
+    --primary-color: #4F46E5;
+    --primary-hover: #4338CA;
+    --secondary-color: #6B7280;
     --background-color: #F3F4F6;
     --card-background: #FFFFFF;
-    --text-color: #1F2937;
-    --border-radius: 12px;
-    --spacing: 16px;
-    --modal-backdrop: rgba(0, 0, 0, 0.5);
+    --text-color: #111827;
+    --muted-color: #6B7280;
+    --border-radius: 14px;
+    --spacing: 14px;
+    --shadow-sm: 0 1px 2px rgba(17, 24, 39, 0.06);
+    --shadow-md: 0 4px 12px rgba(17, 24, 39, 0.08);
+    --modal-backdrop: rgba(17, 24, 39, 0.55);
     --delete-btn-bg: #FEE2E2;
     --delete-btn-color: #DC2626;
     --delete-btn-hover-color: #B91C1C;
@@ -14,16 +19,20 @@
 }
 
 [data-theme="dark"] {
-    --primary-color: #9CA3AF;
-    --secondary-color: #6B7280;
-    --background-color: #1F2937;
-    --card-background: #374151;
+    --primary-color: #818CF8;
+    --primary-hover: #6366F1;
+    --secondary-color: #9CA3AF;
+    --background-color: #111827;
+    --card-background: #1F2937;
     --text-color: #F9FAFB;
+    --muted-color: #9CA3AF;
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.35);
     --modal-backdrop: rgba(0, 0, 0, 0.7);
     --delete-btn-bg: #7F1D1D;
     --delete-btn-color: #FCA5A5;
     --delete-btn-hover-color: #FEE2E2;
-    --input-border: #4B5563;
+    --input-border: #374151;
 }
 
 * {
@@ -59,20 +68,21 @@ body {
 
 .card {
     background: var(--card-background);
-    padding: 20px;
+    padding: 16px;
     border-radius: var(--border-radius);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--shadow-sm);
 }
 
 .card h3 {
-    font-size: 0.9rem;
-    color: var(--primary-color);
-    margin-bottom: 8px;
+    font-size: 0.8rem;
+    color: var(--muted-color);
+    margin-bottom: 6px;
+    font-weight: 500;
 }
 
 .amount {
-    font-size: 1.5rem;
-    font-weight: bold;
+    font-size: 1.4rem;
+    font-weight: 700;
     color: var(--text-color);
 }
 
@@ -182,11 +192,12 @@ body {
 
 .modal-content {
     background: var(--card-background);
-    padding: 24px;
+    padding: 20px;
     border-radius: var(--border-radius);
     width: 90%;
     max-width: 400px;
     border: 1px solid var(--input-border);
+    box-shadow: var(--shadow-md);
     /* İçerik ekran boyunu aşarsa modal içinde kaydırılabilir olsun;
        böylece Kaydet/İptal butonlarına her zaman ulaşılabilir. */
     max-height: calc(100dvh - 32px);
@@ -347,52 +358,15 @@ input:focus {
     opacity: 1;
 }
 
-.detail-balance-input {
-    width: 100%;
-    font-size: 2rem;
-    padding: 20px;
-    margin: 16px 0;
-    text-align: center;
-    font-weight: 600;
-    background: var(--background-color);
-    border: none;
-    border-radius: var(--border-radius);
-    color: var(--text-color);
-    transition: all 0.3s ease;
-    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
-}
-
-.detail-balance-input:focus {
-    outline: none;
-    box-shadow: 0 0 0 2px var(--primary-color);
-    transform: scale(1.02);
-}
-
-.detail-balance-input::placeholder {
-    color: var(--secondary-color);
-    opacity: 0.5;
-}
-
 .amount-input-container {
     position: relative;
     margin: 16px 0;
 }
 
-.amount-input-container::before {
-    content: '₺';
-    position: absolute;
-    left: 20px;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 1.5rem;
-    color: var(--primary-color);
-    z-index: 1;
-}
-
 .amount-input {
     width: 100%;
     font-size: 1.5rem;
-    padding: 16px 16px 16px 40px;
+    padding: 16px;
     border: 2px solid var(--input-border);
     border-radius: var(--border-radius);
     background: var(--card-background);
@@ -421,11 +395,6 @@ input:focus {
 /* Dark mode için ek stiller */
 [data-theme="dark"] .amount-input {
     background: var(--background-color);
-}
-
-[data-theme="dark"] .detail-balance-input {
-    background: var(--background-color);
-    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .detail-actions {
@@ -473,15 +442,6 @@ input:focus {
     font-size: 24px;
 }
 
-.debt-actions {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-top: 12px;
-    padding-top: 12px;
-    border-top: 1px solid var(--background-color);
-}
-
 .debt-checkbox {
     display: flex;
     align-items: center;
@@ -494,7 +454,7 @@ input:focus {
 }
 
 .debt-checkbox:hover {
-    background: #E5E7EB;
+    background: var(--input-border);
 }
 
 .debt-checkbox input[type="checkbox"] {
@@ -542,24 +502,25 @@ input:focus {
 
 .app-logo {
     display: block;
-    height: 85px;
+    height: 64px;
     width: auto;
-    margin: 24px auto;
+    margin: 12px auto 20px;
     object-fit: contain;
 }
 
 .bank-card {
     position: relative;
     cursor: pointer;
-    transition: transform 0.2s ease;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
     background: var(--card-background);
-    padding: 24px;
+    padding: 18px;
     border-radius: var(--border-radius);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--shadow-sm);
 }
 
 .bank-card:hover {
     transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
 }
 
 .bank-card-content {
@@ -574,19 +535,19 @@ input:focus {
 }
 
 .bank-info h3 {
-    margin-bottom: 12px;
-    font-size: 1.2rem;
+    margin-bottom: 8px;
+    font-size: 1.05rem;
 }
 
 .bank-info .amount {
-    font-size: 1.8rem;
-    font-weight: bold;
+    font-size: 1.6rem;
+    font-weight: 700;
     color: var(--text-color);
 }
 
 .bank-logo {
-    width: 80px;
-    height: 80px;
+    width: 64px;
+    height: 64px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -599,30 +560,8 @@ input:focus {
     object-fit: contain;
 }
 
-.iban-display {
-    font-family: monospace;
-    font-size: 0.8rem;
-    padding: 12px;
-    background: var(--background-color);
-    border-radius: var(--border-radius);
-    margin-bottom: 16px;
-    word-break: break-all;
-}
-
-.detail-balance-input {
-    width: 100%;
-    font-size: 1.5rem;
-    padding: 16px;
-    margin: 8px 0;
-    text-align: center;
-    font-weight: bold;
-}
-
 /* Tema değiştirme butonu stilleri */
 .theme-toggle {
-    position: absolute;
-    top: 16px;
-    right: 16px;
     background: var(--card-background);
     border: none;
     border-radius: 50%;
@@ -632,14 +571,14 @@ input:focus {
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--shadow-sm);
     color: var(--primary-color);
-    transition: all 0.3s ease;
-    z-index: 1;
+    transition: all 0.2s ease;
 }
 
 .theme-toggle:hover {
-    transform: scale(1.1);
+    transform: scale(1.08);
+    box-shadow: var(--shadow-md);
 }
 
 .theme-toggle .material-icons {
@@ -915,33 +854,11 @@ select:focus {
     }
 
     .card h3 {
-        font-size: 0.6rem;
+        font-size: 0.7rem;
     }
 
     .amount {
-        font-size: 1rem;
-    }
-
-    .settings-btn {
-        width: 35px;
-        height: 35px;
-        padding: 6px;
-        position: absolute;
-        top: 16px;
-        right: 66px;
-    }
-
-    .settings-btn .material-icons {
-        font-size: 20px;
-    }
-
-    .theme-toggle {
-        width: 35px;
-        height: 35px;
-    }
-
-    .theme-toggle .material-icons {
-        font-size: 20px;
+        font-size: 1.05rem;
     }
 }
 
@@ -1058,9 +975,6 @@ select:focus {
 }
 
 .logout-btn {
-    position: absolute;
-    top: 16px;
-    left: 16px;
     background: var(--card-background);
     border: none;
     border-radius: 50%;
@@ -1070,13 +984,14 @@ select:focus {
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--shadow-sm);
     color: var(--delete-btn-color);
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
 }
 
 .logout-btn:hover {
-    transform: scale(1.1);
+    transform: scale(1.08);
+    box-shadow: var(--shadow-md);
 }
 
 .logout-btn .material-icons {
@@ -1174,7 +1089,7 @@ select:focus {
 }
 
 .month-nav-btn:hover {
-    background-color: var(--hover-color);
+    background-color: var(--background-color);
 }
 
 .month-nav-btn .material-icons {
@@ -1182,92 +1097,27 @@ select:focus {
 }
 
 .settings-btn {
-    background: none;
+    background: var(--card-background);
     border: none;
     color: var(--text-color);
-    padding: 8px;
     border-radius: 50%;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
     width: 40px;
     height: 40px;
-    position: relative;
-    z-index: 1;
+    box-shadow: var(--shadow-sm);
 }
 
 .settings-btn:hover {
-    background: var(--background-color);
     transform: rotate(45deg);
+    box-shadow: var(--shadow-md);
 }
 
 .settings-btn .material-icons {
     font-size: 24px;
-}
-
-@media (max-width: 480px) {
-    .dashboard {
-        grid-template-columns: repeat(3, 1fr);
-        gap: 8px;
-    }
-
-    .bank-logo {
-        width: 60px;
-        height: 60px;
-    }
-    
-    .bank-card {
-        padding: 18px;
-    }
-
-    .bank-info h3 {
-        font-size: 1.1rem;
-        margin-bottom: 10px;
-    }
-
-    .bank-info .amount {
-        font-size: 1.5rem;
-    }
-
-    .bank-card-content {
-        gap: 16px;
-    }
-
-    .card {
-        padding: 12px;
-    }
-
-    .card h3 {
-        font-size: 0.6rem;
-    }
-
-    .amount {
-        font-size: 1rem;
-    }
-
-    .settings-btn {
-        width: 35px;
-        height: 35px;
-        padding: 6px;
-        position: absolute;
-        top: 16px;
-        right: 66px;
-    }
-
-    .settings-btn .material-icons {
-        font-size: 20px;
-    }
-
-    .theme-toggle {
-        width: 35px;
-        height: 35px;
-    }
-
-    .theme-toggle .material-icons {
-        font-size: 20px;
-    }
 }
 
 .detail-balance {
@@ -1399,4 +1249,29 @@ select:focus {
 .card-type-name {
     font-size: 0.9rem;
     color: var(--text-color);
-} 
+}
+
+/* Boş liste durumu */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 36px 16px;
+    color: var(--muted-color);
+    background: var(--card-background);
+    border: 1px dashed var(--input-border);
+    border-radius: var(--border-radius);
+    text-align: center;
+}
+
+.empty-state .material-icons {
+    font-size: 40px;
+    opacity: 0.5;
+}
+
+.empty-state p {
+    font-size: 0.9rem;
+    margin: 0;
+}
