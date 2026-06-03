@@ -92,6 +92,51 @@ body {
     gap: 20px;
 }
 
+/* 6 haneli PIN giriş alanı (internet bankacılığı tarzı) */
+.pin-field {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.pin-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--secondary-color);
+}
+
+.pin-boxes {
+    display: flex;
+    gap: 8px;
+}
+
+.pin-box {
+    flex: 1;
+    min-width: 0;
+    height: 56px;
+    text-align: center;
+    font-size: 1.5rem;
+    font-weight: 700;
+    border: 2px solid var(--input-border);
+    border-radius: 14px;
+    background: var(--card-background);
+    color: var(--text-color);
+    caret-color: var(--primary-color);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.pin-box:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.12);
+    transform: translateY(-2px);
+}
+
+.pin-box.filled {
+    border-color: var(--primary-color);
+    background: rgba(79, 70, 229, 0.05);
+}
+
 .input-group {
     position: relative;
     display: flex;
@@ -107,10 +152,6 @@ body {
     z-index: 2;
 }
 
-.toggle-password .material-icons {
-    left: auto;
-}
-
 .input-group input {
     width: 100%;
     padding: 16px 48px;
@@ -122,10 +163,6 @@ body {
     transition: all 0.3s ease;
 }
 
-.input-group input[type="password"] {
-    padding-right: 48px;
-}
-
 .input-group input:focus {
     outline: none;
     border-color: var(--primary-color);
@@ -133,28 +170,6 @@ body {
 }
 
 .input-group input:focus + .material-icons {
-    color: var(--primary-color);
-}
-
-.toggle-password {
-    position: absolute;
-    right: 16px;
-    top: 50%;
-    transform: translateY(-50%);
-    background: none;
-    border: none;
-    color: var(--secondary-color);
-    cursor: pointer;
-    padding: 4px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: color 0.3s ease;
-    z-index: 2;
-    pointer-events: auto;
-}
-
-.toggle-password:hover {
     color: var(--primary-color);
 }
 

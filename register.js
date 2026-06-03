@@ -1,22 +1,9 @@
 document.addEventListener('DOMContentLoaded', () => {
     const registerForm = document.getElementById('registerForm');
-    const togglePasswordBtns = document.querySelectorAll('.toggle-password');
-    const passwordInputs = document.querySelectorAll('input[type="password"]');
     const captchaBox = document.getElementById('captchaBox');
     const refreshCaptchaBtn = document.getElementById('refreshCaptcha');
 
     let captchaText = '';
-
-    // Şifre göster/gizle fonksiyonu
-    togglePasswordBtns.forEach((btn, index) => {
-        btn.addEventListener('click', () => {
-            const type = passwordInputs[index].getAttribute('type') === 'password' ? 'text' : 'password';
-            passwordInputs[index].setAttribute('type', type);
-            
-            const icon = btn.querySelector('.material-icons');
-            icon.textContent = type === 'password' ? 'visibility_off' : 'visibility';
-        });
-    });
 
     // Captcha oluşturma fonksiyonu
     function generateCaptcha() {
@@ -57,8 +44,13 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        if (!/^\d{6}$/.test(password)) {
+            showError('PIN 6 haneli ve yalnızca rakamlardan oluşmalıdır.');
+            return;
+        }
+
         if (password !== passwordConfirm) {
-            showError('Şifreler eşleşmiyor!');
+            showError('PIN kodları eşleşmiyor!');
             return;
         }
 
@@ -117,7 +109,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     errorMessage = 'Kayıt işlemi şu anda devre dışı.';
                     break;
                 case 'auth/weak-password':
-                    errorMessage = 'Şifre çok zayıf. En az 6 karakter kullanın.';
+                    errorMessage = 'PIN çok zayıf. Lütfen farklı bir PIN deneyin.';
                     break;
             }
             

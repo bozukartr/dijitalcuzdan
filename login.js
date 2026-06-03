@@ -1,17 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     const loginForm = document.getElementById('loginForm');
-    const togglePassword = document.querySelector('.toggle-password');
     const passwordInput = document.getElementById('password');
     const rememberMe = document.getElementById('rememberMe');
-
-    // Şifre göster/gizle fonksiyonu
-    togglePassword.addEventListener('click', () => {
-        const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-        passwordInput.setAttribute('type', type);
-        
-        const icon = togglePassword.querySelector('.material-icons');
-        icon.textContent = type === 'password' ? 'visibility_off' : 'visibility';
-    });
 
     // Kullanıcı adından email bulma
     async function getEmailByUsername(username) {
@@ -37,7 +27,12 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const username = document.getElementById('username').value;
         const password = passwordInput.value;
-        
+
+        if (!/^\d{6}$/.test(password)) {
+            showError('Lütfen 6 haneli PIN kodunuzu girin.');
+            return;
+        }
+
         try {
             // Kullanıcı adına karşılık gelen email'i bul
             const email = await getEmailByUsername(username);
@@ -73,7 +68,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     errorMessage = 'Kullanıcı bulunamadı.';
                     break;
                 case 'auth/wrong-password':
-                    errorMessage = 'Hatalı şifre.';
+                case 'auth/invalid-credential':
+                    errorMessage = 'Hatalı PIN.';
                     break;
                 case 'auth/too-many-requests':
                     errorMessage = 'Çok fazla başarısız deneme. Lütfen daha sonra tekrar deneyin.';
