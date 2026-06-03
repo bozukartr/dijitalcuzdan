@@ -2,7 +2,7 @@
 // Uygulama kabuğunu (app shell) önbelleğe alır, çevrimdışı çalışmayı ve
 // PWA olarak kurulabilmeyi sağlar.
 
-const CACHE_VERSION = 'v4';
+const CACHE_VERSION = 'v6';
 const CACHE_NAME = `dijital-cuzdan-${CACHE_VERSION}`;
 
 // Kurulum sırasında önbelleğe alınacak temel dosyalar (app shell).
@@ -17,6 +17,7 @@ const APP_SHELL = [
     'login.js',
     'register.js',
     'auth.js',
+    'pin.js',
     'pwa.js',
     'firebase-config.js',
     'manifest.json',

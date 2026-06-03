@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="login.css">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#4F46E5">
+    <meta name="theme-color" content="#F1E9DB">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Dijital Cüzdan">
@@ -35,19 +35,24 @@
                 <span class="material-icons">person</span>
                 <input type="text" id="username" placeholder="Kullanıcı Adı" required>
             </div>
-            <div class="input-group">
-                <span class="material-icons">lock</span>
-                <input type="password" id="password" placeholder="Şifre" required>
-                <button type="button" class="toggle-password">
-                    <span class="material-icons">visibility_off</span>
-                </button>
+            <div class="pin-field">
+                <label class="pin-label">6 Haneli PIN</label>
+                <div class="pin-boxes">
+                    <input type="password" inputmode="numeric" maxlength="1" class="pin-box" autocomplete="off" aria-label="PIN 1. hane">
+                    <input type="password" inputmode="numeric" maxlength="1" class="pin-box" autocomplete="off" aria-label="PIN 2. hane">
+                    <input type="password" inputmode="numeric" maxlength="1" class="pin-box" autocomplete="off" aria-label="PIN 3. hane">
+                    <input type="password" inputmode="numeric" maxlength="1" class="pin-box" autocomplete="off" aria-label="PIN 4. hane">
+                    <input type="password" inputmode="numeric" maxlength="1" class="pin-box" autocomplete="off" aria-label="PIN 5. hane">
+                    <input type="password" inputmode="numeric" maxlength="1" class="pin-box" autocomplete="off" aria-label="PIN 6. hane">
+                </div>
+                <input type="hidden" id="password">
             </div>
             <div class="remember-forgot">
                 <label class="remember-me">
                     <input type="checkbox" id="rememberMe">
                     <span>Beni Hatırla</span>
                 </label>
-                <a href="#" class="forgot-password">Şifremi Unuttum</a>
+                <a href="#" class="forgot-password">PIN'imi Unuttum</a>
             </div>
             <button type="submit" class="login-btn">
                 <span class="material-icons">login</span>
@@ -59,6 +64,7 @@
         </form>
     </div>
     <script src="login.js"></script>
+    <script src="pin.js"></script>
     <script src="pwa.js"></script>
 </body>
 </html> 

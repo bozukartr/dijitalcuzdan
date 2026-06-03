@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="login.css">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#4F46E5">
+    <meta name="theme-color" content="#F1E9DB">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Dijital Cüzdan">
@@ -35,19 +35,29 @@
                 <span class="material-icons">person</span>
                 <input type="text" id="username" placeholder="Kullanıcı Adı" required minlength="3">
             </div>
-            <div class="input-group">
-                <span class="material-icons">lock</span>
-                <input type="password" id="password" placeholder="Şifre" required minlength="6">
-                <button type="button" class="toggle-password">
-                    <span class="material-icons">visibility_off</span>
-                </button>
+            <div class="pin-field">
+                <label class="pin-label">6 Haneli PIN Belirleyin</label>
+                <div class="pin-boxes">
+                    <input type="password" inputmode="numeric" maxlength="1" class="pin-box" autocomplete="off" aria-label="PIN 1. hane">
+                    <input type="password" inputmode="numeric" maxlength="1" class="pin-box" autocomplete="off" aria-label="PIN 2. hane">
+                    <input type="password" inputmode="numeric" maxlength="1" class="pin-box" autocomplete="off" aria-label="PIN 3. hane">
+                    <input type="password" inputmode="numeric" maxlength="1" class="pin-box" autocomplete="off" aria-label="PIN 4. hane">
+                    <input type="password" inputmode="numeric" maxlength="1" class="pin-box" autocomplete="off" aria-label="PIN 5. hane">
+                    <input type="password" inputmode="numeric" maxlength="1" class="pin-box" autocomplete="off" aria-label="PIN 6. hane">
+                </div>
+                <input type="hidden" id="password">
             </div>
-            <div class="input-group">
-                <span class="material-icons">lock</span>
-                <input type="password" id="passwordConfirm" placeholder="Şifre Tekrar" required minlength="6">
-                <button type="button" class="toggle-password">
-                    <span class="material-icons">visibility_off</span>
-                </button>
+            <div class="pin-field">
+                <label class="pin-label">PIN Tekrar</label>
+                <div class="pin-boxes">
+                    <input type="password" inputmode="numeric" maxlength="1" class="pin-box" autocomplete="off" aria-label="PIN tekrar 1. hane">
+                    <input type="password" inputmode="numeric" maxlength="1" class="pin-box" autocomplete="off" aria-label="PIN tekrar 2. hane">
+                    <input type="password" inputmode="numeric" maxlength="1" class="pin-box" autocomplete="off" aria-label="PIN tekrar 3. hane">
+                    <input type="password" inputmode="numeric" maxlength="1" class="pin-box" autocomplete="off" aria-label="PIN tekrar 4. hane">
+                    <input type="password" inputmode="numeric" maxlength="1" class="pin-box" autocomplete="off" aria-label="PIN tekrar 5. hane">
+                    <input type="password" inputmode="numeric" maxlength="1" class="pin-box" autocomplete="off" aria-label="PIN tekrar 6. hane">
+                </div>
+                <input type="hidden" id="passwordConfirm">
             </div>
             <div class="captcha-container">
                 <div id="captchaBox" class="captcha-box"></div>
@@ -69,6 +79,7 @@
         </form>
     </div>
     <script src="register.js"></script>
+    <script src="pin.js"></script>
     <script src="pwa.js"></script>
 </body>
 </html> 

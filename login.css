@@ -1,24 +1,26 @@
 :root {
-    --primary-color: #4F46E5;
-    --primary-hover: #4338CA;
-    --secondary-color: #6B7280;
-    --background-color: #F3F4F6;
-    --card-background: #FFFFFF;
-    --text-color: #1F2937;
+    --primary-color: #C2683B;
+    --primary-hover: #A85629;
+    --secondary-color: #8C8474;
+    --accent-color: #6E7355;
+    --background-color: #F1E9DB;
+    --card-background: #FBF6EE;
+    --text-color: #3A352D;
     --border-radius: 16px;
-    --input-border: #E5E7EB;
-    --error-color: #DC2626;
-    --success-color: #059669;
+    --input-border: #E4D8C2;
+    --error-color: #B5482B;
+    --success-color: #5E7045;
 }
 
 [data-theme="dark"] {
-    --primary-color: #6366F1;
-    --primary-hover: #4F46E5;
-    --secondary-color: #9CA3AF;
-    --background-color: #111827;
-    --card-background: #1F2937;
-    --text-color: #F9FAFB;
-    --input-border: #374151;
+    --primary-color: #D5814F;
+    --primary-hover: #C2683B;
+    --secondary-color: #A89E8A;
+    --accent-color: #8C9069;
+    --background-color: #211E17;
+    --card-background: #2C281F;
+    --text-color: #F2EBDC;
+    --input-border: #433C2D;
 }
 
 * {
@@ -41,9 +43,9 @@ body {
     padding-bottom: max(20px, env(safe-area-inset-bottom));
     padding-left: max(20px, env(safe-area-inset-left));
     padding-right: max(20px, env(safe-area-inset-right));
-    background-image: 
-        radial-gradient(circle at 100% 0%, rgba(79, 70, 229, 0.1) 0%, transparent 50%),
-        radial-gradient(circle at 0% 100%, rgba(99, 102, 241, 0.1) 0%, transparent 50%);
+    background-image:
+        radial-gradient(circle at 100% 0%, rgba(194, 104, 59, 0.12) 0%, transparent 50%),
+        radial-gradient(circle at 0% 100%, rgba(110, 115, 85, 0.14) 0%, transparent 55%);
     background-attachment: fixed;
 }
 
@@ -92,6 +94,51 @@ body {
     gap: 20px;
 }
 
+/* 6 haneli PIN giriş alanı (internet bankacılığı tarzı) */
+.pin-field {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.pin-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--secondary-color);
+}
+
+.pin-boxes {
+    display: flex;
+    gap: 8px;
+}
+
+.pin-box {
+    flex: 1;
+    min-width: 0;
+    height: 56px;
+    text-align: center;
+    font-size: 1.5rem;
+    font-weight: 700;
+    border: 2px solid var(--input-border);
+    border-radius: 14px;
+    background: var(--card-background);
+    color: var(--text-color);
+    caret-color: var(--primary-color);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.pin-box:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 4px rgba(194, 104, 59, 0.18);
+    transform: translateY(-2px);
+}
+
+.pin-box.filled {
+    border-color: var(--primary-color);
+    background: rgba(194, 104, 59, 0.07);
+}
+
 .input-group {
     position: relative;
     display: flex;
@@ -107,10 +154,6 @@ body {
     z-index: 2;
 }
 
-.toggle-password .material-icons {
-    left: auto;
-}
-
 .input-group input {
     width: 100%;
     padding: 16px 48px;
@@ -122,39 +165,13 @@ body {
     transition: all 0.3s ease;
 }
 
-.input-group input[type="password"] {
-    padding-right: 48px;
-}
-
 .input-group input:focus {
     outline: none;
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+    box-shadow: 0 0 0 4px rgba(194, 104, 59, 0.15);
 }
 
 .input-group input:focus + .material-icons {
-    color: var(--primary-color);
-}
-
-.toggle-password {
-    position: absolute;
-    right: 16px;
-    top: 50%;
-    transform: translateY(-50%);
-    background: none;
-    border: none;
-    color: var(--secondary-color);
-    cursor: pointer;
-    padding: 4px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: color 0.3s ease;
-    z-index: 2;
-    pointer-events: auto;
-}
-
-.toggle-password:hover {
     color: var(--primary-color);
 }
 
