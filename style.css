@@ -59,25 +59,92 @@ body {
     margin: 0 auto;
 }
 
-.dashboard {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: var(--spacing);
-    margin-bottom: var(--spacing);
+/* Üst başlık çubuğu */
+.app-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
 }
 
-.card {
-    background: var(--card-background);
-    padding: 16px;
-    border-radius: var(--border-radius);
-    box-shadow: var(--shadow-sm);
+.brand-logo {
+    height: 40px;
+    width: auto;
+    object-fit: contain;
 }
 
-.card h3 {
-    font-size: 0.8rem;
-    color: var(--muted-color);
-    margin-bottom: 6px;
+.header-actions {
+    display: flex;
+    gap: 8px;
+}
+
+/* Öne çıkan net varlık kartı (hero) */
+.balance-hero {
+    background: linear-gradient(135deg, #6366F1 0%, #4F46E5 55%, #4338CA 100%);
+    border-radius: 22px;
+    padding: 24px 22px;
+    color: #fff;
+    box-shadow: 0 12px 28px rgba(79, 70, 229, 0.28);
+    margin-bottom: 18px;
+}
+
+.balance-label {
+    font-size: 0.85rem;
     font-weight: 500;
+    opacity: 0.85;
+    letter-spacing: 0.02em;
+}
+
+.balance-value {
+    font-size: 2.3rem;
+    font-weight: 800;
+    margin: 6px 0 18px;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+}
+
+.balance-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.stat {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255, 255, 255, 0.14);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 14px;
+    padding: 10px 12px;
+    backdrop-filter: blur(4px);
+}
+
+.stat-icon {
+    font-size: 20px;
+    background: rgba(255, 255, 255, 0.18);
+    border-radius: 10px;
+    padding: 6px;
+}
+
+.stat-text {
+    min-width: 0;
+}
+
+.stat-label {
+    font-size: 0.7rem;
+    opacity: 0.85;
+    display: block;
+    white-space: nowrap;
+}
+
+.stat-value {
+    font-size: 1rem;
+    font-weight: 700;
+    margin: 2px 0 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .amount {
@@ -86,27 +153,35 @@ body {
     color: var(--text-color);
 }
 
+/* Segmented (pill) sekme kontrolü */
 .tabs {
     display: flex;
-    gap: 8px;
+    gap: 4px;
     margin-bottom: var(--spacing);
+    background: var(--card-background);
+    border: 1px solid var(--input-border);
+    border-radius: 14px;
+    padding: 4px;
+    box-shadow: var(--shadow-sm);
 }
 
 .tab-btn {
     flex: 1;
-    padding: 12px;
+    padding: 10px 6px;
     border: none;
-    background: var(--card-background);
-    color: var(--primary-color);
-    border-radius: var(--border-radius);
+    background: transparent;
+    color: var(--muted-color);
+    border-radius: 10px;
     cursor: pointer;
-    font-weight: 500;
-    transition: all 0.3s ease;
+    font-weight: 600;
+    font-size: 0.85rem;
+    transition: color 0.2s ease, background 0.2s ease;
 }
 
 .tab-btn.active {
     background: var(--primary-color);
-    color: white;
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3);
 }
 
 .tab-content {
@@ -123,50 +198,49 @@ body {
 
 .add-btn {
     width: 100%;
-    padding: 12px;
-    background: var(--card-background);
-    border: 2px dashed var(--primary-color);
-    border-radius: var(--border-radius);
-    color: var(--primary-color);
+    padding: 13px;
+    background: var(--primary-color);
+    border: none;
+    border-radius: 14px;
+    color: #fff;
+    font-weight: 600;
+    font-size: 0.95rem;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
-    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
 
 .add-btn:hover {
-    background: var(--background-color);
+    background: var(--primary-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(79, 70, 229, 0.3);
+}
+
+.add-btn:active {
+    transform: translateY(0);
 }
 
 .cards-container {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing);
+    gap: 10px;
 }
 
 .bank-card, .debt-card {
     background: var(--card-background);
     padding: 16px;
     border-radius: var(--border-radius);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--input-border);
+    box-shadow: var(--shadow-sm);
 }
 
 .bank-card h3, .debt-card h3 {
     margin-bottom: 8px;
     font-size: 1rem;
-}
-
-.iban {
-    font-family: monospace;
-    color: var(--primary-color);
-    padding: 4px 8px;
-    background: var(--background-color);
-    border-radius: 4px;
-    font-size: 0.9rem;
-    cursor: pointer;
-    margin: 8px 0;
 }
 
 /* Mobil "bottom sheet" deseni: modallar alttan yukarı kayar,
@@ -372,40 +446,6 @@ input:focus {
     margin-bottom: -4px;
 }
 
-.iban-display {
-    font-family: monospace;
-    font-size: 1.1rem;
-    padding: 16px;
-    background: var(--background-color);
-    border-radius: var(--border-radius);
-    margin-bottom: 24px;
-    word-break: break-all;
-    color: var(--text-color);
-    text-align: center;
-    letter-spacing: 1px;
-    position: relative;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.iban-display:hover {
-    background: var(--card-background);
-}
-
-.iban-display .copy-icon {
-    position: absolute;
-    right: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 20px;
-    color: var(--primary-color);
-    opacity: 0.5;
-}
-
-.iban-display:hover .copy-icon {
-    opacity: 1;
-}
-
 .amount-input-container {
     position: relative;
     margin: 16px 0;
@@ -548,14 +588,6 @@ input:focus {
     color: var(--primary-color);
 }
 
-.app-logo {
-    display: block;
-    height: 64px;
-    width: auto;
-    margin: 12px auto 20px;
-    object-fit: contain;
-}
-
 .bank-card {
     position: relative;
     cursor: pointer;
@@ -642,10 +674,11 @@ input:focus {
     background: var(--card-background);
     padding: 16px;
     border-radius: var(--border-radius);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--input-border);
+    box-shadow: var(--shadow-sm);
     position: relative;
     cursor: pointer;
-    transition: transform 0.2s ease;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .subscription-card:hover {
@@ -790,14 +823,15 @@ select:focus {
 
 .expense-card {
     background: var(--card-background);
-    padding: 12px;
+    padding: 13px 14px;
     border-radius: var(--border-radius);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--input-border);
+    box-shadow: var(--shadow-sm);
     display: flex;
     align-items: center;
     gap: 12px;
     cursor: pointer;
-    transition: transform 0.2s ease;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .expense-card:hover {
@@ -845,68 +879,27 @@ select:focus {
     gap: 8px;
 }
 
-.card.expenses {
-    background: linear-gradient(135deg, #6366F1 0%, #4F46E5 100%);
-    color: white;
-}
-
-.card.expenses h3 {
-    color: rgba(255, 255, 255, 0.9);
-}
-
-@media (max-width: 768px) {
-    .dashboard {
-        grid-template-columns: repeat(3, 1fr);
-        gap: 8px;
-    }
-
-    .card h3 {
-        font-size: 0.8rem;
-    }
-
-    .amount {
-        font-size: 1.2rem;
-    }
-}
-
 @media (max-width: 480px) {
-    .dashboard {
-        grid-template-columns: repeat(3, 1fr);
-        gap: 8px;
+    .balance-value {
+        font-size: 2rem;
     }
 
     .bank-logo {
-        width: 60px;
-        height: 60px;
-    }
-    
-    .bank-card {
-        padding: 18px;
+        width: 56px;
+        height: 56px;
     }
 
     .bank-info h3 {
-        font-size: 1.1rem;
-        margin-bottom: 10px;
+        font-size: 1rem;
+        margin-bottom: 8px;
     }
 
     .bank-info .amount {
-        font-size: 1.5rem;
+        font-size: 1.4rem;
     }
 
     .bank-card-content {
-        gap: 16px;
-    }
-
-    .card {
-        padding: 12px;
-    }
-
-    .card h3 {
-        font-size: 0.7rem;
-    }
-
-    .amount {
-        font-size: 1.05rem;
+        gap: 14px;
     }
 }
 

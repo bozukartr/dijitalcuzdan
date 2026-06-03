@@ -25,33 +25,44 @@
 </head>
 <body>
     <div class="container">
-        <div style="display: flex; gap: 10px; justify-content: flex-end; margin-bottom: 20px;">
-            <button id="settingsBtn" class="settings-btn">
-                <span class="material-icons">settings</span>
-            </button>
-            <button id="logoutBtn" class="logout-btn">
-                <span class="material-icons">logout</span>
-            </button>
-            <button id="themeToggle" class="theme-toggle">
-                <span class="material-icons light-icon">light_mode</span>
-                <span class="material-icons dark-icon">dark_mode</span>
-            </button>
-        </div>
-        <img src="logo.png" alt="Dijital Cüzdan Logo" class="app-logo">
-        <div class="dashboard">
-            <div class="card debt">
-                <h3>Toplam Borç</h3>
-                <p class="amount" id="totalDebt">₺0</p>
+        <header class="app-header">
+            <div class="brand">
+                <img src="logo.png" alt="Dijital Cüzdan" class="brand-logo">
             </div>
-            <div class="card assets">
-                <h3>Net Varlık</h3>
-                <p class="amount" id="totalAssets">₺0</p>
+            <div class="header-actions">
+                <button id="settingsBtn" class="settings-btn" aria-label="Ayarlar">
+                    <span class="material-icons">settings</span>
+                </button>
+                <button id="themeToggle" class="theme-toggle" aria-label="Tema">
+                    <span class="material-icons light-icon">light_mode</span>
+                    <span class="material-icons dark-icon">dark_mode</span>
+                </button>
+                <button id="logoutBtn" class="logout-btn" aria-label="Çıkış">
+                    <span class="material-icons">logout</span>
+                </button>
             </div>
-            <div class="card expenses">
-                <h3>Aylık Toplam Harcama</h3>
-                <p class="amount" id="monthlyExpenses">₺0</p>
+        </header>
+
+        <section class="balance-hero">
+            <span class="balance-label">Net Varlık</span>
+            <p class="balance-value" id="totalAssets">₺0</p>
+            <div class="balance-stats">
+                <div class="stat">
+                    <span class="material-icons stat-icon">south_west</span>
+                    <div class="stat-text">
+                        <span class="stat-label">Toplam Borç</span>
+                        <p class="stat-value" id="totalDebt">₺0</p>
+                    </div>
+                </div>
+                <div class="stat">
+                    <span class="material-icons stat-icon">receipt_long</span>
+                    <div class="stat-text">
+                        <span class="stat-label">Bu Ay Harcama</span>
+                        <p class="stat-value" id="monthlyExpenses">₺0</p>
+                    </div>
+                </div>
             </div>
-        </div>
+        </section>
 
         <div class="tabs">
             <button class="tab-btn active" data-tab="banks">Bankalar</button>
@@ -163,8 +174,6 @@
                     </button>
                 </div>
                 <input type="hidden" id="bankName" required>
-                <label class="field-label">IBAN</label>
-                <input type="text" id="iban" placeholder="TR00 0000 0000 0000 0000 0000 00" required inputmode="numeric">
                 <label class="field-label">Kart Tipi</label>
                 <div class="card-type-buttons">
                     <button type="button" class="card-type-btn" data-type="debit">
@@ -290,10 +299,6 @@
             </button>
             <h2 id="bankDetailTitle"></h2>
             <div class="detail-content">
-                <label class="detail-label">IBAN</label>
-                <div class="iban-display" id="bankDetailIban" onclick="copyToClipboard(this.textContent)">
-                    <span class="material-icons copy-icon">content_copy</span>
-                </div>
                 <label class="detail-label">Güncel Varlık</label>
                 <div class="detail-balance" id="bankDetailBalanceDisplay"></div>
                 
