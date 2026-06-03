@@ -1,10 +1,6 @@
-// Service Worker kaydı - PWA desteği için.
-// Tüm sayfalarda (index, register, dashboard) yüklenir.
+// Service Worker kaydı (PWA)
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js')
-            .catch((error) => {
-                console.error('Service Worker kaydı başarısız:', error);
-            });
+        navigator.serviceWorker.register('sw.js').catch(err => console.error('SW kaydı başarısız:', err));
     });
 }

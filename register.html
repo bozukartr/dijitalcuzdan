@@ -3,83 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Dijital Cüzdan - Kayıt</title>
+    <title>Dijital Cüzdan — Kayıt</title>
     <link rel="icon" type="image/png" href="applogo.png">
-    <link rel="stylesheet" href="login.css">
+    <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#F1E9DB">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Dijital Cüzdan">
+    <meta name="theme-color" content="#F4F5F7">
     <link rel="apple-touch-icon" href="applogo.png">
-    <link rel="apple-touch-icon" sizes="192x192" href="applogo.png">
-    <link rel="apple-touch-icon" sizes="512x512" href="applogo.png">
-    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     <script src="firebase-config.js"></script>
 </head>
-<body>
-    <div class="login-card">
-        <div class="logo-container">
-            <img src="logo.png" alt="Dijital Cüzdan Logo" class="app-logo">
-        </div>
-        <div class="auth-head">
-            <h1 class="auth-title">Hesap oluşturun</h1>
-            <p class="auth-subtitle">Birkaç saniyede cüzdanınızı oluşturun</p>
-        </div>
-        <form id="registerForm" class="login-form">
-            <div class="input-group">
-                <span class="material-icons">person</span>
-                <input type="text" id="username" placeholder="Kullanıcı Adı" required minlength="3">
+<body class="auth-body">
+    <div class="auth-card">
+        <img src="logo.png" alt="Dijital Cüzdan" class="auth-logo">
+        <h1>Hesap oluştur</h1>
+        <p class="sub">Birkaç saniyede cüzdanını oluştur</p>
+        <form id="registerForm" class="auth-form">
+            <div id="authMsg"></div>
+            <div class="field">
+                <label>Kullanıcı Adı</label>
+                <input type="text" id="username" placeholder="kullaniciadi" autocomplete="username" required>
             </div>
-            <div class="pin-field">
-                <label class="pin-label">6 Haneli PIN Belirleyin</label>
-                <div class="pin-boxes">
-                    <input type="password" inputmode="numeric" maxlength="1" class="pin-box" autocomplete="off" aria-label="PIN 1. hane">
-                    <input type="password" inputmode="numeric" maxlength="1" class="pin-box" autocomplete="off" aria-label="PIN 2. hane">
-                    <input type="password" inputmode="numeric" maxlength="1" class="pin-box" autocomplete="off" aria-label="PIN 3. hane">
-                    <input type="password" inputmode="numeric" maxlength="1" class="pin-box" autocomplete="off" aria-label="PIN 4. hane">
-                    <input type="password" inputmode="numeric" maxlength="1" class="pin-box" autocomplete="off" aria-label="PIN 5. hane">
-                    <input type="password" inputmode="numeric" maxlength="1" class="pin-box" autocomplete="off" aria-label="PIN 6. hane">
+            <div class="field">
+                <label>Şifre</label>
+                <div class="auth-pass">
+                    <input type="password" id="password" placeholder="En az 6 karakter" autocomplete="new-password" required minlength="6">
+                    <button type="button" class="toggle" data-toggle><span class="material-icons">visibility_off</span></button>
                 </div>
-                <input type="hidden" id="password">
             </div>
-            <div class="pin-field">
-                <label class="pin-label">PIN Tekrar</label>
-                <div class="pin-boxes">
-                    <input type="password" inputmode="numeric" maxlength="1" class="pin-box" autocomplete="off" aria-label="PIN tekrar 1. hane">
-                    <input type="password" inputmode="numeric" maxlength="1" class="pin-box" autocomplete="off" aria-label="PIN tekrar 2. hane">
-                    <input type="password" inputmode="numeric" maxlength="1" class="pin-box" autocomplete="off" aria-label="PIN tekrar 3. hane">
-                    <input type="password" inputmode="numeric" maxlength="1" class="pin-box" autocomplete="off" aria-label="PIN tekrar 4. hane">
-                    <input type="password" inputmode="numeric" maxlength="1" class="pin-box" autocomplete="off" aria-label="PIN tekrar 5. hane">
-                    <input type="password" inputmode="numeric" maxlength="1" class="pin-box" autocomplete="off" aria-label="PIN tekrar 6. hane">
+            <div class="field">
+                <label>Şifre Tekrar</label>
+                <div class="auth-pass">
+                    <input type="password" id="passwordConfirm" placeholder="Şifreyi tekrar gir" autocomplete="new-password" required minlength="6">
+                    <button type="button" class="toggle" data-toggle><span class="material-icons">visibility_off</span></button>
                 </div>
-                <input type="hidden" id="passwordConfirm">
             </div>
-            <div class="captcha-container">
-                <div id="captchaBox" class="captcha-box"></div>
-                <div class="input-group">
-                    <span class="material-icons">security</span>
-                    <input type="text" id="captchaInput" placeholder="Güvenlik Kodunu Girin" required>
+            <div class="field">
+                <label>Güvenlik Kodu</label>
+                <div class="captcha">
+                    <div class="captcha-box" id="captchaBox"></div>
+                    <input type="text" id="captchaInput" placeholder="Kodu gir" required>
+                    <button type="button" class="captcha-refresh" id="captchaRefresh"><span class="material-icons">refresh</span></button>
                 </div>
-                <button type="button" id="refreshCaptcha" class="refresh-captcha">
-                    <span class="material-icons">refresh</span>
-                </button>
             </div>
-            <button type="submit" class="login-btn">
-                <span class="material-icons">person_add</span>
-                Kayıt Ol
-            </button>
-            <p class="register-text">
-                Zaten hesabınız var mı? <a href="index.html">Giriş Yapın</a>
-            </p>
+            <button type="submit" class="btn btn-primary">Kayıt Ol</button>
         </form>
+        <p class="auth-alt">Zaten hesabın var mı? <a href="index.html">Giriş yap</a></p>
     </div>
-    <script src="register.js"></script>
-    <script src="pin.js"></script>
+    <script src="auth.js"></script>
     <script src="pwa.js"></script>
 </body>
-</html> 
+</html>
