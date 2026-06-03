@@ -1,57 +1,98 @@
-// Uygulama verilerini Firestore'da saklayacağız
-let banks = [];
+/* ============================================================
+   Dijital Cüzdan - Uygulama mantığı
+   Veri Firestore'da users/{uid} altında saklanır.
+   ============================================================ */
+
+/* ---------- Sabitler ---------- */
+const CURRENCIES = [
+    { code: 'TRY', symbol: '₺', name: 'TL' },
+    { code: 'EUR', symbol: '€', name: 'Euro' },
+    { code: 'USD', symbol: '$', name: 'Dolar' },
+    { code: 'GBP', symbol: '£', name: 'Pound' },
+    { code: 'AED', symbol: 'د.إ', name: 'AED' }
+];
+
+const BANKS = [
+    { name: 'Ziraat Bankası', img: 'img/ziraatbankasi.png' },
+    { name: 'Vakıfbank', img: 'img/vakifbank.png' },
+    { name: 'İş Bankası', img: 'img/isbankasi.png' },
+    { name: 'Halkbank', img: 'img/halkbankasi.png' },
+    { name: 'Garanti', img: 'img/garanti.png' },
+    { name: 'Yapı Kredi', img: 'img/yapikredi.png' },
+    { name: 'Akbank', img: 'img/akbank.png' },
+    { name: 'QNB', img: 'img/qnb.png' },
+    { name: 'Denizbank', img: 'img/denizbank.png' },
+    { name: 'Papara', img: 'img/papara.png' },
+    { name: 'Emirates NBD', img: 'img/emiratesnbd.png' }
+];
+const BANK_IMG = Object.fromEntries(BANKS.map(b => [b.name, b.img]));
+
+const CARD_COLORS = ['terracotta', 'khaki', 'navy', 'plum', 'teal', 'charcoal'];
+
+const CATEGORIES = [
+    { name: 'Market', icon: 'shopping_cart', color: '#C2683B' },
+    { name: 'Yemek', icon: 'restaurant', color: '#D98A4E' },
+    { name: 'Ulaşım', icon: 'directions_bus', color: '#6E7355' },
+    { name: 'Giyim', icon: 'checkroom', color: '#9C6B4A' },
+    { name: 'Teknoloji', icon: 'devices', color: '#4E6B6E' },
+    { name: 'Eğlence', icon: 'movie', color: '#8A5A7A' },
+    { name: 'Oyun', icon: 'sports_esports', color: '#5E7045' },
+    { name: 'Kozmetik', icon: 'spa', color: '#B08A6A' },
+    { name: 'Diğer', icon: 'category', color: '#918872' }
+];
+const CATEGORY_ICON = Object.fromEntries(CATEGORIES.map(c => [c.name, c.icon]));
+const CATEGORY_COLOR = Object.fromEntries(CATEGORIES.map(c => [c.name, c.color]));
+
+const SUB_ICONS = ['subscriptions', 'movie', 'music_note', 'sports_esports', 'cloud', 'fitness_center', 'wifi', 'bolt', 'newspaper', 'school'];
+
+/* ---------- Durum ---------- */
+let cards = [];
 let debts = [];
 let subscriptions = [];
 let expenses = [];
+let transactions = [];
+let userSettings = { defaultCurrency: 'TRY', monthlyBudget: 0 };
+let selectedDate = new Date();
+let exchangeRates = null;
+let balanceHidden = false;
+let editingCardId = null;
+let activeCardId = null; // para ekle / transfer için
 
-// Döviz kurları için API URL'leri
 const EXCHANGE_API_URL = 'https://api.exchangerate-api.com/v4/latest/TRY';
 
-// Döviz kurlarını saklayacağımız global değişken
-let exchangeRates = null;
+/* ---------- Yardımcılar ---------- */
+function $(sel, root = document) { return root.querySelector(sel); }
+function $all(sel, root = document) { return Array.from(root.querySelectorAll(sel)); }
 
-// Seçili ay için global değişken
-let selectedDate = new Date();
-
-// Global değişkenlere ekle
-let userSettings = {
-    defaultCurrency: 'TRY'
-};
-
-// Para girişi kontrolü için fonksiyon
-function setupAmountInputs() {
-    document.querySelectorAll('.amount-input').forEach(input => {
-        input.addEventListener('input', function(e) {
-            // Sadece sayılar ve virgül karakterine izin ver
-            let value = this.value.replace(/[^\d,]/g, '');
-            
-            // Virgül kontrolü
-            if (value.includes(',')) {
-                const parts = value.split(',');
-                // Sadece bir virgül ve virgülden sonra en fazla 2 basamak
-                if (parts.length > 2) {
-                    value = parts[0] + ',' + parts[1];
-                }
-                if (parts[1] && parts[1].length > 2) {
-                    value = parts[0] + ',' + parts[1].substring(0, 2);
-                }
-            }
-            
-            // Değeri güncelle
-            this.value = value;
-        });
-
-        // Mobil klavyede decimal klavye açılması için
-        input.setAttribute('inputmode', 'decimal');
-    });
+function symbolOf(code) {
+    const c = CURRENCIES.find(x => x.code === code);
+    return c ? c.symbol : '';
 }
 
-// Döviz kurlarını güncelleme fonksiyonu
+function formatCurrency(amount, currency) {
+    const n = Number(amount) || 0;
+    return `${symbolOf(currency)} ${n.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+function formatDate(dateStr) {
+    return new Date(dateStr).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
+}
+
+function parseAmount(value) {
+    if (typeof value !== 'string') return Number(value) || 0;
+    return parseFloat(value.replace(/\./g, '').replace(',', '.')) || 0;
+}
+
+function convertCurrency(amount, from, to) {
+    if (!exchangeRates || from === to) return amount;
+    const inTRY = amount * (exchangeRates[from] || 1);
+    return inTRY / (exchangeRates[to] || 1);
+}
+
 async function updateExchangeRates() {
     try {
-        const response = await fetch(EXCHANGE_API_URL);
-        const data = await response.json();
-        // TRY baz alındığı için tersini alıyoruz
+        const res = await fetch(EXCHANGE_API_URL);
+        const data = await res.json();
         exchangeRates = {
             TRY: 1,
             USD: 1 / data.rates.USD,
@@ -59,1119 +100,804 @@ async function updateExchangeRates() {
             GBP: 1 / data.rates.GBP,
             AED: 1 / data.rates.AED
         };
-        return true;
-    } catch (error) {
-        console.error('Döviz kurları alınamadı:', error);
-        return false;
+    } catch (e) {
+        console.error('Döviz kurları alınamadı:', e);
     }
 }
 
-// Belirli bir döviz cinsinden TL'ye çevirme
-function convertToTRY(amount, currency) {
-    if (!exchangeRates) return amount; // Kurlar yüklenmediyse direkt miktarı döndür
-    return amount * exchangeRates[currency];
+function toast(msg) {
+    let t = $('#toast');
+    if (!t) {
+        t = document.createElement('div');
+        t.id = 'toast';
+        t.className = 'toast';
+        document.body.appendChild(t);
+    }
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(t._timer);
+    t._timer = setTimeout(() => t.classList.remove('show'), 2200);
 }
 
-// Tema yönetimi
+/* ---------- Tema ---------- */
 function initTheme() {
-    const savedTheme = localStorage.getItem('theme') || 'light';
-    document.documentElement.setAttribute('data-theme', savedTheme);
+    document.documentElement.setAttribute('data-theme', localStorage.getItem('theme') || 'light');
 }
-
 function toggleTheme() {
-    const currentTheme = document.documentElement.getAttribute('data-theme');
-    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-    document.documentElement.setAttribute('data-theme', newTheme);
-    localStorage.setItem('theme', newTheme);
+    const next = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('theme', next);
 }
 
-// Tema değiştirme butonu olayı
-document.getElementById('themeToggle').addEventListener('click', toggleTheme);
-
-// Tema başlatma
-initTheme();
-
-// DOM elementleri
-const banksList = document.getElementById('banksList');
-const debtsList = document.getElementById('debtsList');
-const subscriptionsList = document.getElementById('subscriptionsList');
-const expensesList = document.getElementById('expensesList');
-const totalDebtElement = document.getElementById('totalDebt');
-const totalAssetsElement = document.getElementById('totalAssets');
-const bankModal = document.getElementById('bankModal');
-const debtModal = document.getElementById('debtModal');
-const subscriptionModal = document.getElementById('subscriptionModal');
-const expenseModal = document.getElementById('expenseModal');
-const debtDetailModal = document.getElementById('debtDetailModal');
-const bankDetailModal = document.getElementById('bankDetailModal');
-const subscriptionDetailModal = document.getElementById('subscriptionDetailModal');
-const bankForm = document.getElementById('bankForm');
-const debtForm = document.getElementById('debtForm');
-const subscriptionForm = document.getElementById('subscriptionForm');
-const expenseForm = document.getElementById('expenseForm');
-const expenseDetailModal = document.getElementById('expenseDetailModal');
-const expenseDetailTitle = document.getElementById('expenseDetailTitle');
-const expenseDetailDelete = document.getElementById('expenseDetailDelete');
-const monthlyExpensesElement = document.getElementById('monthlyExpenses');
-
-// Kategori ikonları
-const categoryIcons = {
-    'Market': 'shopping_cart',
-    'Yemek': 'restaurant',
-    'Oyun': 'sports_esports',
-    'Ulaşım': 'directions_bus',
-    'Giyim': 'checkroom',
-    'Teknoloji': 'devices',
-    'Eğlence': 'movie',
-    'Kozmetik': 'spa'
-};
-
-// Para birimi formatlama fonksiyonu
-function formatCurrency(amount, currency) {
-    const symbols = {
-        'TRY': '₺',
-        'EUR': '€',
-        'USD': '$',
-        'GBP': '£',
-        'AED': 'د.إ'
-    };
-    
-    return `${symbols[currency] || ''} ${amount.toLocaleString('tr-TR', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-    })}`;
-}
-
-// Tab işlemleri
-document.querySelectorAll('.tab-btn').forEach(button => {
-    button.addEventListener('click', () => {
-        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-        
-        button.classList.add('active');
-        document.getElementById(button.dataset.tab).classList.add('active');
-    });
-});
-
-// Modal işlemleri
-document.getElementById('addBankBtn').addEventListener('click', () => {
-    bankModal.classList.add('active');
-});
-
-document.getElementById('addDebtBtn').addEventListener('click', () => {
-    debtModal.classList.add('active');
-});
-
-document.getElementById('addSubscriptionBtn').addEventListener('click', () => {
-    subscriptionModal.classList.add('active');
-});
-
-document.getElementById('addExpenseBtn').addEventListener('click', () => {
-    // Banka seçeneklerini güncelle
-    const bankSelect = document.getElementById('expenseBank');
-    bankSelect.innerHTML = '<option value="">Ödeme Yapılan Hesap</option>' +
-        banks.map(bank => `
-            <option value="${bank.id}">${bank.name} (${formatCurrency(bank.balance, bank.currency)})</option>
-        `).join('');
-    
-    expenseModal.classList.add('active');
-});
-
-document.querySelectorAll('.cancel-btn').forEach(button => {
-    button.addEventListener('click', () => {
-        bankModal.classList.remove('active');
-        debtModal.classList.remove('active');
-        subscriptionModal.classList.remove('active');
-        expenseModal.classList.remove('active');
-    });
-});
-
-// Banka seçimi
-document.querySelectorAll('.bank-select-btn').forEach(button => {
-    button.addEventListener('click', () => {
-        document.querySelectorAll('.bank-select-btn').forEach(btn => btn.classList.remove('selected'));
-        button.classList.add('selected');
-        document.getElementById('bankName').value = button.dataset.bank;
-    });
-});
-
-// Kart tipi seçimi
-document.querySelectorAll('.card-type-btn').forEach(button => {
-    button.addEventListener('click', () => {
-        document.querySelectorAll('.card-type-btn').forEach(btn => btn.classList.remove('selected'));
-        button.classList.add('selected');
-        document.getElementById('cardType').value = button.dataset.type;
-    });
-});
-
-// Form işlemleri
-bankForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    
-    const bankName = document.getElementById('bankName').value;
-    if (!bankName) {
-        alert('Lütfen bir banka seçin');
-        return;
-    }
-
-    const currency = document.getElementById('bankCurrency').value;
-    if (!currency) {
-        alert('Lütfen bir döviz cinsi seçin');
-        return;
-    }
-
-    const cardType = document.getElementById('cardType').value;
-    if (!cardType) {
-        alert('Lütfen kart tipini seçin');
-        return;
-    }
-
-    const bank = {
-        id: Date.now(),
-        name: bankName,
-        balance: 0,
-        currency: currency,
-        cardType: cardType // Yeni alan
-    };
-    
-    banks.push(bank);
-    saveData();
-    renderBanks();
-    bankForm.reset();
-    document.querySelectorAll('.bank-select-btn').forEach(btn => btn.classList.remove('selected'));
-    document.querySelectorAll('.card-type-btn').forEach(btn => btn.classList.remove('selected'));
-    bankModal.classList.remove('active');
-});
-
-// Para birimi seçimi için event listener'ları ekle
-document.querySelectorAll('#debtModal .currency-select-btn').forEach(button => {
-    button.addEventListener('click', function() {
-        document.querySelectorAll('#debtModal .currency-select-btn').forEach(btn => 
-            btn.classList.remove('selected'));
-        this.classList.add('selected');
-        document.getElementById('debtCurrency').value = this.dataset.currency;
-    });
-});
-
-document.querySelectorAll('#subscriptionModal .currency-select-btn').forEach(button => {
-    button.addEventListener('click', function() {
-        document.querySelectorAll('#subscriptionModal .currency-select-btn').forEach(btn => 
-            btn.classList.remove('selected'));
-        this.classList.add('selected');
-        document.getElementById('subscriptionCurrency').value = this.dataset.currency;
-    });
-});
-
-// Form submit olaylarında virgüllü değerleri parse et
-function parseAmount(value) {
-    if (typeof value === 'string') {
-        return parseFloat(value.replace(',', '.'));
-    }
-    return value;
-}
-
-// Form submit olaylarını güncelle
-debtForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    
-    const currency = document.getElementById('debtCurrency').value;
-    if (!currency) {
-        alert('Lütfen bir para birimi seçin');
-        return;
-    }
-    
-    const debt = {
-        id: Date.now(),
-        title: document.getElementById('debtTitle').value,
-        amount: parseAmount(document.getElementById('debtAmount').value),
-        currency: currency,
-        dueDate: document.getElementById('dueDate').value || null,
-        isPaid: document.getElementById('isPaid').checked
-    };
-    
-    debts.push(debt);
-    saveData();
-    renderDebts();
-    debtForm.reset();
-    document.querySelectorAll('#debtModal .currency-select-btn').forEach(btn => 
-        btn.classList.remove('selected'));
-    debtModal.classList.remove('active');
-});
-
-// Abonelik ekleme formunu güncelle
-subscriptionForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    
-    const currency = document.getElementById('subscriptionCurrency').value;
-    if (!currency) {
-        alert('Lütfen bir para birimi seçin');
-        return;
-    }
-    
-    const subscription = {
-        id: Date.now(),
-        title: document.getElementById('subscriptionTitle').value,
-        amount: parseAmount(document.getElementById('subscriptionAmount').value),
-        currency: currency,
-        period: document.getElementById('subscriptionPeriod').value,
-        paymentDate: document.getElementById('subscriptionDate').value,
-        lastPaymentDate: null,
-        isPaid: false
-    };
-    
-    subscriptions.push(subscription);
-    saveData();
-    renderSubscriptions();
-    subscriptionForm.reset();
-    document.querySelectorAll('#subscriptionModal .currency-select-btn').forEach(btn => 
-        btn.classList.remove('selected'));
-    subscriptionModal.classList.remove('active');
-});
-
-expenseForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    
-    const amount = parseAmount(document.getElementById('expenseAmount').value);
-    const bankId = document.getElementById('expenseBank').value;
-    
-    // Seçilen bankayı bul
-    const bankIndex = banks.findIndex(b => b.id.toString() === bankId);
-    if (bankIndex === -1) {
-        alert('Lütfen bir hesap seçin');
-        return;
-    }
-    
-    // Yeterli bakiye kontrolü
-    if (banks[bankIndex].balance < amount) {
-        alert('Seçilen hesapta yeterli bakiye yok');
-        return;
-    }
-    
-    // Bankadan tutarı düş
-    banks[bankIndex].balance -= amount;
-    
-    const expense = {
-        id: Date.now(),
-        title: document.getElementById('expenseCategory').value,
-        category: document.getElementById('expenseCategory').value,
-        amount: amount,
-        date: new Date().toISOString(),
-        bankId: bankId,
-        bankName: banks[bankIndex].name,
-        currency: banks[bankIndex].currency
-    };
-    
-    expenses.push(expense);
-    saveData();
-    renderExpenses();
-    renderBanks(); // Banka bakiyelerini güncelle
-    expenseForm.reset();
-    document.querySelectorAll('.category-btn').forEach(btn => btn.classList.remove('selected'));
-    expenseModal.classList.remove('active');
-});
-
-// Liste boşken gösterilecek bilgilendirme ekranı
-function emptyState(icon, text) {
-    return `
-        <div class="empty-state">
-            <span class="material-icons">${icon}</span>
-            <p>${text}</p>
-        </div>`;
-}
-
-// Render fonksiyonları
-function renderBanks() {
-    if (banks.length === 0) {
-        banksList.innerHTML = emptyState('account_balance', 'Henüz hesap eklenmedi');
-        updateTotals();
-        return;
-    }
-    banksList.innerHTML = banks.map(bank => `
-        <div class="bank-card" onclick="showBankDetail(${bank.id})">
-            <div class="bank-card-content">
-                <div class="bank-info">
-                    <h3>${bank.name}</h3>
-                    <div class="amount">${formatCurrency(bank.balance, bank.currency)}</div>
-                    <small class="card-type">${bank.cardType === 'debit' ? 'Debit Kart' : 'Kredi Kartı'}</small>
-                </div>
-                <div class="bank-logo">
-                    <img src="img/${bank.name.toLowerCase().replace(/\s+/g, '').replace(/ı/g, 'i')}.png" alt="${bank.name}">
-                </div>
-            </div>
-        </div>
-    `).join('');
-    updateTotals();
-}
-
-function renderDebts() {
-    if (debts.length === 0) {
-        debtsList.innerHTML = emptyState('credit_card_off', 'Henüz borç eklenmedi');
-        updateTotals();
-        return;
-    }
-    debtsList.innerHTML = debts.map(debt => `
-        <div class="debt-card ${debt.isPaid ? 'paid-debt' : ''}" onclick="showDebtDetail(${debt.id})">
-            <h3>${debt.title}</h3>
-            <p class="amount">${formatCurrency(debt.amount, debt.currency)}</p>
-            ${debt.dueDate ? `<p class="due-date">Son Ödeme: ${formatDate(debt.dueDate)}</p>` : ''}
-        </div>
-    `).join('');
-    updateTotals();
-}
-
-function renderSubscriptions() {
-    if (subscriptions.length === 0) {
-        subscriptionsList.innerHTML = emptyState('subscriptions', 'Henüz abonelik eklenmedi');
-        document.getElementById('totalSubscriptionAmount').textContent = formatCurrency(0, userSettings.defaultCurrency);
-        updateTotals();
-        return;
-    }
-    subscriptionsList.innerHTML = subscriptions.map(subscription => {
-        const nextPayment = getNextPaymentDate(subscription);
-        const isOverdue = isPaymentOverdue(subscription);
-        const isPaid = subscription.isPaid && subscription.lastPaymentDate;
-        
-        return `
-            <div class="subscription-card ${isOverdue ? 'overdue' : ''} ${isPaid ? 'paid-subscription' : ''}" 
-                 onclick="showSubscriptionDetail(${subscription.id})">
-                <h3>${subscription.title}</h3>
-                <p class="amount">${formatCurrency(subscription.amount, subscription.currency)}</p>
-                <div class="subscription-info">
-                    <span>${subscription.period === 'monthly' ? 'Aylık' : 'Yıllık'}</span>
-                    <div class="payment-date">
-                        <span class="material-icons">${isOverdue ? 'warning' : isPaid ? 'check_circle' : 'event'}</span>
-                        <span>${isOverdue ? 'Ödeme Gecikti!' : 
-                               isPaid ? 'Bu Ay Ödendi - Sonraki: ' + formatDate(nextPayment) :
-                               'Sonraki Ödeme: ' + formatDate(nextPayment)}</span>
-                    </div>
-                </div>
-            </div>
-        `;
-    }).join('');
-
-    // Toplam abonelik miktarını hesapla ve göster (varsayılan para birimine çevirerek)
-    const totalMonthly = subscriptions.reduce((total, subscription) => {
-        const amount = parseFloat(subscription.amount) || 0;
-        const amountInDefaultCurrency = convertCurrency(amount, subscription.currency, userSettings.defaultCurrency);
-        if (subscription.period === 'monthly') {
-            return total + amountInDefaultCurrency;
-        } else { // yearly
-            return total + (amountInDefaultCurrency / 12);
-        }
-    }, 0);
-
-    document.getElementById('totalSubscriptionAmount').textContent = formatCurrency(totalMonthly, userSettings.defaultCurrency);
-    updateTotals();
-}
-
-// Ay seçici butonları için event listener'lar
-document.getElementById('prevMonth').addEventListener('click', () => {
-    selectedDate.setMonth(selectedDate.getMonth() - 1);
-    updateSelectedMonthDisplay();
-    renderExpenses();
-});
-
-document.getElementById('nextMonth').addEventListener('click', () => {
-    selectedDate.setMonth(selectedDate.getMonth() + 1);
-    updateSelectedMonthDisplay();
-    renderExpenses();
-});
-
-// Seçili ayı görüntüleme
-function updateSelectedMonthDisplay() {
-    const options = { year: 'numeric', month: 'long' };
-    document.getElementById('selectedMonth').textContent = selectedDate.toLocaleDateString('tr-TR', options);
-}
-
-// Harcamaları render etme fonksiyonunu güncelle
-function renderExpenses() {
-    const expensesList = document.getElementById('expensesList');
-    expensesList.innerHTML = '';
-    
-    // Seçili ayın başlangıç ve bitiş tarihleri
-    const startOfMonth = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
-    const endOfMonth = new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 0);
-    
-    // Seçili aya ait harcamaları filtrele
-    const filteredExpenses = expenses.filter(expense => {
-        const expenseDate = new Date(expense.date);
-        return expenseDate >= startOfMonth && expenseDate <= endOfMonth;
-    });
-    
-    // Harcamaları tarihe göre sırala (en yeni en üstte)
-    filteredExpenses.sort((a, b) => new Date(b.date) - new Date(a.date));
-    
-    if (filteredExpenses.length === 0) {
-        expensesList.innerHTML = emptyState('receipt_long', 'Bu ay harcama kaydı yok');
-        updateTotalExpenses();
-        return;
-    }
-
-    filteredExpenses.forEach(expense => {
-        const card = document.createElement('div');
-        card.className = 'expense-card';
-        card.innerHTML = `
-            <h3>
-                <span class="material-icons">${categoryIcons[expense.category]}</span>
-                ${expense.title}
-            </h3>
-            <p class="amount">${formatCurrency(expense.amount, expense.currency)}</p>
-            <p class="expense-date">
-                ${formatDate(expense.date)}
-                <br>
-                <small class="bank-name">${expense.bankName || 'Bilinmeyen Hesap'}</small>
-            </p>
-        `;
-        
-        card.onclick = () => showExpenseDetail(expense);
-        expensesList.appendChild(card);
-    });
-    
-    updateTotalExpenses();
-}
-
-// Toplam harcamaları güncelleme fonksiyonunu güncelle
-function updateTotalExpenses() {
-    // Seçili ayın başlangıç ve bitiş tarihleri
-    const startOfMonth = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
-    const endOfMonth = new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 0);
-    
-    // Seçili aya ait toplam harcama
-    const monthlyTotal = expenses
-        .filter(expense => {
-            const expenseDate = new Date(expense.date);
-            return expenseDate >= startOfMonth && expenseDate <= endOfMonth;
-        })
-        .reduce((sum, expense) => {
-            // Harcama tutarını varsayılan para birimine çevir
-            const amountInDefaultCurrency = convertCurrency(expense.amount, expense.currency, userSettings.defaultCurrency);
-            return sum + amountInDefaultCurrency;
-        }, 0);
-    
-    monthlyExpensesElement.textContent = formatCurrency(monthlyTotal, userSettings.defaultCurrency);
-    updateTotals();
-}
-
-// Borç silme fonksiyonu
-function deleteDebt(debtId) {
-    if (confirm('Bu borcu silmek istediğinizden emin misiniz?')) {
-        debts = debts.filter(debt => debt.id !== debtId);
-        saveData();
-        renderDebts();
-    }
-}
-
-// Borç ödeme durumunu değiştirme
-function toggleDebtPaid(debtId) {
-    const debtIndex = debts.findIndex(debt => debt.id === debtId);
-    if (debtIndex !== -1) {
-        debts[debtIndex].isPaid = !debts[debtIndex].isPaid;
-        saveData();
-        renderDebts();
-    }
-}
-
-// Borç detay modalı
-function showDebtDetail(debtId) {
-    const debt = debts.find(d => d.id === debtId);
-    if (!debt) return;
-
-    const detailTitle = document.getElementById('detailTitle');
-    const detailAmount = document.getElementById('debtDetailAmount');
-    const detailDate = document.getElementById('debtDetailDate');
-    const detailIsPaid = document.getElementById('detailIsPaid');
-    const detailDeleteBtn = document.getElementById('detailDeleteBtn');
-
-    detailTitle.textContent = debt.title;
-    detailAmount.value = debt.amount;
-    detailDate.value = debt.dueDate || '';
-    detailIsPaid.checked = debt.isPaid;
-
-    detailIsPaid.onchange = () => {
-        toggleDebtPaid(debtId);
-        debtDetailModal.classList.remove('active');
-    };
-
-    detailDeleteBtn.onclick = () => {
-        deleteDebt(debtId);
-        debtDetailModal.classList.remove('active');
-    };
-
-    debtDetailModal.classList.add('active');
-}
-
-// Banka detay modalı
-function showBankDetail(bankId) {
-    const bank = banks.find(b => b.id === bankId);
-    if (!bank) return;
-
-    const detailTitle = document.getElementById('bankDetailTitle');
-    const detailBalance = document.getElementById('bankDetailBalanceDisplay');
-    const deleteBtn = document.getElementById('bankDetailDelete');
-    currentBankId = bankId; // Global değişken olarak sakla
-
-    detailTitle.textContent = bank.name;
-    detailBalance.textContent = formatCurrency(bank.balance, bank.currency);
-
-    // Transfer için diğer bankaları listele
-    const targetBankSelect = document.getElementById('targetBank');
-    targetBankSelect.innerHTML = '<option value="">Hedef Hesap Seçin</option>' +
-        banks.filter(b => b.id !== bankId)
-            .map(b => `<option value="${b.id}">${b.name} (${formatCurrency(b.balance, b.currency)})</option>`)
-            .join('');
-
-    deleteBtn.onclick = () => {
-        if (confirm('Bu bankayı silmek istediğinizden emin misiniz?')) {
-            banks = banks.filter(b => b.id !== bankId);
-            saveData();
-            renderBanks();
-            bankDetailModal.classList.remove('active');
-        }
-    };
-
-    bankDetailModal.classList.add('active');
-    hideAddMoneyForm();
-    hideTransferForm();
-}
-
-// Para ekleme formunu göster
-function showAddMoneyForm() {
-    document.getElementById('addMoneyForm').style.display = 'block';
-    document.getElementById('transferForm').style.display = 'none';
-    document.getElementById('addAmount').value = '';
-}
-
-// Para ekleme formunu gizle
-function hideAddMoneyForm() {
-    document.getElementById('addMoneyForm').style.display = 'none';
-}
-
-// Transfer formunu göster
-function showTransferForm() {
-    document.getElementById('transferForm').style.display = 'block';
-    document.getElementById('addMoneyForm').style.display = 'none';
-    document.getElementById('transferAmount').value = '';
-}
-
-// Transfer formunu gizle
-function hideTransferForm() {
-    document.getElementById('transferForm').style.display = 'none';
-}
-
-// Para ekleme işlemi
-function addMoney() {
-    const amount = parseAmount(document.getElementById('addAmount').value);
-    if (!amount || amount <= 0) {
-        alert('Lütfen geçerli bir miktar girin');
-        return;
-    }
-
-    const bankIndex = banks.findIndex(b => b.id === currentBankId);
-    if (bankIndex === -1) return;
-
-    banks[bankIndex].balance += amount;
-    saveData();
-    renderBanks();
-    showBankDetail(currentBankId); // Detay görünümünü güncelle
-    hideAddMoneyForm();
-}
-
-// Para transferi işlemi
-function transferMoney() {
-    const amount = parseAmount(document.getElementById('transferAmount').value);
-    const targetBankId = document.getElementById('targetBank').value;
-
-    if (!amount || amount <= 0) {
-        alert('Lütfen geçerli bir miktar girin');
-        return;
-    }
-
-    if (!targetBankId) {
-        alert('Lütfen hedef hesap seçin');
-        return;
-    }
-
-    const sourceBankIndex = banks.findIndex(b => b.id === currentBankId);
-    const targetBankIndex = banks.findIndex(b => b.id === parseInt(targetBankId));
-
-    if (sourceBankIndex === -1 || targetBankIndex === -1) return;
-
-    const sourceBank = banks[sourceBankIndex];
-    const targetBank = banks[targetBankIndex];
-
-    if (sourceBank.balance < amount) {
-        alert('Yetersiz bakiye');
-        return;
-    }
-
-    // Para birimlerini kontrol et ve gerekirse dönüşüm yap
-    let transferAmount = amount;
-    if (sourceBank.currency !== targetBank.currency) {
-        // Önce TRY'ye çevir
-        const amountInTRY = convertToTRY(amount, sourceBank.currency);
-        // Hedef para birimine çevir
-        transferAmount = convertCurrency(amountInTRY, 'TRY', targetBank.currency);
-    }
-
-    // Transfer işlemini gerçekleştir
-    sourceBank.balance -= amount;
-    targetBank.balance += transferAmount;
-
-    saveData();
-    renderBanks();
-    showBankDetail(currentBankId); // Detay görünümünü güncelle
-    hideTransferForm();
-}
-
-// Global değişken olarak currentBankId'yi tanımla
-let currentBankId = null;
-
-// Abonelik detay modalını güncelle
-function showSubscriptionDetail(subscriptionId) {
-    const subscription = subscriptions.find(s => s.id === subscriptionId);
-    if (!subscription) return;
-
-    const detailTitle = document.getElementById('subscriptionDetailTitle');
-    const detailAmount = document.getElementById('subscriptionDetailAmount');
-    const detailPeriod = document.getElementById('subscriptionDetailPeriod');
-    const detailDate = document.getElementById('subscriptionDetailDate');
-    const detailPaid = document.getElementById('subscriptionDetailPaid');
-    const saveBtn = document.getElementById('subscriptionDetailSave');
-    const deleteBtn = document.getElementById('subscriptionDetailDelete');
-
-    detailTitle.textContent = subscription.title;
-    detailAmount.value = subscription.amount;
-    detailPeriod.value = subscription.period;
-    detailDate.value = subscription.paymentDate;
-    detailPaid.checked = subscription.isPaid;
-
-    saveBtn.onclick = () => {
-        const newAmount = parseAmount(detailAmount.value);
-        if (!isNaN(newAmount) && newAmount >= 0) {
-            const index = subscriptions.findIndex(s => s.id === subscriptionId);
-            if (index !== -1) {
-                const isPaidChanged = detailPaid.checked !== subscriptions[index].isPaid;
-                
-                subscriptions[index] = {
-                    ...subscriptions[index],
-                    amount: newAmount,
-                    period: detailPeriod.value,
-                    paymentDate: detailDate.value,
-                    isPaid: detailPaid.checked,
-                    lastPaymentDate: isPaidChanged && detailPaid.checked ? new Date().toISOString() : subscriptions[index].lastPaymentDate
-                };
-                
-                saveData();
-                renderSubscriptions();
-                subscriptionDetailModal.classList.remove('active');
-            }
-        }
-    };
-
-    deleteBtn.onclick = () => {
-        if (confirm('Bu aboneliği silmek istediğinizden emin misiniz?')) {
-            subscriptions = subscriptions.filter(s => s.id !== subscriptionId);
-            saveData();
-            renderSubscriptions();
-            subscriptionDetailModal.classList.remove('active');
-        }
-    };
-
-    subscriptionDetailModal.classList.add('active');
-}
-
-// Sonraki ödeme tarihini hesaplama fonksiyonunu güncelle
-function getNextPaymentDate(subscription) {
-    const today = new Date();
-    let baseDate;
-
-    // Eğer son ödeme yapıldıysa, son ödeme tarihini baz al
-    if (subscription.lastPaymentDate && subscription.isPaid) {
-        baseDate = new Date(subscription.lastPaymentDate);
-    } else {
-        baseDate = new Date(subscription.paymentDate);
-    }
-
-    const nextPayment = new Date(baseDate);
-
-    if (subscription.period === 'monthly') {
-        // Aylık abonelik için
-        while (nextPayment < today) {
-            nextPayment.setMonth(nextPayment.getMonth() + 1);
-        }
-    } else {
-        // Yıllık abonelik için
-        while (nextPayment < today) {
-            nextPayment.setFullYear(nextPayment.getFullYear() + 1);
-        }
-    }
-
-    return nextPayment;
-}
-
-// Ödeme gecikme kontrolünü güncelle
-function isPaymentOverdue(subscription) {
-    const today = new Date();
-    const nextPayment = getNextPaymentDate(subscription);
-    
-    // Eğer bu ay ödendiyse, gecikme yok
-    if (subscription.isPaid && subscription.lastPaymentDate) {
-        const lastPayment = new Date(subscription.lastPaymentDate);
-        const currentMonth = today.getMonth();
-        const currentYear = today.getFullYear();
-        const paymentMonth = lastPayment.getMonth();
-        const paymentYear = lastPayment.getFullYear();
-        
-        // Aynı ay içindeyse veya gelecek bir tarihse gecikme yok
-        if ((currentYear === paymentYear && currentMonth === paymentMonth) || 
-            lastPayment > today) {
-            return false;
-        }
-    }
-    
-    return today > nextPayment;
-}
-
-function updateTotals() {
-    const today = new Date();
-    
-    // Ödenmemiş borçların toplamını varsayılan para birimine çevir
-    const totalDebt = debts
-        .filter(debt => !debt.isPaid)
-        .reduce((sum, debt) => {
-            const amountInDefaultCurrency = convertCurrency(debt.amount, debt.currency, userSettings.defaultCurrency);
-            return sum + amountInDefaultCurrency;
-        }, 0);
-    
-    // Vadesi geçmiş ve ödenmemiş aboneliklerin toplamını varsayılan para birimine çevir
-    const overdueSubscriptions = subscriptions
-        .filter(s => isPaymentOverdue(s) && !s.isPaid)
-        .reduce((sum, s) => {
-            const amountInDefaultCurrency = convertCurrency(s.amount, s.currency, userSettings.defaultCurrency);
-            if (s.period === 'monthly') {
-                return sum + amountInDefaultCurrency;
-            } else { // yearly
-                return sum + (amountInDefaultCurrency / 12);
-            }
-        }, 0);
-    
-    // Tüm varlıkları varsayılan para birimine çevir
-    const totalAssetsInDefaultCurrency = calculateTotalAssetsInCurrency(userSettings.defaultCurrency);
-    
-    // Toplam borcu varsayılan para biriminde göster
-    const totalDebtInDefaultCurrency = totalDebt + overdueSubscriptions;
-    
-    totalDebtElement.textContent = formatCurrency(totalDebtInDefaultCurrency, userSettings.defaultCurrency);
-    totalAssetsElement.textContent = formatCurrency(totalAssetsInDefaultCurrency - totalDebtInDefaultCurrency, userSettings.defaultCurrency);
-}
-
-// Verileri kaydetme fonksiyonu
+/* ---------- Firestore ---------- */
 async function saveData() {
     const user = firebase.auth().currentUser;
     if (!user) return;
-
     try {
-        // Firestore'a kaydet
         await firebase.firestore().collection('users').doc(user.uid).set({
-            banks: banks,
-            debts: debts,
-            subscriptions: subscriptions,
-            expenses: expenses,
+            cards, debts, subscriptions, expenses, transactions,
             settings: userSettings,
             lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-        });
-    } catch (error) {
-        console.error('Veri kaydetme hatası:', error);
+        }, { merge: true });
+    } catch (e) {
+        console.error('Veri kaydetme hatası:', e);
+        toast('Kaydedilemedi, bağlantıyı kontrol edin');
     }
 }
 
-// Verileri yükleme fonksiyonu
+function normalizeCard(c) {
+    return {
+        id: c.id,
+        bank: c.bank || c.name || 'Diğer',
+        label: c.label || c.name || c.bank || 'Kart',
+        last4: c.last4 || '',
+        color: c.color || CARD_COLORS[(c.id || 0) % CARD_COLORS.length],
+        balance: Number(c.balance) || 0,
+        currency: c.currency || 'TRY',
+        cardType: c.cardType || 'debit'
+    };
+}
+
 async function loadData() {
     const user = firebase.auth().currentUser;
     if (!user) return;
-
     try {
         const doc = await firebase.firestore().collection('users').doc(user.uid).get();
         if (doc.exists) {
-            const data = doc.data();
-            banks = data.banks || [];
-            debts = data.debts || [];
-            subscriptions = data.subscriptions || [];
-            expenses = data.expenses || [];
-            userSettings = data.settings || { defaultCurrency: 'TRY' };
-            
-            // Verileri görüntüle
-            renderBanks();
-            renderDebts();
-            renderSubscriptions();
-            renderExpenses();
+            const d = doc.data();
+            cards = (d.cards || d.banks || []).map(normalizeCard);
+            debts = d.debts || [];
+            subscriptions = d.subscriptions || [];
+            expenses = d.expenses || [];
+            transactions = d.transactions || [];
+            userSettings = Object.assign({ defaultCurrency: 'TRY', monthlyBudget: 0 }, d.settings || {});
         }
-    } catch (error) {
-        console.error('Veri yükleme hatası:', error);
+    } catch (e) {
+        console.error('Veri yükleme hatası:', e);
     }
+    renderAll();
 }
 
-function formatDate(dateString) {
-    const options = { year: 'numeric', month: 'long', day: 'numeric' };
-    return new Date(dateString).toLocaleDateString('tr-TR', options);
-}
-
-// Modal kapatma işlemleri
-document.querySelectorAll('.close-btn, .cancel-btn').forEach(button => {
-    button.addEventListener('click', () => {
-        bankModal.classList.remove('active');
-        debtModal.classList.remove('active');
-        subscriptionModal.classList.remove('active');
-        expenseModal.classList.remove('active');
-        debtDetailModal.classList.remove('active');
-        bankDetailModal.classList.remove('active');
-        subscriptionDetailModal.classList.remove('active');
-    });
-});
-
-// Modal dışına tıklandığında kapatma
-window.addEventListener('click', (e) => {
-    if (e.target.classList.contains('modal')) {
-        e.target.classList.remove('active');
-    }
-});
-
-// Kategori seçimi
-document.querySelectorAll('.category-btn').forEach(button => {
-    button.addEventListener('click', () => {
-        document.querySelectorAll('.category-btn').forEach(btn => btn.classList.remove('selected'));
-        button.classList.add('selected');
-        document.getElementById('expenseCategory').value = button.dataset.category;
-    });
-});
-
-function showExpenseDetail(expense) {
-    const expenseDetailTitle = document.getElementById('expenseDetailTitle');
-    const detailAmount = document.querySelector('#expenseDetailModal .detail-amount');
-    const detailDate = document.querySelector('#expenseDetailModal .expense-detail-date');
-    const expenseDetailModal = document.getElementById('expenseDetailModal');
-    
-    expenseDetailTitle.textContent = expense.title;
-    detailAmount.textContent = formatCurrency(expense.amount, expense.currency);
-    detailDate.textContent = `${formatDate(expense.date)}${expense.bankName ? ' - ' + expense.bankName : ''}`;
-    
-    expenseDetailDelete.onclick = () => {
-        if (confirm('Bu harcamayı silmek istediğinizden emin misiniz?')) {
-            // Harcama silindiğinde bankaya parayı geri ekle
-            if (expense.bankId) {
-                const bankIndex = banks.findIndex(b => b.id.toString() === expense.bankId.toString());
-                if (bankIndex !== -1) {
-                    banks[bankIndex].balance += expense.amount;
-                }
-            }
-            
-            expenses = expenses.filter(e => e.id !== expense.id);
-            saveData();
-            renderExpenses();
-            renderBanks(); // Banka bakiyelerini güncelle
-            expenseDetailModal.classList.remove('active');
-        }
-    };
-    
-    // Modal'ı göster
-    expenseDetailModal.classList.add('active');
-    
-    // Kapatma butonuna tıklama olayını ekle
-    const closeBtn = expenseDetailModal.querySelector('.close-btn');
-    closeBtn.onclick = () => {
-        expenseDetailModal.classList.remove('active');
-    };
-}
-
-// Başlangıç render
-renderBanks();
-renderDebts();
-renderSubscriptions();
-renderExpenses();
-
-// Döviz seçimi için event listener
-const currencyButtons = document.querySelectorAll('.currency-select-btn');
-const bankCurrencyInput = document.getElementById('bankCurrency');
-
-currencyButtons.forEach(button => {
-    button.addEventListener('click', function() {
-        currencyButtons.forEach(btn => btn.classList.remove('selected'));
-        this.classList.add('selected');
-        bankCurrencyInput.value = this.dataset.currency;
-    });
-});
-
-// Uygulama başlangıcında döviz kurlarını güncelle
-async function initializeApp() {
-    await updateExchangeRates();
-    // Her saat başı kurları güncelle
-    setInterval(updateExchangeRates, 3600000);
-    
-    renderBanks();
+/* ---------- Render: hepsi ---------- */
+function renderAll() {
+    updateSummary();
+    renderCards();
+    renderRecent();
     renderDebts();
-    renderSubscriptions();
+    renderSubs();
     renderExpenses();
+    updateMonthLabel();
 }
 
-// Başlangıç render işlemlerini güncelle
-document.addEventListener('DOMContentLoaded', initializeApp);
+/* ---------- Özet ---------- */
+function netWorthValue() {
+    const def = userSettings.defaultCurrency;
+    return cards.reduce((s, c) => s + convertCurrency(c.balance, c.currency, def), 0);
+}
+function totalDebtValue() {
+    const def = userSettings.defaultCurrency;
+    return debts.filter(d => !d.isPaid).reduce((s, d) => s + convertCurrency(d.amount, d.currency, def), 0);
+}
+function monthlyExpenseValue(date = new Date()) {
+    const def = userSettings.defaultCurrency;
+    const start = new Date(date.getFullYear(), date.getMonth(), 1);
+    const end = new Date(date.getFullYear(), date.getMonth() + 1, 0, 23, 59, 59);
+    return expenses
+        .filter(e => { const dd = new Date(e.date); return dd >= start && dd <= end; })
+        .reduce((s, e) => s + convertCurrency(e.amount, e.currency, def), 0);
+}
 
-// Çıkış yap butonu olayı
-document.getElementById('logoutBtn').addEventListener('click', () => {
-    if (confirm('Çıkış yapmak istediğinizden emin misiniz?')) {
-        firebase.auth().signOut().then(() => {
-            localStorage.clear();
-            window.location.href = 'index.html';
-        }).catch((error) => {
-            console.error('Çıkış hatası:', error);
-        });
+function maskMoney(text) {
+    return balanceHidden ? '••••••' : text;
+}
+
+function updateSummary() {
+    const def = userSettings.defaultCurrency;
+    $('#netWorth').textContent = maskMoney(formatCurrency(netWorthValue(), def));
+    $('#homeDebt').textContent = maskMoney(formatCurrency(totalDebtValue(), def));
+    $('#homeMonthly').textContent = maskMoney(formatCurrency(monthlyExpenseValue(), def));
+}
+
+/* ---------- Kartlar (carousel + flip) ---------- */
+function renderCards() {
+    const wrap = $('#cardCarousel');
+    const tiles = cards.map(c => {
+        const logo = BANK_IMG[c.bank] ? `<img src="${BANK_IMG[c.bank]}" alt="${c.bank}">` : '';
+        const last4 = c.last4 ? `•••• ${c.last4}` : '•••• ••••';
+        const typeLabel = c.cardType === 'credit' ? 'Kredi Kartı' : 'Banka Kartı';
+        return `
+        <div class="pay-card theme-${c.color}" data-id="${c.id}">
+          <div class="pay-card-inner">
+            <div class="pay-card-face front">
+              <div class="pc-top">
+                <span class="pc-label">${c.label}</span>
+                <span class="pc-logo">${logo}</span>
+              </div>
+              <span class="pc-chip"></span>
+              <div class="pc-number">${last4}</div>
+              <div class="pc-bottom">
+                <div>
+                  <span class="pc-type">${typeLabel}</span>
+                  <div class="pc-balance">${maskMoney(formatCurrency(c.balance, c.currency))}</div>
+                </div>
+                <span class="pc-cur">${c.currency}</span>
+              </div>
+            </div>
+            <div class="pay-card-face back">
+              <p class="pc-back-title">${c.label}</p>
+              <div class="pc-actions">
+                <button data-action="addmoney" data-id="${c.id}"><span class="material-icons">add</span>Para</button>
+                <button data-action="transfer" data-id="${c.id}"><span class="material-icons">swap_horiz</span>Transfer</button>
+                <button data-action="spend" data-id="${c.id}"><span class="material-icons">shopping_cart</span>Harcama</button>
+                <button data-action="edit" data-id="${c.id}"><span class="material-icons">edit</span>Düzenle</button>
+                <button data-action="delete" data-id="${c.id}" class="danger"><span class="material-icons">delete</span>Sil</button>
+              </div>
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+
+    const addTile = `
+        <button class="add-card-tile" data-action="addcard">
+          <span class="material-icons">add</span>
+          <span>Kart Ekle</span>
+        </button>`;
+
+    wrap.innerHTML = tiles + addTile;
+}
+
+/* ---------- Son hareketler ---------- */
+function activityList() {
+    const exp = expenses.map(e => ({
+        type: 'expense', icon: CATEGORY_ICON[e.category] || 'shopping_cart',
+        title: e.title || e.category, sub: e.cardName || '', date: e.date,
+        amount: e.amount, currency: e.currency, sign: -1
+    }));
+    const tx = transactions.map(t => ({
+        type: t.type,
+        icon: t.type === 'income' ? 'south_west' : 'swap_horiz',
+        title: t.title, sub: t.sub || '', date: t.date,
+        amount: t.amount, currency: t.currency, sign: t.type === 'income' ? 1 : 0
+    }));
+    return [...exp, ...tx].sort((a, b) => new Date(b.date) - new Date(a.date));
+}
+
+function renderRecent() {
+    const wrap = $('#recentActivity');
+    const items = activityList().slice(0, 8);
+    if (!items.length) { wrap.innerHTML = emptyState('receipt_long', 'Henüz hareket yok'); return; }
+    wrap.innerHTML = items.map(it => {
+        const cls = it.sign < 0 ? 'neg' : it.sign > 0 ? 'pos' : '';
+        const prefix = it.sign < 0 ? '-' : it.sign > 0 ? '+' : '';
+        return `
+        <div class="row">
+          <span class="row-icon"><span class="material-icons">${it.icon}</span></span>
+          <div class="row-main">
+            <span class="row-title">${it.title}</span>
+            <span class="row-sub">${it.sub ? it.sub + ' · ' : ''}${formatDate(it.date)}</span>
+          </div>
+          <span class="row-amount ${cls}">${prefix}${formatCurrency(it.amount, it.currency)}</span>
+        </div>`;
+    }).join('');
+}
+
+/* ---------- Borçlar ---------- */
+function debtBadge(d) {
+    if (d.isPaid) return '<span class="badge ok">Ödendi</span>';
+    if (!d.dueDate) return '';
+    const days = Math.ceil((new Date(d.dueDate) - new Date()) / 86400000);
+    if (days < 0) return '<span class="badge danger">Gecikti</span>';
+    if (days === 0) return '<span class="badge warn">Bugün</span>';
+    if (days <= 7) return `<span class="badge warn">${days} gün kaldı</span>`;
+    return `<span class="badge">${formatDate(d.dueDate)}</span>`;
+}
+
+function renderDebts() {
+    const q = ($('#debtSearch')?.value || '').toLowerCase();
+    const list = debts
+        .filter(d => d.title.toLowerCase().includes(q))
+        .sort((a, b) => (a.isPaid - b.isPaid) || (new Date(a.dueDate || '2999') - new Date(b.dueDate || '2999')));
+    const wrap = $('#debtsList');
+    if (!list.length) { wrap.innerHTML = emptyState('request_quote', 'Borç bulunmuyor'); return; }
+    wrap.innerHTML = list.map(d => {
+        const inst = (d.installments && d.installments > 1)
+            ? `<span class="row-sub">${d.installments} taksit · aylık ${formatCurrency(d.amount / d.installments, d.currency)}</span>` : '';
+        return `
+        <div class="card-row ${d.isPaid ? 'paid' : ''}" data-detail="debt" data-id="${d.id}">
+          <div class="row-main">
+            <span class="row-title">${d.title}</span>
+            ${inst}
+            <span class="row-badges">${debtBadge(d)}</span>
+          </div>
+          <span class="row-amount big">${formatCurrency(d.amount, d.currency)}</span>
+        </div>`;
+    }).join('');
+}
+
+/* ---------- Abonelikler ---------- */
+function nextPaymentDate(sub) {
+    const today = new Date();
+    let base = (sub.lastPaymentDate && sub.isPaid) ? new Date(sub.lastPaymentDate) : new Date(sub.paymentDate);
+    const next = new Date(base);
+    while (next < today) {
+        if (sub.period === 'yearly') next.setFullYear(next.getFullYear() + 1);
+        else next.setMonth(next.getMonth() + 1);
     }
-});
+    return next;
+}
+function monthlyEquivalent(sub) {
+    const m = sub.period === 'yearly' ? sub.amount / 12 : sub.amount;
+    return convertCurrency(m, sub.currency, userSettings.defaultCurrency);
+}
 
-// Kullanıcı ayarları modalı
-document.getElementById('settingsBtn').addEventListener('click', () => {
-    document.getElementById('settingsModal').classList.add('active');
-    // Mevcut varsayılan para birimini seç
-    document.querySelectorAll('#settingsModal .currency-select-btn').forEach(btn => {
-        if (btn.dataset.currency === userSettings.defaultCurrency) {
-            btn.classList.add('selected');
-        } else {
-            btn.classList.remove('selected');
-        }
+function renderSubs() {
+    const def = userSettings.defaultCurrency;
+    const monthly = subscriptions.reduce((s, x) => s + monthlyEquivalent(x), 0);
+    $('#subMonthlyTotal').textContent = formatCurrency(monthly, def);
+    $('#subYearlyTotal').textContent = formatCurrency(monthly * 12, def);
+
+    const q = ($('#subSearch')?.value || '').toLowerCase();
+    const list = subscriptions.filter(s => s.title.toLowerCase().includes(q));
+    const wrap = $('#subsList');
+    if (!list.length) { wrap.innerHTML = emptyState('autorenew', 'Abonelik bulunmuyor'); return; }
+    wrap.innerHTML = list.map(s => {
+        const np = nextPaymentDate(s);
+        const days = Math.ceil((np - new Date()) / 86400000);
+        let badge = `<span class="badge">${days} gün sonra</span>`;
+        if (days <= 3) badge = `<span class="badge warn">${days <= 0 ? 'Bugün' : days + ' gün'}</span>`;
+        return `
+        <div class="card-row" data-detail="sub" data-id="${s.id}">
+          <span class="row-icon"><span class="material-icons">${s.icon || 'subscriptions'}</span></span>
+          <div class="row-main">
+            <span class="row-title">${s.title}</span>
+            <span class="row-sub">${s.period === 'yearly' ? 'Yıllık' : 'Aylık'} · ${formatDate(np)}</span>
+            <span class="row-badges">${badge}</span>
+          </div>
+          <span class="row-amount big">${formatCurrency(s.amount, s.currency)}</span>
+        </div>`;
+    }).join('');
+}
+
+/* ---------- Harcamalar (donut + bütçe + liste) ---------- */
+function monthExpenses(date = selectedDate) {
+    const start = new Date(date.getFullYear(), date.getMonth(), 1);
+    const end = new Date(date.getFullYear(), date.getMonth() + 1, 0, 23, 59, 59);
+    return expenses.filter(e => { const dd = new Date(e.date); return dd >= start && dd <= end; });
+}
+
+function updateMonthLabel() {
+    $('#selectedMonth').textContent = selectedDate.toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' });
+}
+
+function renderDonut(monthList) {
+    const def = userSettings.defaultCurrency;
+    const sums = {};
+    monthList.forEach(e => {
+        const cat = e.category || 'Diğer';
+        sums[cat] = (sums[cat] || 0) + convertCurrency(e.amount, e.currency, def);
     });
-});
-
-// Ayarlar modalındaki iptal butonuna tıklandığında modalı kapat
-document.querySelector('#settingsModal .cancel-btn').addEventListener('click', () => {
-    document.getElementById('settingsModal').classList.remove('active');
-});
-
-// Para birimi seçimi için event listener
-document.querySelectorAll('#settingsModal .currency-select-btn').forEach(button => {
-    button.addEventListener('click', function() {
-        document.querySelectorAll('#settingsModal .currency-select-btn').forEach(btn => 
-            btn.classList.remove('selected'));
-        this.classList.add('selected');
-        document.getElementById('defaultCurrency').value = this.dataset.currency;
+    const total = Object.values(sums).reduce((a, b) => a + b, 0);
+    const donut = $('#expenseDonut');
+    const legend = $('#donutLegend');
+    if (total <= 0) {
+        donut.style.background = 'conic-gradient(var(--input-border) 0 100%)';
+        donut.innerHTML = '<div class="donut-hole"><span>—</span></div>';
+        legend.innerHTML = '<p class="muted-note">Bu ay harcama yok</p>';
+        return;
+    }
+    let acc = 0;
+    const segments = Object.entries(sums).sort((a, b) => b[1] - a[1]).map(([cat, val]) => {
+        const start = (acc / total) * 100;
+        acc += val;
+        const end = (acc / total) * 100;
+        return { cat, val, start, end, color: CATEGORY_COLOR[cat] || '#918872' };
     });
-});
+    donut.style.background = `conic-gradient(${segments.map(s => `${s.color} ${s.start}% ${s.end}%`).join(', ')})`;
+    donut.innerHTML = `<div class="donut-hole"><span>${formatCurrency(total, def)}</span><small>toplam</small></div>`;
+    legend.innerHTML = segments.map(s => `
+        <div class="legend-item">
+          <span class="legend-dot" style="background:${s.color}"></span>
+          <span class="legend-cat">${s.cat}</span>
+          <span class="legend-val">%${Math.round((s.val / total) * 100)}</span>
+        </div>`).join('');
+}
 
-// Ayarları kaydet
-document.getElementById('settingsForm').addEventListener('submit', async (e) => {
+function renderBudget(monthList) {
+    const def = userSettings.defaultCurrency;
+    const card = $('#budgetCard');
+    const budget = Number(userSettings.monthlyBudget) || 0;
+    if (budget <= 0) { card.style.display = 'none'; return; }
+    card.style.display = 'block';
+    const spent = monthList.reduce((s, e) => s + convertCurrency(e.amount, e.currency, def), 0);
+    const pct = Math.min(100, (spent / budget) * 100);
+    const fill = $('#budgetFill');
+    fill.style.width = pct + '%';
+    fill.className = 'budget-fill' + (spent > budget ? ' over' : pct > 80 ? ' warn' : '');
+    $('#budgetText').textContent = `${formatCurrency(spent, def)} / ${formatCurrency(budget, def)}`;
+}
+
+function renderExpenses() {
+    const monthList = monthExpenses();
+    renderDonut(monthList);
+    renderBudget(monthList);
+    const q = ($('#expenseSearch')?.value || '').toLowerCase();
+    const list = monthList
+        .filter(e => (e.title || e.category || '').toLowerCase().includes(q))
+        .sort((a, b) => new Date(b.date) - new Date(a.date));
+    const wrap = $('#expensesList');
+    if (!list.length) { wrap.innerHTML = emptyState('receipt_long', 'Bu ay harcama kaydı yok'); return; }
+    wrap.innerHTML = list.map(e => `
+        <div class="card-row" data-detail="expense" data-id="${e.id}">
+          <span class="row-icon"><span class="material-icons">${CATEGORY_ICON[e.category] || 'shopping_cart'}</span></span>
+          <div class="row-main">
+            <span class="row-title">${e.title || e.category}</span>
+            <span class="row-sub">${e.cardName ? e.cardName + ' · ' : ''}${formatDate(e.date)}</span>
+          </div>
+          <span class="row-amount neg big">-${formatCurrency(e.amount, e.currency)}</span>
+        </div>`).join('');
+}
+
+function emptyState(icon, text) {
+    return `<div class="empty"><span class="material-icons">${icon}</span><p>${text}</p></div>`;
+}
+
+/* ============================================================
+   Modal yardımcıları
+   ============================================================ */
+function openModal(id) { $('#' + id).classList.add('active'); }
+function closeModal(el) { el.classList.remove('active'); }
+function closeAllModals() { $all('.modal.active').forEach(m => m.classList.remove('active')); }
+
+/* Para birimi buton gruplarını oluştur */
+function buildCurrencyGroups() {
+    $all('[data-currency-group]').forEach(group => {
+        group.innerHTML = CURRENCIES.map(c =>
+            `<button type="button" class="cur-btn" data-cur="${c.code}"><b>${c.symbol}</b><span>${c.name}</span></button>`
+        ).join('');
+    });
+}
+const CUR_HIDDEN = { card: 'cardCurrency', debt: 'debtCurrency', sub: 'subCurrency', settings: 'defaultCurrency' };
+function selectCurrency(group, code) {
+    const wrap = $(`[data-currency-group="${group}"]`);
+    $all('.cur-btn', wrap).forEach(b => b.classList.toggle('selected', b.dataset.cur === code));
+    $('#' + CUR_HIDDEN[group]).value = code;
+}
+
+/* Renk seçenekleri */
+function buildColorRow() {
+    $('#colorRow').innerHTML = CARD_COLORS.map(c =>
+        `<button type="button" class="color-dot theme-${c}" data-color="${c}" aria-label="${c}"></button>`
+    ).join('');
+}
+function selectColor(color) {
+    $all('#colorRow .color-dot').forEach(b => b.classList.toggle('selected', b.dataset.color === color));
+    $('#cardColor').value = color;
+}
+
+/* Banka ızgarası */
+function buildBankGrid() {
+    $('#bankGrid').innerHTML = BANKS.map(b =>
+        `<button type="button" class="bank-tile" data-bank="${b.name}"><img src="${b.img}" alt="${b.name}"></button>`
+    ).join('');
+}
+
+/* Kategori ızgarası */
+function buildCatGrid() {
+    $('#catGrid').innerHTML = CATEGORIES.map(c =>
+        `<button type="button" class="cat-tile" data-cat="${c.name}"><span class="material-icons">${c.icon}</span><span>${c.name}</span></button>`
+    ).join('');
+}
+
+/* Abonelik ikonları */
+function buildSubIcons() {
+    $('#subIconRow').innerHTML = SUB_ICONS.map(i =>
+        `<button type="button" class="icon-pick" data-icon="${i}"><span class="material-icons">${i}</span></button>`
+    ).join('');
+}
+
+/* Tutar inputu: sadece rakam ve virgül */
+function setupAmountInputs() {
+    $all('.amount-input').forEach(input => {
+        input.addEventListener('input', function () {
+            let v = this.value.replace(/[^\d,]/g, '');
+            const parts = v.split(',');
+            if (parts.length > 2) v = parts[0] + ',' + parts[1];
+            if (parts[1] && parts[1].length > 2) v = parts[0] + ',' + parts[1].slice(0, 2);
+            this.value = v;
+        });
+    });
+}
+
+/* ============================================================
+   Kart işlemleri
+   ============================================================ */
+function openCardModal(card) {
+    editingCardId = card ? card.id : null;
+    $('#cardModalTitle').textContent = card ? 'Kartı Düzenle' : 'Kart Ekle';
+    $('#cardBalanceLabel').style.display = card ? 'none' : 'block';
+    $('#cardBalance').parentElement.style.display = card ? 'none' : 'block';
+
+    $('#cardForm').reset();
+    const def = card ? card.color : 'terracotta';
+    selectColor(def);
+    selectCurrency('card', card ? card.currency : userSettings.defaultCurrency);
+    $('#cardBank').value = card ? card.bank : '';
+    $('#cardType').value = card ? card.cardType : '';
+    $('#cardLabel').value = card ? card.label : '';
+    $('#cardLast4').value = card ? card.last4 : '';
+
+    $all('#bankGrid .bank-tile').forEach(b => b.classList.toggle('selected', card && b.dataset.bank === card.bank));
+    $all('#cardTypeRow .chip').forEach(b => b.classList.toggle('selected', card && b.dataset.type === card.cardType));
+
+    openModal('cardModal');
+}
+
+function submitCard(e) {
     e.preventDefault();
-    const newDefaultCurrency = document.getElementById('defaultCurrency').value || 'TRY';
-    userSettings.defaultCurrency = newDefaultCurrency;
-    
-    // Firestore'a kaydet
-    const user = firebase.auth().currentUser;
-    if (user) {
-        try {
-            await firebase.firestore().collection('users').doc(user.uid).update({
-                settings: userSettings
-            });
-            document.getElementById('settingsModal').classList.remove('active');
-            // Tüm görünümleri güncelle
-            updateTotals();
-            renderExpenses(); // Harcamaları yeniden render et
-        } catch (error) {
-            console.error('Ayarlar kaydedilemedi:', error);
+    const bank = $('#cardBank').value;
+    const label = $('#cardLabel').value.trim();
+    const cardType = $('#cardType').value;
+    const currency = $('#cardCurrency').value;
+    if (!bank) return toast('Lütfen banka seçin');
+    if (!label) return toast('Lütfen kart adı girin');
+    if (!cardType) return toast('Lütfen kart tipi seçin');
+    if (!currency) return toast('Lütfen para birimi seçin');
+
+    if (editingCardId) {
+        const c = cards.find(x => x.id === editingCardId);
+        if (c) {
+            c.bank = bank; c.label = label; c.cardType = cardType;
+            c.currency = currency; c.color = $('#cardColor').value;
+            c.last4 = $('#cardLast4').value.replace(/\D/g, '').slice(0, 4);
         }
-    }
-});
-
-// Kullanıcı ayarlarını yükle
-async function loadUserSettings() {
-    const user = firebase.auth().currentUser;
-    if (user) {
-        try {
-            const doc = await firebase.firestore().collection('users').doc(user.uid).get();
-            if (doc.exists && doc.data().settings) {
-                userSettings = doc.data().settings;
-            }
-        } catch (error) {
-            console.error('Ayarlar yüklenemedi:', error);
-        }
-    }
-}
-
-// Para birimi dönüştürme fonksiyonunu güncelle
-function convertCurrency(amount, fromCurrency, toCurrency) {
-    if (!exchangeRates || fromCurrency === toCurrency) return amount;
-    
-    // Önce TRY'ye çevir
-    const amountInTRY = amount * exchangeRates[fromCurrency];
-    
-    // Sonra hedef para birimine çevir
-    return amountInTRY / exchangeRates[toCurrency];
-}
-
-// Toplam varlıkları hesaplama fonksiyonunu güncelle
-function calculateTotalAssetsInCurrency(targetCurrency) {
-    return banks.reduce((total, bank) => {
-        const amountInTargetCurrency = convertCurrency(bank.balance, bank.currency, targetCurrency);
-        return total + amountInTargetCurrency;
-    }, 0);
-}
-
-// Firebase Auth state değişikliğini dinle ve ayarları yükle
-firebase.auth().onAuthStateChanged(async (user) => {
-    if (user) {
-        await loadUserSettings(); // Önce ayarları yükle
-        await loadData(); // Sonra verileri yükle
     } else {
-        banks = [];
-        debts = [];
-        subscriptions = [];
-        expenses = [];
-    }
-});
-
-// Bottom sheet modalları aşağı kaydırarak kapatma (native mobil his)
-function setupSheetGestures() {
-    document.querySelectorAll('.modal').forEach(modal => {
-        const content = modal.querySelector('.modal-content');
-        if (!content) return;
-
-        let startY = 0;
-        let deltaY = 0;
-        let dragging = false;
-
-        content.addEventListener('touchstart', (e) => {
-            // Sadece dar ekranda (sheet modu) ve içerik en üstteyken sürüklemeye izin ver
-            if (window.innerWidth >= 600 || content.scrollTop > 0) return;
-            startY = e.touches[0].clientY;
-            deltaY = 0;
-            dragging = true;
-            content.style.transition = 'none';
-        }, { passive: true });
-
-        content.addEventListener('touchmove', (e) => {
-            if (!dragging) return;
-            deltaY = e.touches[0].clientY - startY;
-            // Yalnızca aşağı yönde hareket
-            if (deltaY > 0) {
-                content.style.transform = `translateY(${deltaY}px)`;
-            }
-        }, { passive: true });
-
-        content.addEventListener('touchend', () => {
-            if (!dragging) return;
-            dragging = false;
-            content.style.transition = 'transform 0.25s ease';
-            content.style.transform = '';
-            // Yeterince aşağı çekildiyse modalı kapat
-            if (deltaY > 110) {
-                modal.classList.remove('active');
-            }
+        cards.push({
+            id: Date.now(), bank, label, cardType, currency,
+            color: $('#cardColor').value,
+            last4: $('#cardLast4').value.replace(/\D/g, '').slice(0, 4),
+            balance: parseAmount($('#cardBalance').value)
         });
-    });
+    }
+    saveData();
+    renderAll();
+    closeAllModals();
 }
 
-// DOM yüklendiğinde input kontrollerini başlat
-document.addEventListener('DOMContentLoaded', () => {
-    setupAmountInputs();
-    initTheme();
-    updateSelectedMonthDisplay();
-    setupSheetGestures();
-});
+function deleteCard(id) {
+    if (!confirm('Bu kartı silmek istediğinize emin misiniz?')) return;
+    cards = cards.filter(c => c.id !== id);
+    saveData();
+    renderAll();
+}
 
+function openAddMoney(id) {
+    activeCardId = id;
+    $('#addMoneyAmount').value = '';
+    openModal('addMoneyModal');
+}
+function confirmAddMoney() {
+    const amount = parseAmount($('#addMoneyAmount').value);
+    const c = cards.find(x => x.id === activeCardId);
+    if (!c || amount <= 0) return toast('Geçerli bir tutar girin');
+    c.balance += amount;
+    transactions.push({ id: Date.now(), type: 'income', title: 'Para yükleme', sub: c.label, amount, currency: c.currency, date: new Date().toISOString() });
+    saveData(); renderAll(); closeAllModals();
+    toast('Bakiye güncellendi');
+}
+
+function openTransfer(id) {
+    activeCardId = id;
+    $('#transferAmount').value = '';
+    $('#transferTarget').innerHTML = cards.filter(c => c.id !== id)
+        .map(c => `<option value="${c.id}">${c.label} (${formatCurrency(c.balance, c.currency)})</option>`).join('');
+    if (cards.length < 2) return toast('Transfer için en az 2 kart gerekli');
+    openModal('transferModal');
+}
+function confirmTransfer() {
+    const amount = parseAmount($('#transferAmount').value);
+    const src = cards.find(c => c.id === activeCardId);
+    const dst = cards.find(c => c.id === Number($('#transferTarget').value));
+    if (!src || !dst || amount <= 0) return toast('Geçerli bir tutar girin');
+    if (src.balance < amount) return toast('Yetersiz bakiye');
+    src.balance -= amount;
+    const converted = convertCurrency(amount, src.currency, dst.currency);
+    dst.balance += converted;
+    transactions.push({ id: Date.now(), type: 'transfer', title: `${src.label} → ${dst.label}`, sub: 'Transfer', amount, currency: src.currency, date: new Date().toISOString() });
+    saveData(); renderAll(); closeAllModals();
+    toast('Transfer tamamlandı');
+}
+
+/* ============================================================
+   Borç / Abonelik / Harcama formları
+   ============================================================ */
+function submitDebt(e) {
+    e.preventDefault();
+    const currency = $('#debtCurrency').value;
+    if (!currency) return toast('Para birimi seçin');
+    debts.push({
+        id: Date.now(),
+        title: $('#debtTitle').value.trim(),
+        amount: parseAmount($('#debtAmount').value),
+        currency,
+        installments: Math.max(1, Number($('#debtInstallments').value) || 1),
+        dueDate: $('#debtDueDate').value || null,
+        isPaid: $('#debtIsPaid').checked
+    });
+    saveData(); renderAll(); closeAllModals();
+}
+
+function submitSub(e) {
+    e.preventDefault();
+    const currency = $('#subCurrency').value;
+    if (!currency) return toast('Para birimi seçin');
+    subscriptions.push({
+        id: Date.now(),
+        title: $('#subTitle').value.trim(),
+        icon: $('#subIcon').value || 'subscriptions',
+        amount: parseAmount($('#subAmount').value),
+        currency,
+        period: $('#subPeriod').value,
+        paymentDate: $('#subDate').value,
+        lastPaymentDate: null,
+        isPaid: false
+    });
+    saveData(); renderAll(); closeAllModals();
+}
+
+function submitExpense(e) {
+    e.preventDefault();
+    const category = $('#expenseCategory').value;
+    const amount = parseAmount($('#expenseAmount').value);
+    const cardId = Number($('#expenseCard').value);
+    const card = cards.find(c => c.id === cardId);
+    if (!category) return toast('Kategori seçin');
+    if (amount <= 0) return toast('Geçerli tutar girin');
+    if (!card) return toast('Kart seçin');
+    if (card.balance < amount) return toast('Kartta yeterli bakiye yok');
+    card.balance -= amount;
+    expenses.push({
+        id: Date.now(), title: category, category, amount,
+        currency: card.currency, date: new Date().toISOString(),
+        cardId: card.id, cardName: card.label
+    });
+    saveData(); renderAll(); closeAllModals();
+}
+
+function openExpenseModal(preCardId) {
+    $('#expenseForm').reset();
+    $('#expenseCategory').value = '';
+    $all('#catGrid .cat-tile').forEach(b => b.classList.remove('selected'));
+    $('#expenseCard').innerHTML = '<option value="">Kart seçin</option>' +
+        cards.map(c => `<option value="${c.id}" ${c.id === preCardId ? 'selected' : ''}>${c.label} (${formatCurrency(c.balance, c.currency)})</option>`).join('');
+    openModal('expenseModal');
+}
+
+/* ============================================================
+   Detay görünümü (borç / abonelik / harcama)
+   ============================================================ */
+function openDetail(type, id) {
+    const titleEl = $('#itemDetailTitle');
+    const body = $('#itemDetailBody');
+    if (type === 'debt') {
+        const d = debts.find(x => x.id === id); if (!d) return;
+        titleEl.textContent = d.title;
+        body.innerHTML = `
+          <div class="detail-amount">${formatCurrency(d.amount, d.currency)}</div>
+          ${d.installments > 1 ? `<p class="detail-line">${d.installments} taksit · aylık ${formatCurrency(d.amount / d.installments, d.currency)}</p>` : ''}
+          ${d.dueDate ? `<p class="detail-line">Son ödeme: ${formatDate(d.dueDate)}</p>` : ''}
+          <label class="checkbox"><input type="checkbox" id="detailDebtPaid" ${d.isPaid ? 'checked' : ''}> <span>Ödendi olarak işaretle</span></label>
+          <div class="modal-actions">
+            <button type="button" class="btn-danger" data-del="debt" data-id="${d.id}"><span class="material-icons">delete</span> Sil</button>
+          </div>`;
+        $('#detailDebtPaid').addEventListener('change', (ev) => {
+            d.isPaid = ev.target.checked; saveData(); renderAll();
+        });
+    } else if (type === 'sub') {
+        const s = subscriptions.find(x => x.id === id); if (!s) return;
+        const np = nextPaymentDate(s);
+        titleEl.textContent = s.title;
+        body.innerHTML = `
+          <div class="detail-amount">${formatCurrency(s.amount, s.currency)}</div>
+          <p class="detail-line">${s.period === 'yearly' ? 'Yıllık' : 'Aylık'} ödeme</p>
+          <p class="detail-line">Sonraki ödeme: ${formatDate(np)}</p>
+          <p class="detail-line">Yıllık maliyet: ${formatCurrency(monthlyEquivalent(s) * 12, userSettings.defaultCurrency)}</p>
+          <label class="checkbox"><input type="checkbox" id="detailSubPaid" ${s.isPaid ? 'checked' : ''}> <span>Bu ay ödendi</span></label>
+          <div class="modal-actions">
+            <button type="button" class="btn-danger" data-del="sub" data-id="${s.id}"><span class="material-icons">delete</span> Sil</button>
+          </div>`;
+        $('#detailSubPaid').addEventListener('change', (ev) => {
+            s.isPaid = ev.target.checked;
+            s.lastPaymentDate = ev.target.checked ? new Date().toISOString() : s.lastPaymentDate;
+            saveData(); renderAll();
+        });
+    } else if (type === 'expense') {
+        const e = expenses.find(x => x.id === id); if (!e) return;
+        titleEl.textContent = e.title || e.category;
+        body.innerHTML = `
+          <div class="detail-amount neg">-${formatCurrency(e.amount, e.currency)}</div>
+          <p class="detail-line">${e.cardName || ''}</p>
+          <p class="detail-line">${formatDate(e.date)}</p>
+          <div class="modal-actions">
+            <button type="button" class="btn-danger" data-del="expense" data-id="${e.id}"><span class="material-icons">delete</span> Sil</button>
+          </div>`;
+    }
+    openModal('itemDetailModal');
+}
+
+function deleteItem(type, id) {
+    if (!confirm('Silmek istediğinize emin misiniz?')) return;
+    if (type === 'debt') debts = debts.filter(d => d.id !== id);
+    else if (type === 'sub') subscriptions = subscriptions.filter(s => s.id !== id);
+    else if (type === 'expense') {
+        const e = expenses.find(x => x.id === id);
+        if (e && e.cardId) { const c = cards.find(x => x.id === e.cardId); if (c) c.balance += e.amount; }
+        expenses = expenses.filter(x => x.id !== id);
+    }
+    saveData(); renderAll(); closeAllModals();
+}
+
+/* ============================================================
+   Olay bağlama
+   ============================================================ */
+function wireEvents() {
+    // Tema / çıkış / ayarlar
+    $('#themeToggle').addEventListener('click', toggleTheme);
+    $('#logoutBtn').addEventListener('click', () => {
+        if (confirm('Çıkış yapmak istediğinize emin misiniz?')) {
+            firebase.auth().signOut().then(() => { localStorage.clear(); location.href = 'index.html'; });
+        }
+    });
+    $('#settingsBtn').addEventListener('click', () => {
+        selectCurrency('settings', userSettings.defaultCurrency);
+        $('#monthlyBudget').value = userSettings.monthlyBudget ? String(userSettings.monthlyBudget).replace('.', ',') : '';
+        openModal('settingsModal');
+    });
+    $('#toggleBalance').addEventListener('click', () => {
+        balanceHidden = !balanceHidden;
+        $('#toggleBalance').querySelector('.material-icons').textContent = balanceHidden ? 'visibility_off' : 'visibility';
+        renderCards(); updateSummary();
+    });
+
+    // Alt navigasyon (tab)
+    $all('.tab-btn').forEach(btn => btn.addEventListener('click', () => {
+        $all('.tab-btn').forEach(b => b.classList.remove('active'));
+        $all('.tab-content').forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+        $('#' + btn.dataset.tab).classList.add('active');
+        $('.app-main').scrollTop = 0;
+        window.scrollTo(0, 0);
+    }));
+
+    // Ekle butonları
+    $('#addCardBtn').addEventListener('click', () => openCardModal(null));
+    $('#addDebtBtn').addEventListener('click', () => { $('#debtForm').reset(); $('#debtCurrency').value=''; selectCurrency('debt', userSettings.defaultCurrency); openModal('debtModal'); });
+    $('#addSubscriptionBtn').addEventListener('click', () => {
+        $('#subForm').reset(); $('#subCurrency').value=''; selectCurrency('sub', userSettings.defaultCurrency);
+        $('#subPeriod').value = 'monthly'; $all('#subPeriodRow .chip').forEach((c,i)=>c.classList.toggle('selected', i===0));
+        $('#subIcon').value = 'subscriptions'; $all('#subIconRow .icon-pick').forEach((c,i)=>c.classList.toggle('selected', i===0));
+        openModal('subModal');
+    });
+    $('#addExpenseBtn').addEventListener('click', () => openExpenseModal());
+
+    // Modal kapatma (close-btn / backdrop / data-close)
+    document.addEventListener('click', (e) => {
+        if (e.target.closest('[data-close]')) { closeAllModals(); return; }
+        if (e.target.classList.contains('modal')) closeModal(e.target);
+    });
+
+    // Carousel (flip + aksiyonlar)
+    $('#cardCarousel').addEventListener('click', (e) => {
+        const actionBtn = e.target.closest('[data-action]');
+        if (actionBtn) {
+            const action = actionBtn.dataset.action;
+            const id = Number(actionBtn.dataset.id);
+            if (action === 'addcard') return openCardModal(null);
+            if (action === 'addmoney') return openAddMoney(id);
+            if (action === 'transfer') return openTransfer(id);
+            if (action === 'spend') return openExpenseModal(id);
+            if (action === 'edit') return openCardModal(cards.find(c => c.id === id));
+            if (action === 'delete') return deleteCard(id);
+        }
+        const card = e.target.closest('.pay-card');
+        if (card) card.classList.toggle('flipped');
+    });
+
+    // Liste satırı → detay
+    document.addEventListener('click', (e) => {
+        const row = e.target.closest('[data-detail]');
+        if (row) openDetail(row.dataset.detail, Number(row.dataset.id));
+        const del = e.target.closest('[data-del]');
+        if (del) deleteItem(del.dataset.del, Number(del.dataset.id));
+    });
+
+    // Para birimi / renk / banka / tip / kategori / ikon / periyot seçimleri (delegasyon)
+    document.addEventListener('click', (e) => {
+        const cur = e.target.closest('.cur-btn');
+        if (cur) { const g = cur.closest('[data-currency-group]').dataset.currencyGroup; selectCurrency(g, cur.dataset.cur); }
+        const color = e.target.closest('.color-dot');
+        if (color) selectColor(color.dataset.color);
+        const bank = e.target.closest('.bank-tile');
+        if (bank) { $all('#bankGrid .bank-tile').forEach(b=>b.classList.remove('selected')); bank.classList.add('selected'); $('#cardBank').value = bank.dataset.bank; }
+        const ctype = e.target.closest('#cardTypeRow .chip');
+        if (ctype) { $all('#cardTypeRow .chip').forEach(b=>b.classList.remove('selected')); ctype.classList.add('selected'); $('#cardType').value = ctype.dataset.type; }
+        const cat = e.target.closest('.cat-tile');
+        if (cat) { $all('#catGrid .cat-tile').forEach(b=>b.classList.remove('selected')); cat.classList.add('selected'); $('#expenseCategory').value = cat.dataset.cat; }
+        const sicon = e.target.closest('.icon-pick');
+        if (sicon) { $all('#subIconRow .icon-pick').forEach(b=>b.classList.remove('selected')); sicon.classList.add('selected'); $('#subIcon').value = sicon.dataset.icon; }
+        const per = e.target.closest('#subPeriodRow .chip');
+        if (per) { $all('#subPeriodRow .chip').forEach(b=>b.classList.remove('selected')); per.classList.add('selected'); $('#subPeriod').value = per.dataset.period; }
+    });
+
+    // Form gönderimleri
+    $('#cardForm').addEventListener('submit', submitCard);
+    $('#debtForm').addEventListener('submit', submitDebt);
+    $('#subForm').addEventListener('submit', submitSub);
+    $('#expenseForm').addEventListener('submit', submitExpense);
+    $('#addMoneyConfirm').addEventListener('click', confirmAddMoney);
+    $('#transferConfirm').addEventListener('click', confirmTransfer);
+    $('#settingsForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        userSettings.defaultCurrency = $('#defaultCurrency').value || 'TRY';
+        userSettings.monthlyBudget = parseAmount($('#monthlyBudget').value);
+        saveData(); renderAll(); closeAllModals();
+        toast('Ayarlar kaydedildi');
+    });
+
+    // Aramalar
+    $('#debtSearch').addEventListener('input', renderDebts);
+    $('#subSearch').addEventListener('input', renderSubs);
+    $('#expenseSearch').addEventListener('input', renderExpenses);
+
+    // Ay gezinme
+    $('#prevMonth').addEventListener('click', () => { selectedDate.setMonth(selectedDate.getMonth() - 1); updateMonthLabel(); renderExpenses(); });
+    $('#nextMonth').addEventListener('click', () => { selectedDate.setMonth(selectedDate.getMonth() + 1); updateMonthLabel(); renderExpenses(); });
+}
+
+/* ============================================================
+   Başlangıç
+   ============================================================ */
+document.addEventListener('DOMContentLoaded', async () => {
+    initTheme();
+    buildCurrencyGroups();
+    buildColorRow();
+    buildBankGrid();
+    buildCatGrid();
+    buildSubIcons();
+    setupAmountInputs();
+    updateMonthLabel();
+    wireEvents();
+    renderAll();
+
+    await updateExchangeRates();
+    setInterval(updateExchangeRates, 3600000);
+    renderAll();
+
+    firebase.auth().onAuthStateChanged(async (user) => {
+        if (user) {
+            await loadData();
+        } else {
+            cards = []; debts = []; subscriptions = []; expenses = []; transactions = [];
+            location.href = 'index.html';
+        }
+    });
+});

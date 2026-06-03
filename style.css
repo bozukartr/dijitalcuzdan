@@ -1,46 +1,45 @@
+/* ============================================================
+   Dijital Cüzdan - Tema: açık & mat (bej + terracotta + haki)
+   ============================================================ */
 :root {
-    /* Mat palet: bej zemin + terracotta turuncu + haki yeşil */
-    --primary-color: #C2683B;      /* terracotta turuncu - aksiyon/aktif */
+    --primary: #C2683B;
     --primary-hover: #A85629;
-    --secondary-color: #8C8474;
-    --accent-color: #6E7355;       /* haki yeşil */
-    --accent-deep: #515838;        /* hero için derin haki */
-    --hero-text: #F6F1E6;
-    --background-color: #F1E9DB;   /* mat bej */
-    --card-background: #FBF6EE;     /* sıcak krem yüzey */
+    --accent: #6E7355;
+    --bg: #F1E9DB;
+    --surface: #FBF6EE;
     --surface-2: #EFE6D5;
-    --text-color: #3A352D;          /* sıcak koyu */
-    --muted-color: #918872;
-    --border-radius: 16px;
-    --spacing: 14px;
-    --shadow-sm: 0 1px 2px rgba(58, 53, 45, 0.06);
-    --shadow-md: 0 8px 22px rgba(58, 53, 45, 0.10);
-    --modal-backdrop: rgba(46, 42, 34, 0.45);
-    --delete-btn-bg: #F1D9CE;
-    --delete-btn-color: #B5482B;
-    --delete-btn-hover-color: #8F3217;
-    --input-border: #E4D8C2;
+    --text: #3A352D;
+    --muted: #918872;
+    --border: #E4D8C2;
+    --radius: 16px;
+    --shadow-sm: 0 1px 2px rgba(58, 53, 45, 0.07);
+    --shadow-md: 0 8px 22px rgba(58, 53, 45, 0.12);
+    --danger: #B5482B;
+    --danger-bg: #F1D9CE;
+    --ok: #5E7045;
+    --warn: #C58A2E;
+    --backdrop: rgba(46, 42, 34, 0.45);
+    --hero-text: #F6F1E6;
 }
 
 [data-theme="dark"] {
-    --primary-color: #D5814F;
+    --primary: #D5814F;
     --primary-hover: #C2683B;
-    --secondary-color: #A89E8A;
-    --accent-color: #8C9069;
-    --accent-deep: #3B4030;
-    --hero-text: #F3EEE2;
-    --background-color: #211E17;
-    --card-background: #2C281F;
+    --accent: #8C9069;
+    --bg: #201D16;
+    --surface: #2C281F;
     --surface-2: #353026;
-    --text-color: #F2EBDC;
-    --muted-color: #A89E8A;
+    --text: #F2EBDC;
+    --muted: #A89E8A;
+    --border: #433C2D;
     --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-    --shadow-md: 0 8px 22px rgba(0, 0, 0, 0.35);
-    --modal-backdrop: rgba(0, 0, 0, 0.6);
-    --delete-btn-bg: #5A2A1E;
-    --delete-btn-color: #F0B3A0;
-    --delete-btn-hover-color: #FCE0D6;
-    --input-border: #433C2D;
+    --shadow-md: 0 8px 22px rgba(0, 0, 0, 0.4);
+    --danger: #F0B3A0;
+    --danger-bg: #5A2A1E;
+    --ok: #A6C083;
+    --warn: #E0B25A;
+    --backdrop: rgba(0, 0, 0, 0.6);
+    --hero-text: #F4EFE3;
 }
 
 * {
@@ -52,18 +51,17 @@
 }
 
 body {
-    background-color: var(--background-color);
-    color: var(--text-color);
+    background: var(--bg);
+    color: var(--text);
 }
 
-/* Native uygulama kabuğu: sabit üst bar + kaydırılan içerik + alt navigasyon */
+/* ---------- App shell ---------- */
 .app {
     max-width: 480px;
     margin: 0 auto;
     min-height: 100dvh;
     display: flex;
     flex-direction: column;
-    background: var(--background-color);
 }
 
 .topbar {
@@ -73,1245 +71,474 @@ body {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
     padding: 10px 16px;
     padding-top: max(10px, env(safe-area-inset-top));
-    background: var(--background-color);
-    background: color-mix(in srgb, var(--background-color) 88%, transparent);
+    background: var(--bg);
+    background: color-mix(in srgb, var(--bg) 85%, transparent);
     backdrop-filter: blur(10px);
-    border-bottom: 1px solid var(--input-border);
+    border-bottom: 1px solid var(--border);
 }
 
-.topbar-logo {
-    height: 30px;
-    width: auto;
-    object-fit: contain;
-}
+.topbar-logo { height: 28px; width: auto; }
 
-.topbar-actions {
-    display: flex;
-    gap: 8px;
-}
+.topbar-actions { display: flex; gap: 8px; }
 
 .icon-btn {
-    width: 40px;
-    height: 40px;
+    width: 40px; height: 40px;
     border: none;
     border-radius: 12px;
-    background: var(--card-background);
-    color: var(--text-color);
+    background: var(--surface);
+    color: var(--text);
     box-shadow: var(--shadow-sm);
     cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: transform 0.15s ease, background 0.2s ease;
+    display: flex; align-items: center; justify-content: center;
+    transition: transform 0.15s ease;
 }
-
-.icon-btn:active {
-    transform: scale(0.92);
-}
-
-.icon-btn .material-icons {
-    font-size: 22px;
-}
-
-.icon-btn-danger {
-    color: var(--delete-btn-color);
-}
+.icon-btn:active { transform: scale(0.92); }
+.icon-btn .material-icons { font-size: 22px; }
+.icon-btn-danger { color: var(--danger); }
 
 .app-main {
     flex: 1;
-    padding: 16px 16px calc(78px + env(safe-area-inset-bottom));
+    padding: 14px 16px calc(82px + env(safe-area-inset-bottom));
 }
 
-/* Alt navigasyon menüsü */
+/* ---------- Alt navigasyon ---------- */
 .bottom-nav {
     position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    left: 0; right: 0; bottom: 0;
     z-index: 20;
-    background: var(--card-background);
-    background: color-mix(in srgb, var(--card-background) 92%, transparent);
+    background: var(--surface);
+    background: color-mix(in srgb, var(--surface) 92%, transparent);
     backdrop-filter: blur(12px);
-    border-top: 1px solid var(--input-border);
+    border-top: 1px solid var(--border);
     padding-bottom: env(safe-area-inset-bottom);
 }
-
-.nav-inner {
-    max-width: 480px;
-    margin: 0 auto;
-    display: flex;
-}
-
+.nav-inner { max-width: 480px; margin: 0 auto; display: flex; }
 .nav-inner .tab-btn {
     flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 3px;
-    padding: 9px 4px;
-    background: none;
-    border: none;
-    cursor: pointer;
-    color: var(--muted-color);
-    font-size: 0.68rem;
-    font-weight: 600;
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    padding: 9px 4px 8px;
+    background: none; border: none; cursor: pointer;
+    color: var(--muted);
+    font-size: 0.66rem; font-weight: 600;
     transition: color 0.2s ease;
 }
+.nav-inner .tab-btn .material-icons { font-size: 24px; }
+.nav-inner .tab-btn.active { color: var(--primary); }
 
-.nav-inner .tab-btn .material-icons {
-    font-size: 24px;
-}
+.tab-content { display: none; animation: fadeIn 0.25s ease; }
+.tab-content.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } }
 
-.nav-inner .tab-btn.active {
-    color: var(--primary-color);
-}
-
-/* Bölüm başlığı + ekle butonu */
-.section-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin: 4px 0 12px;
-}
-
-.section-title {
-    font-size: 1.15rem;
-    font-weight: 700;
-    color: var(--text-color);
-}
-
-/* Üst başlık çubuğu */
-/* Öne çıkan net varlık kartı (hero) - mat haki yeşil */
-.balance-hero {
-    background: linear-gradient(150deg, var(--accent-color) 0%, var(--accent-deep) 100%);
-    border-radius: 22px;
-    padding: 22px 20px;
+/* ---------- Hero ---------- */
+.hero {
+    background: linear-gradient(150deg, var(--accent) 0%, #4F5539 100%);
     color: var(--hero-text);
+    border-radius: 22px;
+    padding: 20px;
     box-shadow: var(--shadow-md);
     margin-bottom: 20px;
 }
-
-.balance-label {
-    font-size: 0.85rem;
-    font-weight: 500;
-    opacity: 0.85;
-    letter-spacing: 0.02em;
+.hero-top { display: flex; align-items: center; justify-content: space-between; }
+.hero-label { font-size: 0.85rem; opacity: 0.85; }
+.hero-eye {
+    background: rgba(255,255,255,0.18); border: none; color: var(--hero-text);
+    width: 32px; height: 32px; border-radius: 9px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
 }
-
-.balance-value {
-    font-size: 2.3rem;
-    font-weight: 800;
-    margin: 6px 0 18px;
-    letter-spacing: -0.02em;
-    line-height: 1.1;
+.hero-eye .material-icons { font-size: 19px; }
+.hero-value { font-size: 2.3rem; font-weight: 800; letter-spacing: -0.02em; margin: 6px 0 18px; }
+.hero-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.hero-stat {
+    display: flex; align-items: center; gap: 9px;
+    background: rgba(255,255,255,0.14);
+    border: 1px solid rgba(255,255,255,0.16);
+    border-radius: 13px; padding: 10px;
 }
+.hero-stat .material-icons { font-size: 20px; opacity: 0.9; }
+.hero-stat-label { font-size: 0.68rem; opacity: 0.85; display: block; }
+.hero-stat-value { font-size: 0.95rem; font-weight: 700; margin-top: 2px; white-space: nowrap; }
 
-.balance-stats {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
+/* ---------- Bölüm başlığı ---------- */
+.section-head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin: 18px 2px 12px;
 }
-
-.stat {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    background: rgba(255, 255, 255, 0.14);
-    border: 1px solid rgba(255, 255, 255, 0.16);
-    border-radius: 14px;
-    padding: 10px 12px;
-    backdrop-filter: blur(4px);
-}
-
-.stat-icon {
-    font-size: 20px;
-    background: rgba(255, 255, 255, 0.18);
-    border-radius: 10px;
-    padding: 6px;
-}
-
-.stat-text {
-    min-width: 0;
-}
-
-.stat-label {
-    font-size: 0.7rem;
-    opacity: 0.85;
-    display: block;
-    white-space: nowrap;
-}
-
-.stat-value {
-    font-size: 1rem;
-    font-weight: 700;
-    margin: 2px 0 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.amount {
-    font-size: 1.4rem;
-    font-weight: 700;
-    color: var(--text-color);
-}
-
-/* Segmented (pill) sekme kontrolü */
-.tab-content {
-    display: none;
-}
-
-.tab-content.active {
-    display: block;
-}
-
-/* Kompakt 'Ekle' butonu (bölüm başlığında) */
+.section-title { font-size: 1.12rem; font-weight: 700; }
 .add-btn {
-    padding: 8px 14px;
-    background: var(--primary-color);
-    border: none;
-    border-radius: 999px;
-    color: #fff;
-    font-weight: 600;
-    font-size: 0.85rem;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
+    display: inline-flex; align-items: center; gap: 3px;
+    padding: 8px 14px; border: none; border-radius: 999px;
+    background: var(--primary); color: #fff;
+    font-weight: 600; font-size: 0.83rem; cursor: pointer;
     box-shadow: var(--shadow-sm);
     transition: transform 0.15s ease, background 0.2s ease;
 }
+.add-btn .material-icons { font-size: 18px; }
+.add-btn:hover { background: var(--primary-hover); }
+.add-btn:active { transform: scale(0.95); }
 
-.add-btn .material-icons {
-    font-size: 18px;
+/* ---------- Arama ---------- */
+.search-box {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 10px 12px; margin-bottom: 12px;
 }
+.search-box .material-icons { color: var(--muted); font-size: 20px; }
+.search-box input { border: none; background: none; outline: none; flex: 1; font-size: 0.95rem; color: var(--text); }
 
-.add-btn:hover {
-    background: var(--primary-hover);
+/* ============================================================
+   Kart carousel + flip
+   ============================================================ */
+.carousel {
+    display: flex; gap: 12px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    padding: 4px 2px 10px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
 }
+.carousel::-webkit-scrollbar { display: none; }
 
-.add-btn:active {
-    transform: scale(0.95);
+.pay-card {
+    flex: 0 0 84%;
+    max-width: 330px;
+    aspect-ratio: 1.6 / 1;
+    scroll-snap-align: center;
+    perspective: 1200px;
+    cursor: pointer;
 }
-
-.cards-container {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+.pay-card-inner {
+    position: relative; width: 100%; height: 100%;
+    transition: transform 0.55s cubic-bezier(0.16,1,0.3,1);
+    transform-style: preserve-3d;
 }
+.pay-card.flipped .pay-card-inner { transform: rotateY(180deg); }
 
-.bank-card, .debt-card {
-    background: var(--card-background);
-    padding: 16px;
-    border-radius: var(--border-radius);
-    border: 1px solid var(--input-border);
+.pay-card-face {
+    position: absolute; inset: 0;
+    -webkit-backface-visibility: hidden; backface-visibility: hidden;
+    border-radius: 18px;
+    padding: 16px 18px;
+    color: #F6F1E6;
+    box-shadow: var(--shadow-md);
+    display: flex; flex-direction: column;
+    overflow: hidden;
+}
+.pay-card-face.front { justify-content: space-between; }
+.pay-card-face.back { transform: rotateY(180deg); justify-content: center; gap: 10px; }
+
+.pc-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.pc-label { font-size: 1rem; font-weight: 700; line-height: 1.2; }
+.pc-logo img { height: 26px; width: auto; max-width: 64px; object-fit: contain; filter: brightness(0) invert(1); opacity: 0.92; }
+.pc-chip {
+    width: 36px; height: 26px; border-radius: 6px;
+    background: linear-gradient(135deg, #f7e4a8, #c9a44e);
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,0.1);
+}
+.pc-number { font-size: 1.05rem; letter-spacing: 2px; font-weight: 600; opacity: 0.95; }
+.pc-bottom { display: flex; align-items: flex-end; justify-content: space-between; }
+.pc-type { font-size: 0.68rem; opacity: 0.8; text-transform: uppercase; letter-spacing: 0.05em; }
+.pc-balance { font-size: 1.3rem; font-weight: 800; margin-top: 2px; }
+.pc-cur { font-size: 0.8rem; font-weight: 700; background: rgba(255,255,255,0.2); padding: 3px 8px; border-radius: 999px; }
+
+.pc-back-title { font-size: 0.95rem; font-weight: 700; opacity: 0.9; text-align: center; }
+.pc-actions { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+.pc-actions button {
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    background: rgba(255,255,255,0.16); border: none; color: #fff;
+    border-radius: 11px; padding: 9px 4px; cursor: pointer;
+    font-size: 0.66rem; font-weight: 600;
+}
+.pc-actions button .material-icons { font-size: 19px; }
+.pc-actions button.danger { background: rgba(0,0,0,0.22); }
+
+.add-card-tile {
+    flex: 0 0 84%; max-width: 330px; aspect-ratio: 1.6 / 1;
+    scroll-snap-align: center;
+    border: 2px dashed var(--border);
+    border-radius: 18px; background: var(--surface);
+    color: var(--muted); cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+    font-weight: 600;
+}
+.add-card-tile .material-icons { font-size: 34px; }
+
+/* Kart renk temaları */
+.theme-terracotta .pay-card-face, .pay-card.theme-terracotta { }
+.theme-terracotta .front, .theme-terracotta .back { background: linear-gradient(140deg, #C2683B, #8E4526); }
+.theme-khaki .front, .theme-khaki .back { background: linear-gradient(140deg, #757A57, #4B5036); }
+.theme-navy .front, .theme-navy .back { background: linear-gradient(140deg, #44556E, #28324A); }
+.theme-plum .front, .theme-plum .back { background: linear-gradient(140deg, #7E5168, #4F3043); }
+.theme-teal .front, .theme-teal .back { background: linear-gradient(140deg, #427067, #284A45); }
+.theme-charcoal .front, .theme-charcoal .back { background: linear-gradient(140deg, #4A463E, #2A2822); }
+/* renk noktaları (modal) */
+.color-dot.theme-terracotta { background: #C2683B; }
+.color-dot.theme-khaki { background: #6E7355; }
+.color-dot.theme-navy { background: #44556E; }
+.color-dot.theme-plum { background: #7E5168; }
+.color-dot.theme-teal { background: #427067; }
+.color-dot.theme-charcoal { background: #4A463E; }
+
+/* ============================================================
+   Listeler / satırlar
+   ============================================================ */
+.list { display: flex; flex-direction: column; gap: 8px; }
+
+.row, .card-row {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 14px;
     box-shadow: var(--shadow-sm);
 }
+.card-row { cursor: pointer; transition: transform 0.15s ease; }
+.card-row:active { transform: scale(0.99); }
+.card-row.paid { opacity: 0.6; }
 
-.bank-card h3, .debt-card h3 {
-    margin-bottom: 8px;
-    font-size: 1rem;
+.row-icon {
+    width: 38px; height: 38px; flex-shrink: 0;
+    border-radius: 11px;
+    background: var(--surface-2);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--primary);
+}
+.row-icon .material-icons { font-size: 20px; }
+
+.row-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.row-title { font-weight: 600; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.row-sub { font-size: 0.76rem; color: var(--muted); }
+.row-badges { margin-top: 2px; }
+
+.row-amount { font-weight: 700; font-size: 0.95rem; white-space: nowrap; }
+.row-amount.big { font-size: 1.05rem; }
+.row-amount.neg { color: var(--danger); }
+.row-amount.pos { color: var(--ok); }
+
+.badge {
+    display: inline-block; font-size: 0.68rem; font-weight: 600;
+    padding: 2px 8px; border-radius: 999px;
+    background: var(--surface-2); color: var(--muted);
+}
+.badge.ok { background: rgba(94,112,69,0.16); color: var(--ok); }
+.badge.warn { background: rgba(197,138,46,0.16); color: var(--warn); }
+.badge.danger { background: var(--danger-bg); color: var(--danger); }
+
+/* ---------- Mini özet kartları ---------- */
+.dual-summary { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+.mini-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 14px; box-shadow: var(--shadow-sm);
+}
+.mini-label { font-size: 0.72rem; color: var(--muted); }
+.mini-value { font-size: 1.25rem; font-weight: 800; margin-top: 4px; }
+
+/* ---------- Ay seçici ---------- */
+.month-selector { display: flex; align-items: center; justify-content: center; gap: 18px; margin: 4px 0 14px; }
+.month-selector h3 { font-size: 1rem; min-width: 130px; text-align: center; }
+.month-nav {
+    width: 36px; height: 36px; border-radius: 50%;
+    border: 1px solid var(--border); background: var(--surface);
+    color: var(--text); cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
 }
 
-/* Mobil "bottom sheet" deseni: modallar alttan yukarı kayar,
-   üst köşeleri yuvarlak ve bir tutma çubuğu (grabber) içerir. */
+/* ---------- Donut grafik ---------- */
+.chart-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 18px;
+    box-shadow: var(--shadow-sm); margin-bottom: 12px;
+    display: flex; align-items: center; gap: 18px; flex-wrap: wrap; justify-content: center;
+}
+.donut {
+    width: 130px; height: 130px; border-radius: 50%;
+    flex-shrink: 0; position: relative;
+    display: flex; align-items: center; justify-content: center;
+}
+.donut-hole {
+    width: 86px; height: 86px; border-radius: 50%;
+    background: var(--surface);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center;
+}
+.donut-hole span { font-size: 0.85rem; font-weight: 800; }
+.donut-hole small { font-size: 0.62rem; color: var(--muted); }
+.donut-legend { flex: 1; min-width: 140px; display: flex; flex-direction: column; gap: 7px; }
+.legend-item { display: flex; align-items: center; gap: 8px; font-size: 0.82rem; }
+.legend-dot { width: 11px; height: 11px; border-radius: 3px; flex-shrink: 0; }
+.legend-cat { flex: 1; }
+.legend-val { font-weight: 700; color: var(--muted); }
+.muted-note { color: var(--muted); font-size: 0.85rem; }
+
+/* ---------- Bütçe ---------- */
+.budget-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 14px 16px;
+    box-shadow: var(--shadow-sm); margin-bottom: 14px;
+}
+.budget-head { display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 8px; font-weight: 600; }
+.budget-bar { height: 10px; background: var(--surface-2); border-radius: 999px; overflow: hidden; }
+.budget-fill { height: 100%; background: var(--accent); border-radius: 999px; transition: width 0.4s ease; }
+.budget-fill.warn { background: var(--warn); }
+.budget-fill.over { background: var(--danger); }
+
+/* ---------- Boş durum ---------- */
+.empty {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 8px; padding: 34px 16px; text-align: center;
+    color: var(--muted);
+    background: var(--surface); border: 1px dashed var(--border); border-radius: var(--radius);
+}
+.empty .material-icons { font-size: 38px; opacity: 0.5; }
+.empty p { font-size: 0.9rem; }
+
+/* ============================================================
+   Modaller (bottom sheet)
+   ============================================================ */
 .modal {
-    display: none;
-    position: fixed;
-    inset: 0;
-    z-index: 100;
-    background: var(--modal-backdrop);
-    align-items: flex-end;
-    justify-content: center;
+    display: none; position: fixed; inset: 0; z-index: 100;
+    background: var(--backdrop);
+    align-items: flex-end; justify-content: center;
 }
-
-.modal.active {
-    display: flex;
-    animation: modalBackdropIn 0.25s ease forwards;
-}
-
-@keyframes modalBackdropIn {
-    from { background: rgba(0, 0, 0, 0); }
-}
+.modal.active { display: flex; animation: backdropIn 0.25s ease; }
+@keyframes backdropIn { from { background: rgba(0,0,0,0); } }
 
 .modal-content {
-    background: var(--card-background);
-    padding: 24px 20px calc(20px + env(safe-area-inset-bottom));
+    position: relative;
+    width: 100%; max-width: 520px;
+    max-height: 92dvh; overflow-y: auto;
+    background: var(--surface);
     border-radius: 22px 22px 0 0;
-    width: 100%;
-    max-width: 520px;
-    border: none;
-    box-shadow: 0 -8px 30px rgba(17, 24, 39, 0.18);
-    /* Uzun içerik (banka/harcama ekleme) sheet içinde kaydırılabilir olsun;
-       Kaydet/İptal butonlarına her zaman ulaşılabilir. */
-    max-height: 92dvh;
-    overflow-y: auto;
+    padding: 22px 18px calc(20px + env(safe-area-inset-bottom));
+    box-shadow: 0 -8px 30px rgba(0,0,0,0.18);
+    animation: sheetUp 0.32s cubic-bezier(0.16,1,0.3,1);
     -webkit-overflow-scrolling: touch;
-    position: relative;
-    animation: sheetUp 0.32s cubic-bezier(0.16, 1, 0.3, 1);
 }
-
-@keyframes sheetUp {
-    from { transform: translateY(100%); }
-    to { transform: translateY(0); }
-}
-
-/* Tutma çubuğu (grabber) */
+@keyframes sheetUp { from { transform: translateY(100%); } }
 .modal-content::before {
-    content: '';
-    display: block;
-    width: 40px;
-    height: 4px;
-    border-radius: 999px;
-    background: var(--input-border);
-    margin: -8px auto 16px;
+    content: ''; display: block;
+    width: 40px; height: 4px; border-radius: 999px;
+    background: var(--border); margin: -8px auto 14px;
 }
-
-/* Geniş ekranlarda klasik ortalanmış diyalog görünümü */
-@media (min-width: 600px) {
-    .modal {
-        align-items: center;
-        padding: 20px;
-    }
-
-    .modal-content {
-        max-width: 420px;
-        border-radius: var(--border-radius);
-        border: 1px solid var(--input-border);
-        box-shadow: var(--shadow-md);
-        max-height: calc(100dvh - 40px);
-        animation: dialogIn 0.2s ease;
-    }
-
-    .modal-content::before {
-        display: none;
-    }
-}
-
-@keyframes dialogIn {
-    from { opacity: 0; transform: translateY(8px) scale(0.98); }
-}
-
-.modal-content h2 {
-    margin-bottom: 16px;
-    font-size: 1.2rem;
-}
-
-form {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-input {
-    padding: 12px;
-    border: 1px solid var(--input-border);
-    border-radius: var(--border-radius);
-    font-size: 1rem;
-    background: var(--card-background);
-    color: var(--text-color);
-}
-
-input:focus {
-    background: var(--card-background);
-    border-color: var(--primary-color);
-}
-
-.modal-buttons {
-    display: flex;
-    gap: 8px;
-    margin-top: 16px;
-}
-
-.modal-buttons button {
-    flex: 1;
-    padding: 12px;
-    border: none;
-    border-radius: var(--border-radius);
-    cursor: pointer;
-    font-weight: 500;
-}
-
-.cancel-btn {
-    background: var(--background-color);
-    color: var(--text-color);
-}
-
-.save-btn {
-    background: var(--primary-color);
-    color: white;
-}
-
-.due-date {
-    font-size: 0.8rem;
-    color: var(--primary-color);
-    margin-top: 4px;
-}
-
-.checkbox-container {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.checkbox-container input[type="checkbox"] {
-    width: 18px;
-    height: 18px;
-    cursor: pointer;
-}
-
-.checkbox-container label {
-    color: var(--text-color);
-    cursor: pointer;
-}
-
-.paid-status {
-    font-size: 0.8rem;
-    color: #059669;
-    margin-top: 4px;
-}
-
-.debt-card {
-    position: relative;
-    cursor: pointer;
-    transition: transform 0.2s ease;
-}
-
-.debt-card:hover {
-    transform: translateY(-2px);
-}
-
-/* .glass artık okunabilirlik için opak kart zemini kullanır
-   (eski yarı saydam efekt metin kontrastını düşürüyordu). */
-.glass {
-    background: var(--card-background);
-}
-
-.detail-modal h2 {
-    font-size: 1.35rem;
-    color: var(--text-color);
-    margin-bottom: 20px;
-    padding-right: 32px;
-}
+.modal-content h2 { font-size: 1.2rem; margin-bottom: 16px; }
 
 @media (min-width: 600px) {
-    .detail-modal .modal-content {
-        max-width: 360px;
-        padding: 28px 24px;
-    }
-}
-
-.detail-label {
-    display: block;
-    font-size: 0.9rem;
-    color: var(--primary-color);
-    margin-bottom: 8px;
-}
-
-/* Modal form alanı etiketi */
-.field-label {
-    display: block;
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: var(--muted-color);
-    margin-bottom: -4px;
-}
-
-.amount-input-container {
-    position: relative;
-    margin: 16px 0;
-}
-
-.amount-input {
-    width: 100%;
-    font-size: 1.5rem;
-    padding: 16px;
-    border: 2px solid var(--input-border);
-    border-radius: var(--border-radius);
-    background: var(--card-background);
-    color: var(--text-color);
-    transition: all 0.3s ease;
-    -moz-appearance: textfield;
-}
-
-.amount-input::-webkit-outer-spin-button,
-.amount-input::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-}
-
-.amount-input:focus {
-    outline: none;
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(194, 104, 59, 0.15);
-}
-
-.amount-input::placeholder {
-    color: var(--secondary-color);
-    opacity: 0.5;
-}
-
-/* Dark mode için ek stiller */
-[data-theme="dark"] .amount-input {
-    background: var(--background-color);
-}
-
-.detail-actions {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    gap: 12px;
-    margin-top: 8px;
-}
-
-.detail-actions .save-btn,
-.detail-actions .delete-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 12px 24px;
-    font-size: 1rem;
-}
-
-.detail-actions .material-icons {
-    font-size: 20px;
+    .modal { align-items: center; padding: 20px; }
+    .modal-content { border-radius: var(--radius); max-height: calc(100dvh - 40px); animation: none; }
+    .modal-content::before { display: none; }
 }
 
 .close-btn {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    background: none;
-    border: none;
-    color: var(--primary-color);
-    cursor: pointer;
-    padding: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    transition: all 0.3s ease;
-}
-
-.close-btn:hover {
-    background: var(--background-color);
-}
-
-.close-btn .material-icons {
-    font-size: 24px;
-}
-
-.debt-checkbox {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 6px 12px;
-    background: var(--background-color);
-    border-radius: var(--border-radius);
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.debt-checkbox:hover {
-    background: var(--input-border);
-}
-
-.debt-checkbox input[type="checkbox"] {
-    width: 16px;
-    height: 16px;
-    margin: 0;
-}
-
-.debt-checkbox label {
-    font-size: 0.9rem;
-    color: var(--primary-color);
-    cursor: pointer;
-}
-
-.delete-btn {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    padding: 6px 12px;
-    background: var(--delete-btn-bg);
-    color: var(--delete-btn-color);
-    border: none;
-    border-radius: var(--border-radius);
-    font-size: 0.9rem;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.delete-btn:hover {
-    color: var(--delete-btn-hover-color);
-}
-
-.delete-btn .material-icons {
-    font-size: 16px;
-}
-
-.paid-debt {
-    opacity: 0.7;
-}
-
-.paid-debt .amount {
-    text-decoration: line-through;
-    color: var(--primary-color);
-}
-
-.bank-card {
-    position: relative;
-    cursor: pointer;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-    background: var(--card-background);
-    padding: 18px;
-    border-radius: var(--border-radius);
-    box-shadow: var(--shadow-sm);
-}
-
-.bank-card:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
-}
-
-.bank-card-content {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 20px;
-}
-
-.bank-info {
-    flex: 1;
-}
-
-.bank-info h3 {
-    margin-bottom: 8px;
-    font-size: 1.05rem;
-}
-
-.bank-info .amount {
-    font-size: 1.6rem;
-    font-weight: 700;
-    color: var(--text-color);
-}
-
-.bank-logo {
-    width: 64px;
-    height: 64px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0.9;
-}
-
-.bank-logo img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-}
-
-[data-theme="dark"] .light-icon,
-[data-theme="light"] .dark-icon {
-    display: none;
-}
-
-.subscription-card {
-    background: var(--card-background);
-    padding: 16px;
-    border-radius: var(--border-radius);
-    border: 1px solid var(--input-border);
-    box-shadow: var(--shadow-sm);
-    position: relative;
-    cursor: pointer;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.subscription-card:hover {
-    transform: translateY(-2px);
-}
-
-.subscription-card h3 {
-    margin-bottom: 8px;
-    font-size: 1rem;
-}
-
-.subscription-info {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 8px;
-    font-size: 0.9rem;
-    color: var(--primary-color);
-}
-
-.payment-date {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-}
-
-.payment-date .material-icons {
-    font-size: 16px;
-}
-
-.detail-select {
-    width: 100%;
-    padding: 12px;
-    font-size: 1rem;
-    background: var(--background-color);
-    border: 1px solid var(--input-border);
-    border-radius: var(--border-radius);
-    color: var(--text-color);
-    margin-bottom: 24px;
-}
-
-.detail-date-input {
-    width: 100%;
-    padding: 12px;
-    font-size: 1rem;
-    background: var(--background-color);
-    border: 1px solid var(--input-border);
-    border-radius: var(--border-radius);
-    color: var(--text-color);
-    margin-bottom: 24px;
-}
-
-.detail-select:focus,
-.detail-date-input:focus {
-    outline: 2px solid var(--primary-color);
-    background: white;
-}
-
-select {
-    width: 100%;
-    padding: 12px;
-    background: var(--card-background);
-    border: 1px solid var(--input-border);
-    border-radius: var(--border-radius);
-    color: var(--text-color);
-    font-size: 1rem;
-    cursor: pointer;
-}
-
-select:focus {
-    border-color: var(--primary-color);
-    outline: none;
-}
-
-.subscription-card.overdue {
-    border: 2px solid #EF4444;
-}
-
-.subscription-card.overdue .payment-date {
-    color: #EF4444;
-}
-
-.subscription-card.overdue .material-icons {
-    color: #EF4444;
-    animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-    0% {
-        opacity: 1;
-    }
-    50% {
-        opacity: 0.5;
-    }
-    100% {
-        opacity: 1;
-    }
-}
-
-.expense-categories {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    margin-bottom: 16px;
-}
-
-.category-row {
-    display: flex;
-    gap: 8px;
-    justify-content: center;
-}
-
-.category-btn {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-    padding: 12px;
-    background: var(--background-color);
-    border: 1px solid var(--input-border);
-    border-radius: var(--border-radius);
-    color: var(--text-color);
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.category-btn:hover {
-    background: var(--card-background);
-    transform: translateY(-2px);
-}
-
-.category-btn.selected {
-    background: var(--primary-color);
-    color: white;
-    border-color: var(--primary-color);
-}
-
-.category-btn .material-icons {
-    font-size: 24px;
-}
-
-.expense-card {
-    background: var(--card-background);
-    padding: 13px 14px;
-    border-radius: var(--border-radius);
-    border: 1px solid var(--input-border);
-    box-shadow: var(--shadow-sm);
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    cursor: pointer;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.expense-card:hover {
-    transform: translateY(-2px);
-}
-
-.expense-card h3 {
-    margin: 0;
-    font-size: 0.9rem;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex: 1;
-}
-
-.expense-card .material-icons {
-    font-size: 18px;
-    color: var(--primary-color);
-}
-
-.expense-card .amount {
-    margin: 0;
-    font-size: 0.9rem;
-    font-weight: 500;
-}
-
-.expense-date {
-    font-size: 0.75rem;
-    color: var(--primary-color);
-    margin: 0;
-    min-width: 85px;
-    text-align: right;
-}
-
-.bank-name {
-    font-size: 0.7rem;
-    opacity: 0.8;
-    display: block;
-    margin-top: 2px;
-}
-
-#expensesList.cards-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 8px;
-}
-
-@media (max-width: 480px) {
-    .balance-value {
-        font-size: 2rem;
-    }
-
-    .bank-logo {
-        width: 56px;
-        height: 56px;
-    }
-
-    .bank-info h3 {
-        font-size: 1rem;
-        margin-bottom: 8px;
-    }
-
-    .bank-info .amount {
-        font-size: 1.4rem;
-    }
-
-    .bank-card-content {
-        gap: 14px;
-    }
-}
-
-.bank-buttons {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
-    gap: 8px;
-    margin-bottom: 0;
-}
-
-.bank-select-btn {
-    background: var(--card-background);
-    border: 1px solid var(--input-border);
-    border-radius: var(--border-radius);
-    padding: 10px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    aspect-ratio: 1;
-    width: 100%;
-}
-
-.bank-select-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.bank-select-btn.selected {
-    border: 2px solid var(--primary-color);
-    background: var(--background-color);
-}
-
-.bank-select-btn img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    padding: 4px;
-}
-
-/* Para birimi seçim butonları */
-.currency-buttons {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 0;
-    flex-wrap: wrap;
-}
-
-.currency-select-btn {
-    flex: 1;
-    min-width: 64px;
-    background: var(--card-background);
-    border: 1px solid var(--input-border);
-    border-radius: var(--border-radius);
-    padding: 8px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-}
-
-.currency-select-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.currency-select-btn.selected {
-    border: 2px solid var(--primary-color);
-    background: var(--background-color);
-}
-
-.currency-symbol {
-    font-size: 1.2rem;
-    font-weight: bold;
-    color: var(--text-color);
-}
-
-.currency-name {
-    font-size: 0.8rem;
-    color: var(--text-color);
-}
-
-@media (max-width: 480px) {
-    .bank-buttons {
-        grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
-        gap: 8px;
-    }
-
-    .bank-select-btn {
-        padding: 8px;
-    }
-
-    .currency-buttons {
-        gap: 6px;
-    }
-    
-    .currency-select-btn {
-        min-width: 60px;
-        padding: 6px 12px;
-    }
-    
-    .currency-symbol {
-        font-size: 1rem;
-    }
-    
-    .currency-name {
-        font-size: 0.7rem;
-    }
-}
-
-.subscription-summary {
-    margin: 12px 0;
-    padding: 0 8px;
-}
-
-.summary-card {
-    background: linear-gradient(135deg, var(--accent-color) 0%, var(--accent-deep) 100%);
-    color: var(--hero-text);
-    border-radius: var(--border-radius);
-    padding: 12px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    box-shadow: var(--shadow-sm);
-}
-
-.summary-icon {
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.summary-icon .material-icons {
-    font-size: 20px;
-}
-
-.summary-info h4 {
-    font-size: 0.8rem;
-    margin: 0;
-    opacity: 0.9;
-}
-
-.summary-amount {
-    font-size: 1.3rem;
-    font-weight: 600;
-    margin: 2px 0;
-}
-
-.summary-period {
-    font-size: 0.7rem;
-    opacity: 0.8;
-}
-
-[data-theme="dark"] .summary-card {
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-}
-
-.subscription-card.paid-subscription .payment-date {
-    color: #059669;
-}
-
-.subscription-card.paid-subscription .material-icons {
-    color: #059669;
-}
-
-.subscription-card.paid-subscription {
-    opacity: 0.8;
-}
-
-.expense-month-selector {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 1rem 0;
-    gap: 1rem;
-}
-
-.expense-month-selector h3 {
-    min-width: 150px;
-    text-align: center;
-    margin: 0;
-    font-size: 1.2rem;
-}
-
-.month-nav-btn {
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 0.5rem;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background-color 0.3s;
-}
-
-.month-nav-btn:hover {
-    background-color: var(--background-color);
-}
-
-.month-nav-btn .material-icons {
-    color: var(--text-color);
-}
-
-.detail-balance {
-    font-size: 2rem;
-    font-weight: 600;
-    text-align: center;
-    padding: 16px;
-    background: var(--background-color);
-    border-radius: var(--border-radius);
-    color: var(--text-color);
-    margin: 16px 0;
-}
-
-.bank-actions {
-    display: flex;
-    gap: 12px;
-    margin: 16px 0;
-}
-
-.action-btn {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 12px;
-    border: none;
-    border-radius: var(--border-radius);
-    background: var(--card-background);
-    color: var(--text-color);
-    cursor: pointer;
-    transition: all 0.3s ease;
-    font-size: 0.9rem;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.add-money-btn {
-    background: var(--accent-color);
-    color: #fff;
-}
-
-.transfer-btn {
-    background: var(--primary-color);
-    color: #fff;
-}
-
-.action-btn:hover {
-    transform: translateY(-2px);
-}
-
-.transaction-form {
-    background: var(--background-color);
-    padding: 16px;
-    border-radius: var(--border-radius);
-    margin: 16px 0;
-}
-
-.transaction-form h3 {
-    font-size: 1.1rem;
-    margin-bottom: 16px;
-    color: var(--text-color);
-}
-
-.form-buttons {
-    display: flex;
-    gap: 8px;
-    margin-top: 16px;
-}
-
-.form-buttons button {
-    flex: 1;
-    padding: 10px;
-    border: none;
-    border-radius: var(--border-radius);
-    cursor: pointer;
-    font-weight: 500;
-}
-
-@media (max-width: 480px) {
-    .bank-actions {
-        flex-direction: column;
-    }
-
-    .action-btn {
-        width: 100%;
-    }
-
-    .detail-balance {
-        font-size: 1.5rem;
-        padding: 12px;
-    }
-}
-
-.card-type-buttons {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 0;
-}
-
-.card-type-btn {
-    flex: 1;
-    background: var(--card-background);
-    border: 1px solid var(--input-border);
-    border-radius: var(--border-radius);
-    padding: 12px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-}
-
-.card-type-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.card-type-btn.selected {
-    border: 2px solid var(--primary-color);
-    background: var(--background-color);
-}
-
-.card-type-btn .material-icons {
-    font-size: 24px;
-    color: var(--text-color);
-}
-
-.card-type-name {
-    font-size: 0.9rem;
-    color: var(--text-color);
-}
-
-/* Boş liste durumu */
-.empty-state {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 36px 16px;
-    color: var(--muted-color);
-    background: var(--card-background);
-    border: 1px dashed var(--input-border);
-    border-radius: var(--border-radius);
-    text-align: center;
-}
-
-.empty-state .material-icons {
-    font-size: 40px;
-    opacity: 0.5;
-}
-
-.empty-state p {
-    font-size: 0.9rem;
-    margin: 0;
-}
+    position: absolute; top: 16px; right: 14px;
+    width: 34px; height: 34px; border-radius: 50%;
+    border: none; background: var(--surface-2); color: var(--text);
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+}
+.close-btn .material-icons { font-size: 20px; }
+
+form { display: flex; flex-direction: column; gap: 10px; }
+
+.field-label { font-size: 0.78rem; font-weight: 600; color: var(--muted); margin: 6px 0 -2px; }
+
+input[type="text"], input[type="number"], input[type="date"], .select {
+    width: 100%; padding: 12px 14px;
+    border: 1px solid var(--border); border-radius: 12px;
+    background: var(--surface); color: var(--text);
+    font-size: 1rem; outline: none;
+}
+input:focus, .select:focus { border-color: var(--primary); }
+
+.amount-wrap { position: relative; }
+.amount-input { font-size: 1.4rem !important; font-weight: 700; padding: 14px !important; }
+
+.select { cursor: pointer; }
+
+.checkbox { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; cursor: pointer; margin: 4px 0; }
+.checkbox input { width: 18px; height: 18px; }
+
+/* seçim grupları */
+.bank-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); gap: 8px; }
+.bank-tile {
+    aspect-ratio: 1; border: 1px solid var(--border); border-radius: 12px;
+    background: var(--surface); cursor: pointer; padding: 8px;
+    display: flex; align-items: center; justify-content: center;
+}
+.bank-tile img { max-width: 100%; max-height: 100%; object-fit: contain; }
+.bank-tile.selected { border: 2px solid var(--primary); background: var(--surface-2); }
+
+.chip-row { display: flex; gap: 8px; }
+.chip {
+    flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;
+    border: 1px solid var(--border); border-radius: 12px; background: var(--surface);
+    color: var(--text); padding: 11px; cursor: pointer; font-size: 0.9rem; font-weight: 500;
+}
+.chip .material-icons { font-size: 19px; }
+.chip.selected { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+.color-row { display: flex; gap: 10px; }
+.color-dot {
+    width: 36px; height: 36px; border-radius: 50%; cursor: pointer;
+    border: 3px solid transparent; box-shadow: var(--shadow-sm);
+}
+.color-dot.selected { border-color: var(--text); }
+
+.currency-row { display: flex; gap: 6px; flex-wrap: wrap; }
+.cur-btn {
+    flex: 1; min-width: 56px;
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
+    border: 1px solid var(--border); border-radius: 12px; background: var(--surface);
+    color: var(--text); padding: 8px 4px; cursor: pointer;
+}
+.cur-btn b { font-size: 1.1rem; }
+.cur-btn span { font-size: 0.7rem; color: var(--muted); }
+.cur-btn.selected { background: var(--primary); color: #fff; border-color: var(--primary); }
+.cur-btn.selected span { color: rgba(255,255,255,0.85); }
+
+.icon-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.icon-pick {
+    width: 44px; height: 44px; border-radius: 12px;
+    border: 1px solid var(--border); background: var(--surface); color: var(--text);
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+}
+.icon-pick.selected { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+.cat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.cat-tile {
+    display: flex; flex-direction: column; align-items: center; gap: 5px;
+    border: 1px solid var(--border); border-radius: 12px; background: var(--surface);
+    color: var(--text); padding: 12px 6px; cursor: pointer; font-size: 0.75rem;
+}
+.cat-tile .material-icons { font-size: 22px; color: var(--primary); }
+.cat-tile.selected { background: var(--primary); color: #fff; border-color: var(--primary); }
+.cat-tile.selected .material-icons { color: #fff; }
+
+/* modal aksiyon butonları */
+.modal-actions { display: flex; gap: 10px; margin-top: 16px; }
+.btn-primary, .btn-ghost, .btn-danger {
+    flex: 1; padding: 13px; border: none; border-radius: 12px;
+    font-weight: 600; font-size: 0.95rem; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    transition: transform 0.15s ease;
+}
+.btn-primary:active, .btn-ghost:active, .btn-danger:active { transform: scale(0.97); }
+.btn-primary { background: var(--primary); color: #fff; }
+.btn-ghost { background: var(--surface-2); color: var(--text); }
+.btn-danger { background: var(--danger-bg); color: var(--danger); }
+.btn-danger .material-icons { font-size: 18px; }
+
+/* detay */
+.detail-amount { font-size: 2rem; font-weight: 800; text-align: center; margin: 6px 0 14px; }
+.detail-amount.neg { color: var(--danger); }
+.detail-line { color: var(--muted); font-size: 0.9rem; text-align: center; margin-bottom: 6px; }
+
+/* ---------- Toast ---------- */
+.toast {
+    position: fixed; left: 50%; bottom: calc(86px + env(safe-area-inset-bottom));
+    transform: translateX(-50%) translateY(20px);
+    background: var(--text); color: var(--bg);
+    padding: 11px 18px; border-radius: 999px; font-size: 0.88rem; font-weight: 500;
+    box-shadow: var(--shadow-md); z-index: 200; opacity: 0; pointer-events: none;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
