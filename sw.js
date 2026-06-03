@@ -2,7 +2,7 @@
 // Uygulama kabuğunu (app shell) önbelleğe alır, çevrimdışı çalışmayı ve
 // PWA olarak kurulabilmeyi sağlar.
 
-const CACHE_VERSION = 'v5';
+const CACHE_VERSION = 'v6';
 const CACHE_NAME = `dijital-cuzdan-${CACHE_VERSION}`;
 
 // Kurulum sırasında önbelleğe alınacak temel dosyalar (app shell).

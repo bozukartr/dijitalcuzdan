@@ -13,7 +13,7 @@
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#4F46E5">
+    <meta name="theme-color" content="#F1E9DB">
     <link rel="apple-touch-icon" href="applogo.png">
     <link rel="apple-touch-icon" sizes="192x192" href="applogo.png">
     <link rel="apple-touch-icon" sizes="512x512" href="applogo.png">
@@ -24,109 +24,127 @@
     <script src="firebase-config.js"></script>
 </head>
 <body>
-    <div class="container">
-        <header class="app-header">
-            <div class="brand">
-                <img src="logo.png" alt="Dijital Cüzdan" class="brand-logo">
-            </div>
-            <div class="header-actions">
-                <button id="settingsBtn" class="settings-btn" aria-label="Ayarlar">
+    <div class="app">
+        <header class="topbar">
+            <img src="logo.png" alt="Dijital Cüzdan" class="topbar-logo">
+            <div class="topbar-actions">
+                <button id="settingsBtn" class="icon-btn" aria-label="Ayarlar">
                     <span class="material-icons">settings</span>
                 </button>
-                <button id="themeToggle" class="theme-toggle" aria-label="Tema">
+                <button id="themeToggle" class="icon-btn" aria-label="Tema">
                     <span class="material-icons light-icon">light_mode</span>
                     <span class="material-icons dark-icon">dark_mode</span>
                 </button>
-                <button id="logoutBtn" class="logout-btn" aria-label="Çıkış">
+                <button id="logoutBtn" class="icon-btn icon-btn-danger" aria-label="Çıkış">
                     <span class="material-icons">logout</span>
                 </button>
             </div>
         </header>
 
-        <section class="balance-hero">
-            <span class="balance-label">Net Varlık</span>
-            <p class="balance-value" id="totalAssets">₺0</p>
-            <div class="balance-stats">
-                <div class="stat">
-                    <span class="material-icons stat-icon">south_west</span>
-                    <div class="stat-text">
-                        <span class="stat-label">Toplam Borç</span>
-                        <p class="stat-value" id="totalDebt">₺0</p>
+        <main class="app-main">
+            <section class="balance-hero">
+                <span class="balance-label">Net Varlık</span>
+                <p class="balance-value" id="totalAssets">₺0</p>
+                <div class="balance-stats">
+                    <div class="stat">
+                        <span class="material-icons stat-icon">south_west</span>
+                        <div class="stat-text">
+                            <span class="stat-label">Toplam Borç</span>
+                            <p class="stat-value" id="totalDebt">₺0</p>
+                        </div>
+                    </div>
+                    <div class="stat">
+                        <span class="material-icons stat-icon">receipt_long</span>
+                        <div class="stat-text">
+                            <span class="stat-label">Bu Ay Harcama</span>
+                            <p class="stat-value" id="monthlyExpenses">₺0</p>
+                        </div>
                     </div>
                 </div>
-                <div class="stat">
-                    <span class="material-icons stat-icon">receipt_long</span>
-                    <div class="stat-text">
-                        <span class="stat-label">Bu Ay Harcama</span>
-                        <p class="stat-value" id="monthlyExpenses">₺0</p>
+            </section>
+
+            <div class="tab-content active" id="banks">
+                <div class="section-head">
+                    <h2 class="section-title">Hesaplarım</h2>
+                    <button class="add-btn" id="addBankBtn">
+                        <span class="material-icons">add</span> Ekle
+                    </button>
+                </div>
+                <div id="banksList" class="cards-container"></div>
+            </div>
+
+            <div class="tab-content" id="debts">
+                <div class="section-head">
+                    <h2 class="section-title">Borçlarım</h2>
+                    <button class="add-btn" id="addDebtBtn">
+                        <span class="material-icons">add</span> Ekle
+                    </button>
+                </div>
+                <div id="debtsList" class="cards-container"></div>
+            </div>
+
+            <div class="tab-content" id="subscriptions">
+                <div class="section-head">
+                    <h2 class="section-title">Aboneliklerim</h2>
+                    <button class="add-btn" id="addSubscriptionBtn">
+                        <span class="material-icons">add</span> Ekle
+                    </button>
+                </div>
+                <div class="subscription-summary">
+                    <div class="summary-card">
+                        <div class="summary-icon">
+                            <span class="material-icons">payments</span>
+                        </div>
+                        <div class="summary-info">
+                            <h4>Toplam Abonelik</h4>
+                            <p class="summary-amount" id="totalSubscriptionAmount">₺0</p>
+                            <small class="summary-period">Aylık Ödeme</small>
+                        </div>
                     </div>
                 </div>
+                <div id="subscriptionsList" class="cards-container"></div>
             </div>
-        </section>
 
-        <div class="tabs">
-            <button class="tab-btn active" data-tab="banks">Bankalar</button>
-            <button class="tab-btn" data-tab="debts">Borçlar</button>
-            <button class="tab-btn" data-tab="subscriptions">Abonelikler</button>
-            <button class="tab-btn" data-tab="expenses">Harcamalar</button>
-        </div>
-
-        <div class="tab-content active" id="banks">
-            <div class="add-section">
-                <button class="add-btn" id="addBankBtn">
-                    <span class="material-icons">add</span> Banka Ekle
-                </button>
-            </div>
-            <div id="banksList" class="cards-container"></div>
-        </div>
-
-        <div class="tab-content" id="debts">
-            <div class="add-section">
-                <button class="add-btn" id="addDebtBtn">
-                    <span class="material-icons">add</span> Borç Ekle
-                </button>
-            </div>
-            <div id="debtsList" class="cards-container"></div>
-        </div>
-
-        <div class="tab-content" id="subscriptions">
-            <div class="add-section">
-                <button class="add-btn" id="addSubscriptionBtn">
-                    <span class="material-icons">add</span> Abonelik Ekle
-                </button>
-            </div>
-            <div class="subscription-summary">
-                <div class="summary-card">
-                    <div class="summary-icon">
-                        <span class="material-icons">payments</span>
-                    </div>
-                    <div class="summary-info">
-                        <h4>Toplam Abonelik</h4>
-                        <p class="summary-amount" id="totalSubscriptionAmount">₺0</p>
-                        <small class="summary-period">Aylık Ödeme</small>
-                    </div>
+            <div class="tab-content" id="expenses">
+                <div class="section-head">
+                    <h2 class="section-title">Harcamalarım</h2>
+                    <button class="add-btn" id="addExpenseBtn">
+                        <span class="material-icons">add</span> Ekle
+                    </button>
                 </div>
+                <div class="expense-month-selector">
+                    <button class="month-nav-btn" id="prevMonth">
+                        <span class="material-icons">chevron_left</span>
+                    </button>
+                    <h3 id="selectedMonth">Mart 2024</h3>
+                    <button class="month-nav-btn" id="nextMonth">
+                        <span class="material-icons">chevron_right</span>
+                    </button>
+                </div>
+                <div id="expensesList" class="cards-container"></div>
             </div>
-            <div id="subscriptionsList" class="cards-container"></div>
-        </div>
+        </main>
 
-        <div class="tab-content" id="expenses">
-            <div class="add-section">
-                <button class="add-btn" id="addExpenseBtn">
-                    <span class="material-icons">add</span> Harcama Ekle
+        <nav class="bottom-nav">
+            <div class="nav-inner">
+                <button class="tab-btn active" data-tab="banks">
+                    <span class="material-icons">account_balance_wallet</span>
+                    <span class="nav-label">Hesaplar</span>
+                </button>
+                <button class="tab-btn" data-tab="debts">
+                    <span class="material-icons">credit_card</span>
+                    <span class="nav-label">Borçlar</span>
+                </button>
+                <button class="tab-btn" data-tab="subscriptions">
+                    <span class="material-icons">autorenew</span>
+                    <span class="nav-label">Abonelik</span>
+                </button>
+                <button class="tab-btn" data-tab="expenses">
+                    <span class="material-icons">receipt_long</span>
+                    <span class="nav-label">Harcama</span>
                 </button>
             </div>
-            <div class="expense-month-selector">
-                <button class="month-nav-btn" id="prevMonth">
-                    <span class="material-icons">chevron_left</span>
-                </button>
-                <h3 id="selectedMonth">Mart 2024</h3>
-                <button class="month-nav-btn" id="nextMonth">
-                    <span class="material-icons">chevron_right</span>
-                </button>
-            </div>
-            <div id="expensesList" class="cards-container"></div>
-        </div>
+        </nav>
     </div>
 
     <!-- Modal for adding bank -->
