@@ -29,7 +29,7 @@
             <img src="logo.png" alt="Dijital Cüzdan" class="topbar-logo">
             <div class="topbar-actions">
                 <button id="settingsBtn" class="icon-btn" aria-label="Ayarlar">
-                    <span class="material-icons">settings</span>
+                    <span class="material-icons">tune</span>
                 </button>
                 <button id="themeToggle" class="icon-btn" aria-label="Tema">
                     <span class="material-icons light-icon">light_mode</span>
@@ -42,97 +42,120 @@
         </header>
 
         <main class="app-main">
-            <section class="balance-hero">
-                <span class="balance-label">Net Varlık</span>
-                <p class="balance-value" id="totalAssets">₺0</p>
-                <div class="balance-stats">
-                    <div class="stat">
-                        <span class="material-icons stat-icon">south_west</span>
-                        <div class="stat-text">
-                            <span class="stat-label">Toplam Borç</span>
-                            <p class="stat-value" id="totalDebt">₺0</p>
-                        </div>
+            <!-- ============ CÜZDAN (HOME) ============ -->
+            <section class="tab-content active" id="home">
+                <div class="hero">
+                    <div class="hero-top">
+                        <span class="hero-label">Net Varlık</span>
+                        <button id="toggleBalance" class="hero-eye" aria-label="Bakiyeyi gizle">
+                            <span class="material-icons">visibility</span>
+                        </button>
                     </div>
-                    <div class="stat">
-                        <span class="material-icons stat-icon">receipt_long</span>
-                        <div class="stat-text">
-                            <span class="stat-label">Bu Ay Harcama</span>
-                            <p class="stat-value" id="monthlyExpenses">₺0</p>
+                    <p class="hero-value" id="netWorth">₺0</p>
+                    <div class="hero-stats">
+                        <div class="hero-stat">
+                            <span class="material-icons">trending_down</span>
+                            <div>
+                                <span class="hero-stat-label">Toplam Borç</span>
+                                <p class="hero-stat-value" id="homeDebt">₺0</p>
+                            </div>
+                        </div>
+                        <div class="hero-stat">
+                            <span class="material-icons">receipt_long</span>
+                            <div>
+                                <span class="hero-stat-label">Bu Ay Harcama</span>
+                                <p class="hero-stat-value" id="homeMonthly">₺0</p>
+                            </div>
                         </div>
                     </div>
                 </div>
+
+                <div class="section-head">
+                    <h2 class="section-title">Kartlarım</h2>
+                    <button class="add-btn" id="addCardBtn"><span class="material-icons">add</span> Kart</button>
+                </div>
+                <div class="carousel" id="cardCarousel"></div>
+
+                <div class="section-head">
+                    <h2 class="section-title">Son Hareketler</h2>
+                </div>
+                <div class="list" id="recentActivity"></div>
             </section>
 
-            <div class="tab-content active" id="banks">
-                <div class="section-head">
-                    <h2 class="section-title">Hesaplarım</h2>
-                    <button class="add-btn" id="addBankBtn">
-                        <span class="material-icons">add</span> Ekle
-                    </button>
-                </div>
-                <div id="banksList" class="cards-container"></div>
-            </div>
-
-            <div class="tab-content" id="debts">
+            <!-- ============ BORÇLAR ============ -->
+            <section class="tab-content" id="debts">
                 <div class="section-head">
                     <h2 class="section-title">Borçlarım</h2>
-                    <button class="add-btn" id="addDebtBtn">
-                        <span class="material-icons">add</span> Ekle
-                    </button>
+                    <button class="add-btn" id="addDebtBtn"><span class="material-icons">add</span> Ekle</button>
                 </div>
-                <div id="debtsList" class="cards-container"></div>
-            </div>
+                <div class="search-box">
+                    <span class="material-icons">search</span>
+                    <input type="text" id="debtSearch" placeholder="Borç ara...">
+                </div>
+                <div class="list" id="debtsList"></div>
+            </section>
 
-            <div class="tab-content" id="subscriptions">
+            <!-- ============ ABONELİKLER ============ -->
+            <section class="tab-content" id="subscriptions">
                 <div class="section-head">
                     <h2 class="section-title">Aboneliklerim</h2>
-                    <button class="add-btn" id="addSubscriptionBtn">
-                        <span class="material-icons">add</span> Ekle
-                    </button>
+                    <button class="add-btn" id="addSubscriptionBtn"><span class="material-icons">add</span> Ekle</button>
                 </div>
-                <div class="subscription-summary">
-                    <div class="summary-card">
-                        <div class="summary-icon">
-                            <span class="material-icons">payments</span>
-                        </div>
-                        <div class="summary-info">
-                            <h4>Toplam Abonelik</h4>
-                            <p class="summary-amount" id="totalSubscriptionAmount">₺0</p>
-                            <small class="summary-period">Aylık Ödeme</small>
-                        </div>
+                <div class="dual-summary">
+                    <div class="mini-card">
+                        <span class="mini-label">Aylık Toplam</span>
+                        <p class="mini-value" id="subMonthlyTotal">₺0</p>
+                    </div>
+                    <div class="mini-card">
+                        <span class="mini-label">Yıllık Maliyet</span>
+                        <p class="mini-value" id="subYearlyTotal">₺0</p>
                     </div>
                 </div>
-                <div id="subscriptionsList" class="cards-container"></div>
-            </div>
+                <div class="search-box">
+                    <span class="material-icons">search</span>
+                    <input type="text" id="subSearch" placeholder="Abonelik ara...">
+                </div>
+                <div class="list" id="subsList"></div>
+            </section>
 
-            <div class="tab-content" id="expenses">
+            <!-- ============ HARCAMALAR ============ -->
+            <section class="tab-content" id="expenses">
                 <div class="section-head">
-                    <h2 class="section-title">Harcamalarım</h2>
-                    <button class="add-btn" id="addExpenseBtn">
-                        <span class="material-icons">add</span> Ekle
-                    </button>
+                    <h2 class="section-title">Harcamalar</h2>
+                    <button class="add-btn" id="addExpenseBtn"><span class="material-icons">add</span> Ekle</button>
                 </div>
-                <div class="expense-month-selector">
-                    <button class="month-nav-btn" id="prevMonth">
-                        <span class="material-icons">chevron_left</span>
-                    </button>
-                    <h3 id="selectedMonth">Mart 2024</h3>
-                    <button class="month-nav-btn" id="nextMonth">
-                        <span class="material-icons">chevron_right</span>
-                    </button>
+                <div class="month-selector">
+                    <button class="month-nav" id="prevMonth"><span class="material-icons">chevron_left</span></button>
+                    <h3 id="selectedMonth">—</h3>
+                    <button class="month-nav" id="nextMonth"><span class="material-icons">chevron_right</span></button>
                 </div>
-                <div id="expensesList" class="cards-container"></div>
-            </div>
+                <div class="chart-card">
+                    <div class="donut" id="expenseDonut"></div>
+                    <div class="donut-legend" id="donutLegend"></div>
+                </div>
+                <div class="budget-card" id="budgetCard">
+                    <div class="budget-head">
+                        <span>Aylık Bütçe</span>
+                        <span id="budgetText">—</span>
+                    </div>
+                    <div class="budget-bar"><div class="budget-fill" id="budgetFill"></div></div>
+                </div>
+                <div class="search-box">
+                    <span class="material-icons">search</span>
+                    <input type="text" id="expenseSearch" placeholder="Harcama ara...">
+                </div>
+                <div class="list" id="expensesList"></div>
+            </section>
         </main>
 
         <nav class="bottom-nav">
             <div class="nav-inner">
-                <button class="tab-btn active" data-tab="banks">
+                <button class="tab-btn active" data-tab="home">
                     <span class="material-icons">account_balance_wallet</span>
-                    <span class="nav-label">Hesaplar</span>
+                    <span class="nav-label">Cüzdan</span>
                 </button>
                 <button class="tab-btn" data-tab="debts">
-                    <span class="material-icons">credit_card</span>
+                    <span class="material-icons">request_quote</span>
                     <span class="nav-label">Borçlar</span>
                 </button>
                 <button class="tab-btn" data-tab="subscriptions">
@@ -140,430 +163,185 @@
                     <span class="nav-label">Abonelik</span>
                 </button>
                 <button class="tab-btn" data-tab="expenses">
-                    <span class="material-icons">receipt_long</span>
+                    <span class="material-icons">pie_chart</span>
                     <span class="nav-label">Harcama</span>
                 </button>
             </div>
         </nav>
     </div>
 
-    <!-- Modal for adding bank -->
-    <div class="modal" id="bankModal">
+    <!-- ============ KART EKLE/DÜZENLE ============ -->
+    <div class="modal" id="cardModal">
         <div class="modal-content">
-            <button class="close-btn">
-                <span class="material-icons">close</span>
-            </button>
-            <h2>Banka Ekle</h2>
-            <form id="bankForm">
-                <label class="field-label">Banka Seçin</label>
-                <div class="bank-buttons">
-                    <button type="button" class="bank-select-btn" data-bank="Ziraat Bankası">
-                        <img src="img/ziraatbankasi.png" alt="Ziraat Bankası">
-                    </button>
-                    <button type="button" class="bank-select-btn" data-bank="Vakıfbank">
-                        <img src="img/vakifbank.png" alt="Vakıfbank">
-                    </button>
-                    <button type="button" class="bank-select-btn" data-bank="İş Bankası">
-                        <img src="img/isbankasi.png" alt="İş Bankası">
-                    </button>
-                    <button type="button" class="bank-select-btn" data-bank="Halkbank">
-                        <img src="img/halkbankasi.png" alt="Halkbank">
-                    </button>
-                    <button type="button" class="bank-select-btn" data-bank="Garanti">
-                        <img src="img/garanti.png" alt="Garanti">
-                    </button>
-                    <button type="button" class="bank-select-btn" data-bank="Yapı Kredi">
-                        <img src="img/yapikredi.png" alt="Yapı Kredi">
-                    </button>
-                    <button type="button" class="bank-select-btn" data-bank="Akbank">
-                        <img src="img/akbank.png" alt="Akbank">
-                    </button>
-                    <button type="button" class="bank-select-btn" data-bank="QNB">
-                        <img src="img/qnb.png" alt="QNB">
-                    </button>
-                    <button type="button" class="bank-select-btn" data-bank="Denizbank">
-                        <img src="img/denizbank.png" alt="Denizbank">
-                    </button>
-                    <button type="button" class="bank-select-btn" data-bank="Papara">
-                        <img src="img/papara.png" alt="Papara">
-                    </button>
-                    <button type="button" class="bank-select-btn" data-bank="Emirates NBD">
-                        <img src="img/emiratesnbd.png" alt="Emirates NBD">
-                    </button>
-                </div>
-                <input type="hidden" id="bankName" required>
+            <button class="close-btn" data-close><span class="material-icons">close</span></button>
+            <h2 id="cardModalTitle">Kart Ekle</h2>
+            <form id="cardForm">
+                <label class="field-label">Banka</label>
+                <div class="bank-grid" id="bankGrid"></div>
+                <input type="hidden" id="cardBank" required>
+
+                <label class="field-label">Kart Adı</label>
+                <input type="text" id="cardLabel" placeholder="Örn. Maaş Kartı" maxlength="22" required>
+
+                <label class="field-label">Son 4 Hane (opsiyonel)</label>
+                <input type="text" id="cardLast4" placeholder="1234" inputmode="numeric" maxlength="4">
+
                 <label class="field-label">Kart Tipi</label>
-                <div class="card-type-buttons">
-                    <button type="button" class="card-type-btn" data-type="debit">
-                        <span class="material-icons">credit_card</span>
-                        <span class="card-type-name">Debit Kart</span>
-                    </button>
-                    <button type="button" class="card-type-btn" data-type="credit">
-                        <span class="material-icons">credit_score</span>
-                        <span class="card-type-name">Kredi Kartı</span>
-                    </button>
+                <div class="chip-row" id="cardTypeRow">
+                    <button type="button" class="chip" data-type="debit"><span class="material-icons">payments</span> Banka Kartı</button>
+                    <button type="button" class="chip" data-type="credit"><span class="material-icons">credit_card</span> Kredi Kartı</button>
                 </div>
                 <input type="hidden" id="cardType" required>
+
+                <label class="field-label">Renk Teması</label>
+                <div class="color-row" id="colorRow"></div>
+                <input type="hidden" id="cardColor" value="terracotta">
+
                 <label class="field-label">Para Birimi</label>
-                <div class="currency-buttons">
-                    <button type="button" class="currency-select-btn" data-currency="TRY">
-                        <span class="currency-symbol">₺</span>
-                        <span class="currency-name">TL</span>
-                    </button>
-                    <button type="button" class="currency-select-btn" data-currency="EUR">
-                        <span class="currency-symbol">€</span>
-                        <span class="currency-name">Euro</span>
-                    </button>
-                    <button type="button" class="currency-select-btn" data-currency="USD">
-                        <span class="currency-symbol">$</span>
-                        <span class="currency-name">Dolar</span>
-                    </button>
-                    <button type="button" class="currency-select-btn" data-currency="GBP">
-                        <span class="currency-symbol">£</span>
-                        <span class="currency-name">Pound</span>
-                    </button>
-                    <button type="button" class="currency-select-btn" data-currency="AED">
-                        <span class="currency-symbol">د.إ</span>
-                        <span class="currency-name">AED</span>
-                    </button>
-                </div>
-                <input type="hidden" id="bankCurrency" required>
-                <div class="modal-buttons">
-                    <button type="button" class="cancel-btn">İptal</button>
-                    <button type="submit" class="save-btn">Kaydet</button>
+                <div class="currency-row" data-currency-group="card"></div>
+                <input type="hidden" id="cardCurrency" required>
+
+                <label class="field-label" id="cardBalanceLabel">Başlangıç Bakiyesi</label>
+                <div class="amount-wrap"><input type="text" id="cardBalance" class="amount-input" placeholder="0,00" inputmode="decimal"></div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn-ghost" data-close>İptal</button>
+                    <button type="submit" class="btn-primary">Kaydet</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Modal for adding debt -->
+    <!-- ============ PARA EKLE ============ -->
+    <div class="modal" id="addMoneyModal">
+        <div class="modal-content">
+            <button class="close-btn" data-close><span class="material-icons">close</span></button>
+            <h2>Para Ekle</h2>
+            <div class="amount-wrap"><input type="text" id="addMoneyAmount" class="amount-input" placeholder="0,00" inputmode="decimal"></div>
+            <div class="modal-actions">
+                <button type="button" class="btn-ghost" data-close>İptal</button>
+                <button type="button" class="btn-primary" id="addMoneyConfirm">Ekle</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ TRANSFER ============ -->
+    <div class="modal" id="transferModal">
+        <div class="modal-content">
+            <button class="close-btn" data-close><span class="material-icons">close</span></button>
+            <h2>Transfer</h2>
+            <div class="amount-wrap"><input type="text" id="transferAmount" class="amount-input" placeholder="0,00" inputmode="decimal"></div>
+            <label class="field-label">Hedef Kart</label>
+            <select id="transferTarget" class="select"></select>
+            <div class="modal-actions">
+                <button type="button" class="btn-ghost" data-close>İptal</button>
+                <button type="button" class="btn-primary" id="transferConfirm">Transfer Et</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ BORÇ EKLE ============ -->
     <div class="modal" id="debtModal">
         <div class="modal-content">
+            <button class="close-btn" data-close><span class="material-icons">close</span></button>
             <h2>Borç Ekle</h2>
             <form id="debtForm">
-                <input type="text" id="debtTitle" placeholder="Borç Başlığı" required>
-                <div class="amount-input-container">
-                    <input type="text" id="debtAmount" class="amount-input" placeholder="0,00" required inputmode="decimal" pattern="[0-9]*[,]?[0-9]*">
-                </div>
-                <div class="currency-buttons">
-                    <button type="button" class="currency-select-btn" data-currency="TRY">
-                        <span class="currency-symbol">₺</span>
-                        <span class="currency-name">TL</span>
-                    </button>
-                    <button type="button" class="currency-select-btn" data-currency="EUR">
-                        <span class="currency-symbol">€</span>
-                        <span class="currency-name">Euro</span>
-                    </button>
-                    <button type="button" class="currency-select-btn" data-currency="USD">
-                        <span class="currency-symbol">$</span>
-                        <span class="currency-name">Dolar</span>
-                    </button>
-                    <button type="button" class="currency-select-btn" data-currency="GBP">
-                        <span class="currency-symbol">£</span>
-                        <span class="currency-name">Pound</span>
-                    </button>
-                    <button type="button" class="currency-select-btn" data-currency="AED">
-                        <span class="currency-symbol">د.إ</span>
-                        <span class="currency-name">AED</span>
-                    </button>
-                </div>
+                <label class="field-label">Başlık</label>
+                <input type="text" id="debtTitle" placeholder="Örn. Kredi Kartı Borcu" required>
+                <label class="field-label">Tutar</label>
+                <div class="amount-wrap"><input type="text" id="debtAmount" class="amount-input" placeholder="0,00" required inputmode="decimal"></div>
+                <label class="field-label">Para Birimi</label>
+                <div class="currency-row" data-currency-group="debt"></div>
                 <input type="hidden" id="debtCurrency" required>
-                <input type="date" id="dueDate" placeholder="Son Ödeme Tarihi">
-                <div class="checkbox-container">
-                    <input type="checkbox" id="isPaid">
-                    <label for="isPaid">Ödendi</label>
-                </div>
-                <div class="modal-buttons">
-                    <button type="button" class="cancel-btn">İptal</button>
-                    <button type="submit" class="save-btn">Kaydet</button>
+                <label class="field-label">Taksit Sayısı</label>
+                <input type="number" id="debtInstallments" placeholder="1" min="1" value="1">
+                <label class="field-label">Son Ödeme Tarihi</label>
+                <input type="date" id="debtDueDate">
+                <label class="checkbox"><input type="checkbox" id="debtIsPaid"> <span>Ödendi</span></label>
+                <div class="modal-actions">
+                    <button type="button" class="btn-ghost" data-close>İptal</button>
+                    <button type="submit" class="btn-primary">Kaydet</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Modal for debt details -->
-    <div class="modal detail-modal" id="debtDetailModal">
-        <div class="modal-content glass">
-            <h2 id="detailTitle"></h2>
-            <div class="detail-content">
-                <label class="detail-label">Borç Miktarı</label>
-                <div class="amount-input-container">
-                    <input type="text" id="debtDetailAmount" class="amount-input" placeholder="0,00" required inputmode="decimal" pattern="[0-9]*[,]?[0-9]*">
-                </div>
-                <label class="detail-label">Son Ödeme Tarihi</label>
-                <input type="date" id="debtDetailDate" class="detail-date-input">
-            </div>
-            <div class="detail-actions">
-                <div class="debt-checkbox detail-checkbox">
-                    <input type="checkbox" id="detailIsPaid">
-                    <label for="detailIsPaid">Ödendi</label>
-                </div>
-                <button class="delete-btn" id="detailDeleteBtn">
-                    <span class="material-icons">delete</span>
-                    Sil
-                </button>
-            </div>
-            <button class="close-btn">
-                <span class="material-icons">close</span>
-            </button>
-        </div>
-    </div>
-
-    <!-- Modal for bank details -->
-    <div class="modal detail-modal" id="bankDetailModal">
-        <div class="modal-content glass">
-            <button class="close-btn">
-                <span class="material-icons">close</span>
-            </button>
-            <h2 id="bankDetailTitle"></h2>
-            <div class="detail-content">
-                <label class="detail-label">Güncel Varlık</label>
-                <div class="detail-balance" id="bankDetailBalanceDisplay"></div>
-                
-                <div class="bank-actions">
-                    <button class="action-btn add-money-btn" onclick="showAddMoneyForm()">
-                        <span class="material-icons">add_circle</span>
-                        Para Ekle
-                    </button>
-                    <button class="action-btn transfer-btn" onclick="showTransferForm()">
-                        <span class="material-icons">swap_horiz</span>
-                        Transfer
-                    </button>
-                </div>
-
-                <!-- Para Ekleme Formu -->
-                <div id="addMoneyForm" class="transaction-form" style="display: none;">
-                    <h3>Para Ekle</h3>
-                    <div class="amount-input-container">
-                        <input type="text" id="addAmount" class="amount-input" placeholder="0,00" required inputmode="decimal" pattern="[0-9]*[,]?[0-9]*">
-                    </div>
-                    <div class="form-buttons">
-                        <button type="button" class="cancel-btn" onclick="hideAddMoneyForm()">İptal</button>
-                        <button type="button" class="save-btn" onclick="addMoney()">Ekle</button>
-                    </div>
-                </div>
-
-                <!-- Transfer Formu -->
-                <div id="transferForm" class="transaction-form" style="display: none;">
-                    <h3>Para Transferi</h3>
-                    <div class="amount-input-container">
-                        <input type="text" id="transferAmount" class="amount-input" placeholder="0,00" required inputmode="decimal" pattern="[0-9]*[,]?[0-9]*">
-                    </div>
-                    <select id="targetBank" class="detail-select">
-                        <option value="">Hedef Hesap Seçin</option>
-                    </select>
-                    <div class="form-buttons">
-                        <button type="button" class="cancel-btn" onclick="hideTransferForm()">İptal</button>
-                        <button type="button" class="save-btn" onclick="transferMoney()">Transfer</button>
-                    </div>
-                </div>
-            </div>
-            <div class="detail-actions">
-                <button class="delete-btn" id="bankDetailDelete">
-                    <span class="material-icons">delete</span>
-                    Sil
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal for adding subscription -->
-    <div class="modal" id="subscriptionModal">
+    <!-- ============ ABONELİK EKLE ============ -->
+    <div class="modal" id="subModal">
         <div class="modal-content">
+            <button class="close-btn" data-close><span class="material-icons">close</span></button>
             <h2>Abonelik Ekle</h2>
-            <form id="subscriptionForm">
-                <input type="text" id="subscriptionTitle" placeholder="Abonelik Adı" required>
-                <div class="amount-input-container">
-                    <input type="text" id="subscriptionAmount" class="amount-input" placeholder="0,00" required inputmode="decimal" pattern="[0-9]*[,]?[0-9]*">
+            <form id="subForm">
+                <label class="field-label">Ad</label>
+                <input type="text" id="subTitle" placeholder="Örn. Netflix" required>
+                <label class="field-label">İkon</label>
+                <div class="icon-row" id="subIconRow"></div>
+                <input type="hidden" id="subIcon" value="subscriptions">
+                <label class="field-label">Tutar</label>
+                <div class="amount-wrap"><input type="text" id="subAmount" class="amount-input" placeholder="0,00" required inputmode="decimal"></div>
+                <label class="field-label">Para Birimi</label>
+                <div class="currency-row" data-currency-group="sub"></div>
+                <input type="hidden" id="subCurrency" required>
+                <label class="field-label">Periyot</label>
+                <div class="chip-row" id="subPeriodRow">
+                    <button type="button" class="chip" data-period="monthly">Aylık</button>
+                    <button type="button" class="chip" data-period="yearly">Yıllık</button>
                 </div>
-                <div class="currency-buttons">
-                    <button type="button" class="currency-select-btn" data-currency="TRY">
-                        <span class="currency-symbol">₺</span>
-                        <span class="currency-name">TL</span>
-                    </button>
-                    <button type="button" class="currency-select-btn" data-currency="EUR">
-                        <span class="currency-symbol">€</span>
-                        <span class="currency-name">Euro</span>
-                    </button>
-                    <button type="button" class="currency-select-btn" data-currency="USD">
-                        <span class="currency-symbol">$</span>
-                        <span class="currency-name">Dolar</span>
-                    </button>
-                    <button type="button" class="currency-select-btn" data-currency="GBP">
-                        <span class="currency-symbol">£</span>
-                        <span class="currency-name">Pound</span>
-                    </button>
-                    <button type="button" class="currency-select-btn" data-currency="AED">
-                        <span class="currency-symbol">د.إ</span>
-                        <span class="currency-name">AED</span>
-                    </button>
-                </div>
-                <input type="hidden" id="subscriptionCurrency" required>
-                <select id="subscriptionPeriod" required>
-                    <option value="monthly">Aylık</option>
-                    <option value="yearly">Yıllık</option>
-                </select>
-                <input type="date" id="subscriptionDate" placeholder="Ödeme Tarihi" required>
-                <div class="modal-buttons">
-                    <button type="button" class="cancel-btn">İptal</button>
-                    <button type="submit" class="save-btn">Kaydet</button>
+                <input type="hidden" id="subPeriod" value="monthly" required>
+                <label class="field-label">İlk Ödeme Tarihi</label>
+                <input type="date" id="subDate" required>
+                <div class="modal-actions">
+                    <button type="button" class="btn-ghost" data-close>İptal</button>
+                    <button type="submit" class="btn-primary">Kaydet</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Modal for subscription details -->
-    <div class="modal detail-modal" id="subscriptionDetailModal">
-        <div class="modal-content glass">
-            <button class="close-btn">
-                <span class="material-icons">close</span>
-            </button>
-            <h2 id="subscriptionDetailTitle"></h2>
-            <div class="detail-content">
-                <label class="detail-label">Aylık Ödeme</label>
-                <div class="amount-input-container">
-                    <input type="text" id="subscriptionDetailAmount" class="amount-input" placeholder="0,00" required inputmode="decimal" pattern="[0-9]*[,]?[0-9]*">
-                </div>
-                <label class="detail-label">Ödeme Periyodu</label>
-                <select id="subscriptionDetailPeriod" class="detail-select">
-                    <option value="monthly">Aylık</option>
-                    <option value="yearly">Yıllık</option>
-                </select>
-                <label class="detail-label">Ödeme Tarihi</label>
-                <input type="date" id="subscriptionDetailDate" class="detail-date-input">
-                <div class="debt-checkbox detail-checkbox">
-                    <input type="checkbox" id="subscriptionDetailPaid">
-                    <label for="subscriptionDetailPaid">Bu Ay Ödendi</label>
-                </div>
-            </div>
-            <div class="detail-actions">
-                <button class="save-btn" id="subscriptionDetailSave">
-                    <span class="material-icons">save</span>
-                    Güncelle
-                </button>
-                <button class="delete-btn" id="subscriptionDetailDelete">
-                    <span class="material-icons">delete</span>
-                    Sil
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal for expense details -->
-    <div class="modal detail-modal" id="expenseDetailModal">
-        <div class="modal-content glass">
-            <button class="close-btn">
-                <span class="material-icons">close</span>
-            </button>
-            <h2 id="expenseDetailTitle"></h2>
-            <div class="detail-content">
-                <p class="detail-amount"></p>
-                <p class="expense-detail-date"></p>
-            </div>
-            <div class="detail-actions">
-                <button class="delete-btn" id="expenseDetailDelete">
-                    <span class="material-icons">delete</span>
-                    Sil
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal for adding expense -->
+    <!-- ============ HARCAMA EKLE ============ -->
     <div class="modal" id="expenseModal">
         <div class="modal-content">
+            <button class="close-btn" data-close><span class="material-icons">close</span></button>
             <h2>Harcama Ekle</h2>
             <form id="expenseForm">
-                <div class="expense-categories">
-                    <div class="category-row">
-                        <button type="button" class="category-btn" data-category="Market">
-                            <span class="material-icons">shopping_cart</span>
-                            Market
-                        </button>
-                        <button type="button" class="category-btn" data-category="Yemek">
-                            <span class="material-icons">restaurant</span>
-                            Yemek
-                        </button>
-                        <button type="button" class="category-btn" data-category="Oyun">
-                            <span class="material-icons">sports_esports</span>
-                            Oyun
-                        </button>
-                    </div>
-                    <div class="category-row">
-                        <button type="button" class="category-btn" data-category="Ulaşım">
-                            <span class="material-icons">directions_bus</span>
-                            Ulaşım
-                        </button>
-                        <button type="button" class="category-btn" data-category="Giyim">
-                            <span class="material-icons">checkroom</span>
-                            Giyim
-                        </button>
-                        <button type="button" class="category-btn" data-category="Teknoloji">
-                            <span class="material-icons">devices</span>
-                            Teknoloji
-                        </button>
-                    </div>
-                    <div class="category-row">
-                        <button type="button" class="category-btn" data-category="Eğlence">
-                            <span class="material-icons">movie</span>
-                            Eğlence
-                        </button>
-                        <button type="button" class="category-btn" data-category="Kozmetik">
-                            <span class="material-icons">spa</span>
-                            Kozmetik
-                        </button>
-                    </div>
-                </div>
+                <label class="field-label">Kategori</label>
+                <div class="cat-grid" id="catGrid"></div>
                 <input type="hidden" id="expenseCategory" required>
-                <div class="amount-input-container">
-                    <input type="text" id="expenseAmount" class="amount-input" placeholder="0,00" required inputmode="decimal" pattern="[0-9]*[,]?[0-9]*">
-                </div>
-                <select id="expenseBank" required>
-                    <option value="">Ödeme Yapılan Hesap</option>
-                </select>
-                <div class="modal-buttons">
-                    <button type="button" class="cancel-btn">İptal</button>
-                    <button type="submit" class="save-btn">Kaydet</button>
+                <label class="field-label">Tutar</label>
+                <div class="amount-wrap"><input type="text" id="expenseAmount" class="amount-input" placeholder="0,00" required inputmode="decimal"></div>
+                <label class="field-label">Ödeme Kartı</label>
+                <select id="expenseCard" class="select" required></select>
+                <div class="modal-actions">
+                    <button type="button" class="btn-ghost" data-close>İptal</button>
+                    <button type="submit" class="btn-primary">Kaydet</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Modal for user settings -->
+    <!-- ============ DETAY (genel) ============ -->
+    <div class="modal" id="itemDetailModal">
+        <div class="modal-content">
+            <button class="close-btn" data-close><span class="material-icons">close</span></button>
+            <h2 id="itemDetailTitle"></h2>
+            <div id="itemDetailBody"></div>
+        </div>
+    </div>
+
+    <!-- ============ AYARLAR ============ -->
     <div class="modal" id="settingsModal">
         <div class="modal-content">
-            <button class="close-btn">
-                <span class="material-icons">close</span>
-            </button>
-            <h2>Kullanıcı Ayarları</h2>
+            <button class="close-btn" data-close><span class="material-icons">close</span></button>
+            <h2>Ayarlar</h2>
             <form id="settingsForm">
-                <label class="detail-label">Varsayılan Para Birimi</label>
-                <div class="currency-buttons">
-                    <button type="button" class="currency-select-btn" data-currency="TRY">
-                        <span class="currency-symbol">₺</span>
-                        <span class="currency-name">TL</span>
-                    </button>
-                    <button type="button" class="currency-select-btn" data-currency="EUR">
-                        <span class="currency-symbol">€</span>
-                        <span class="currency-name">Euro</span>
-                    </button>
-                    <button type="button" class="currency-select-btn" data-currency="USD">
-                        <span class="currency-symbol">$</span>
-                        <span class="currency-name">Dolar</span>
-                    </button>
-                    <button type="button" class="currency-select-btn" data-currency="GBP">
-                        <span class="currency-symbol">£</span>
-                        <span class="currency-name">Pound</span>
-                    </button>
-                    <button type="button" class="currency-select-btn" data-currency="AED">
-                        <span class="currency-symbol">د.إ</span>
-                        <span class="currency-name">AED</span>
-                    </button>
-                </div>
+                <label class="field-label">Varsayılan Para Birimi</label>
+                <div class="currency-row" data-currency-group="settings"></div>
                 <input type="hidden" id="defaultCurrency" required>
-                <div class="modal-buttons">
-                    <button type="button" class="cancel-btn">İptal</button>
-                    <button type="submit" class="save-btn">Kaydet</button>
+                <label class="field-label">Aylık Harcama Bütçesi (0 = kapalı)</label>
+                <div class="amount-wrap"><input type="text" id="monthlyBudget" class="amount-input" placeholder="0,00" inputmode="decimal"></div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-ghost" data-close>İptal</button>
+                    <button type="submit" class="btn-primary">Kaydet</button>
                 </div>
             </form>
         </div>
@@ -572,4 +350,4 @@
     <script src="script.js"></script>
     <script src="pwa.js"></script>
 </body>
-</html> 
+</html>
