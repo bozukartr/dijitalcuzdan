@@ -48,23 +48,42 @@ body {
 }
 
 .login-card {
-    background: transparent;
-    padding: 40px;
-    border-radius: var(--border-radius);
-    backdrop-filter: blur(10px);
+    background: var(--card-background);
+    padding: 32px 28px;
+    border-radius: 24px;
+    border: 1px solid var(--input-border);
+    box-shadow: 0 20px 50px rgba(17, 24, 39, 0.12);
     width: 100%;
-    max-width: 420px;
+    max-width: 400px;
 }
 
 .logo-container {
     text-align: center;
-    margin-bottom: 32px;
+    margin-bottom: 12px;
 }
 
 .app-logo {
-    height: 120px;
+    height: 72px;
     width: auto;
     filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
+}
+
+.auth-head {
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.auth-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-color);
+    margin-bottom: 6px;
+    letter-spacing: -0.01em;
+}
+
+.auth-subtitle {
+    font-size: 0.9rem;
+    color: var(--secondary-color);
 }
 
 .login-form {

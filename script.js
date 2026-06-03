@@ -142,34 +142,6 @@ function formatCurrency(amount, currency) {
     })}`;
 }
 
-// IBAN formatla
-function formatIBAN(iban) {
-    // Sadece sayıları al
-    iban = iban.replace(/[^\d]/g, '');
-    
-    // Maximum 24 karakter (TR hariç)
-    iban = iban.slice(0, 24);
-    
-    // TR ekle
-    iban = 'TR' + iban;
-
-    // Gruplar halinde formatla (2-4-4-4-4-4-2)
-    return iban.replace(/(.{2})(.{4})(.{4})(.{4})(.{4})(.{4})(.+)/, '$1 $2 $3 $4 $5 $6 $7');
-}
-
-// IBAN input olayını dinle
-document.getElementById('iban').addEventListener('input', function(e) {
-    // Sadece sayıları al
-    let value = e.target.value.replace(/[^\d]/g, '');
-    
-    // Maximum 24 karakter (TR hariç)
-    value = value.slice(0, 24);
-    
-    // TR ekle ve formatla
-    let formattedIBAN = formatIBAN(value);
-    e.target.value = formattedIBAN;
-});
-
 // Tab işlemleri
 document.querySelectorAll('.tab-btn').forEach(button => {
     button.addEventListener('click', () => {
@@ -241,13 +213,7 @@ bankForm.addEventListener('submit', (e) => {
         alert('Lütfen bir banka seçin');
         return;
     }
-    
-    const iban = document.getElementById('iban').value;
-    if (iban.replace(/[^\d]/g, '').length < 24) {
-        alert('Lütfen geçerli bir IBAN girin');
-        return;
-    }
-    
+
     const currency = document.getElementById('bankCurrency').value;
     if (!currency) {
         alert('Lütfen bir döviz cinsi seçin');
@@ -259,11 +225,10 @@ bankForm.addEventListener('submit', (e) => {
         alert('Lütfen kart tipini seçin');
         return;
     }
-    
+
     const bank = {
         id: Date.now(),
         name: bankName,
-        iban: formatIBAN(iban),
         balance: 0,
         currency: currency,
         cardType: cardType // Yeni alan
@@ -422,7 +387,7 @@ function renderBanks() {
         return;
     }
     banksList.innerHTML = banks.map(bank => `
-        <div class="bank-card" data-iban="${bank.iban}" onclick="showBankDetail(${bank.id})">
+        <div class="bank-card" onclick="showBankDetail(${bank.id})">
             <div class="bank-card-content">
                 <div class="bank-info">
                     <h3>${bank.name}</h3>
@@ -641,13 +606,11 @@ function showBankDetail(bankId) {
     if (!bank) return;
 
     const detailTitle = document.getElementById('bankDetailTitle');
-    const detailIban = document.getElementById('bankDetailIban');
     const detailBalance = document.getElementById('bankDetailBalanceDisplay');
     const deleteBtn = document.getElementById('bankDetailDelete');
     currentBankId = bankId; // Global değişken olarak sakla
 
     detailTitle.textContent = bank.name;
-    detailIban.textContent = formatIBAN(bank.iban);
     detailBalance.textContent = formatCurrency(bank.balance, bank.currency);
 
     // Transfer için diğer bankaları listele
@@ -951,15 +914,6 @@ async function loadData() {
 function formatDate(dateString) {
     const options = { year: 'numeric', month: 'long', day: 'numeric' };
     return new Date(dateString).toLocaleDateString('tr-TR', options);
-}
-
-async function copyToClipboard(text) {
-    try {
-        await navigator.clipboard.writeText(text);
-        alert('IBAN kopyalandı!');
-    } catch (err) {
-        console.error('Kopyalama başarısız:', err);
-    }
 }
 
 // Modal kapatma işlemleri
