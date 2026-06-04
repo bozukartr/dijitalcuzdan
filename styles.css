@@ -354,6 +354,7 @@ body { background: var(--bg); color: var(--ink); }
 .auth-card h1 { font-size: 1.7rem; font-weight: 800; text-align: center; letter-spacing: -0.02em; }
 .auth-card .sub { text-align: center; color: var(--muted); margin: 8px 0 28px; }
 .auth-form .field input { background: var(--surface); box-shadow: var(--shadow-sm); border-color: transparent; }
+#username { text-transform: lowercase; }
 .auth-pass { position: relative; }
 .auth-pass .toggle { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--muted); cursor: pointer; display: flex; }
 .auth-form .btn { margin-top: 8px; }

@@ -52,6 +52,16 @@
     }
     initPinFields();
 
+    // Kullanıcı adı her zaman küçük harf
+    const usernameInput = document.getElementById('username');
+    if (usernameInput) {
+        usernameInput.addEventListener('input', () => {
+            const start = usernameInput.selectionStart;
+            usernameInput.value = usernameInput.value.toLowerCase();
+            usernameInput.setSelectionRange(start, start);
+        });
+    }
+
     // PIN alanlarını temizleme yardımcı
     function clearPins() {
         document.querySelectorAll('.pin .pin-capture').forEach(c => {
@@ -70,7 +80,7 @@
     if (loginForm) {
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const username = document.getElementById('username').value.trim();
+            const username = document.getElementById('username').value.trim().toLowerCase();
             const password = document.getElementById('password').value;
             if (!/^\d{6}$/.test(password)) { showMsg('6 haneli PIN kodunu girin.', 'error'); return; }
             try {
@@ -109,7 +119,7 @@
 
         registerForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const username = document.getElementById('username').value.trim();
+            const username = document.getElementById('username').value.trim().toLowerCase();
             const password = document.getElementById('password').value;
             const confirm = document.getElementById('passwordConfirm').value;
             const captchaInput = document.getElementById('captchaInput').value.trim();
