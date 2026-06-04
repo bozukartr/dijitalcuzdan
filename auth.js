@@ -9,36 +9,56 @@
         if (type === 'error') setTimeout(() => { box.innerHTML = ''; }, 4000);
     }
 
-    // 6 haneli PIN giriş bileşeni
+    // 6 haneli PIN — nokta göstergesi + 6. hanede otomatik gönderim
     function initPinFields() {
-        document.querySelectorAll('.pin-field').forEach(field => {
-            const boxes = Array.from(field.querySelectorAll('.pin-box'));
-            const hidden = field.querySelector('input[type="hidden"]');
-            if (!boxes.length || !hidden) return;
-            const sync = () => { hidden.value = boxes.map(b => b.value).join(''); };
-            boxes.forEach((box, i) => {
-                box.addEventListener('input', () => {
-                    box.value = box.value.replace(/\D/g, '').slice(0, 1);
-                    box.classList.toggle('filled', box.value !== '');
-                    if (box.value && i < boxes.length - 1) boxes[i + 1].focus();
-                    sync();
+        const allCaptures = Array.from(document.querySelectorAll('.pin .pin-capture'));
+        document.querySelectorAll('.pin').forEach(pin => {
+            const capture = pin.querySelector('.pin-capture');
+            const dots = Array.from(pin.querySelectorAll('.pin-dot'));
+            const hidden = document.getElementById(pin.dataset.target);
+            if (!capture || !hidden) return;
+
+            const render = () => {
+                const len = capture.value.length;
+                dots.forEach((d, i) => {
+                    d.classList.toggle('filled', i < len);
+                    d.classList.toggle('next', i === len);
                 });
-                box.addEventListener('keydown', e => {
-                    if (e.key === 'Backspace' && !box.value && i > 0) boxes[i - 1].focus();
-                });
-                box.addEventListener('focus', () => box.select());
-                box.addEventListener('paste', e => {
-                    e.preventDefault();
-                    const digits = (e.clipboardData.getData('text') || '').replace(/\D/g, '').slice(0, boxes.length);
-                    if (!digits) return;
-                    digits.split('').forEach((d, idx) => { if (boxes[idx]) { boxes[idx].value = d; boxes[idx].classList.add('filled'); } });
-                    boxes[Math.min(digits.length, boxes.length - 1)].focus();
-                    sync();
-                });
+                hidden.value = capture.value;
+            };
+
+            capture.addEventListener('input', () => {
+                capture.value = capture.value.replace(/\D/g, '').slice(0, 6);
+                render();
+                if (capture.value.length === 6) {
+                    if (pin.hasAttribute('data-autosubmit')) {
+                        capture.blur();
+                        pin.closest('form').requestSubmit();
+                    } else {
+                        // sıradaki PIN'e ya da güvenlik koduna geç
+                        const idx = allCaptures.indexOf(capture);
+                        const next = allCaptures[idx + 1];
+                        const captcha = document.getElementById('captchaInput');
+                        if (next) next.focus();
+                        else if (captcha) captcha.focus();
+                    }
+                }
             });
+            capture.addEventListener('focus', () => pin.classList.add('focused'));
+            capture.addEventListener('blur', () => pin.classList.remove('focused'));
+            pin.addEventListener('click', () => capture.focus());
+            render();
         });
     }
     initPinFields();
+
+    // PIN alanlarını temizleme yardımcı
+    function clearPins() {
+        document.querySelectorAll('.pin .pin-capture').forEach(c => {
+            c.value = '';
+            c.dispatchEvent(new Event('input'));
+        });
+    }
 
     async function emailForUsername(username) {
         const snap = await db().collection('users').doc(username).get();
@@ -55,7 +75,7 @@
             if (!/^\d{6}$/.test(password)) { showMsg('6 haneli PIN kodunu girin.', 'error'); return; }
             try {
                 const email = await emailForUsername(username);
-                if (!email) { showMsg('Kullanıcı bulunamadı.', 'error'); return; }
+                if (!email) { showMsg('Kullanıcı bulunamadı.', 'error'); clearPins(); return; }
                 await firebase.auth().signInWithEmailAndPassword(email, password);
                 location.href = 'dashboard.html';
             } catch (err) {
@@ -65,6 +85,8 @@
                     'auth/too-many-requests': 'Çok fazla deneme. Sonra tekrar deneyin.'
                 };
                 showMsg(map[err.code] || 'Giriş yapılamadı.', 'error');
+                clearPins();
+                document.querySelector('.pin[data-autosubmit] .pin-capture').focus();
                 console.error(err);
             }
         });

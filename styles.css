@@ -362,19 +362,23 @@ body { background: var(--bg); color: var(--ink); }
 .msg { padding: 13px 16px; border-radius: 14px; font-size: 0.9rem; margin-bottom: 16px; display: flex; gap: 8px; align-items: center; }
 .msg.error { background: #FBE3E3; color: var(--red); }
 .msg.ok { background: var(--green-soft); color: var(--green); }
-/* 6 haneli PIN giriş alanı */
-.pin-field { width: 100%; }
-.pin-boxes { display: flex; gap: 8px; }
-.pin-box {
-    flex: 1; min-width: 0; height: 56px;
-    text-align: center; font-size: 1.5rem; font-weight: 800;
-    border: none; border-radius: 14px;
-    background: var(--surface); box-shadow: var(--shadow-sm);
-    color: var(--ink); caret-color: var(--green); outline: none;
-    transition: box-shadow 0.15s ease, transform 0.15s ease;
+/* 6 haneli PIN — nokta (yuvarlak) göstergesi */
+.pin { position: relative; padding: 6px 0; }
+.pin-dots { display: flex; justify-content: center; gap: 18px; }
+.pin-dot {
+    width: 18px; height: 18px; border-radius: 50%;
+    border: 2px solid var(--muted); background: transparent;
+    transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
 }
-.pin-box:focus { box-shadow: 0 0 0 2px var(--green), var(--shadow-sm); transform: translateY(-2px); }
-.pin-box.filled { box-shadow: 0 0 0 2px var(--green); }
+.pin-dot.filled { background: var(--green); border-color: var(--green); transform: scale(1.12); }
+.pin.focused .pin-dots .pin-dot:not(.filled):first-child,
+.pin.focused .pin-dot.next { border-color: var(--green); }
+/* Görünmez yakalama alanı: dokununca klavye açılır, rakam/imleç görünmez */
+.pin-capture {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    opacity: 0; border: none; background: none; cursor: pointer;
+    font-size: 16px; /* iOS zoom engeli */
+}
 
 .captcha { display: flex; gap: 10px; align-items: stretch; }
 .captcha-box { flex: 0 0 auto; min-width: 120px; display: flex; align-items: center; justify-content: center; background: var(--surface); box-shadow: var(--shadow-sm); border-radius: 14px; font-family: monospace; font-size: 1.4rem; font-weight: 700; letter-spacing: 6px; user-select: none; }
