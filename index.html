@@ -28,15 +28,16 @@
             </div>
             <div class="field">
                 <label>6 Haneli PIN</label>
-                <div class="pin-field">
-                    <div class="pin-boxes">
-                        <input type="password" inputmode="numeric" maxlength="1" class="pin-box" autocomplete="off" aria-label="PIN 1">
-                        <input type="password" inputmode="numeric" maxlength="1" class="pin-box" autocomplete="off" aria-label="PIN 2">
-                        <input type="password" inputmode="numeric" maxlength="1" class="pin-box" autocomplete="off" aria-label="PIN 3">
-                        <input type="password" inputmode="numeric" maxlength="1" class="pin-box" autocomplete="off" aria-label="PIN 4">
-                        <input type="password" inputmode="numeric" maxlength="1" class="pin-box" autocomplete="off" aria-label="PIN 5">
-                        <input type="password" inputmode="numeric" maxlength="1" class="pin-box" autocomplete="off" aria-label="PIN 6">
+                <div class="pin" data-target="password" data-autosubmit>
+                    <div class="pin-dots">
+                        <span class="pin-dot"></span>
+                        <span class="pin-dot"></span>
+                        <span class="pin-dot"></span>
+                        <span class="pin-dot"></span>
+                        <span class="pin-dot"></span>
+                        <span class="pin-dot"></span>
                     </div>
+                    <input class="pin-capture" type="text" inputmode="numeric" maxlength="6" autocomplete="off" aria-label="6 haneli PIN">
                     <input type="hidden" id="password">
                 </div>
             </div>
