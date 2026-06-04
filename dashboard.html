@@ -26,7 +26,7 @@
                 <h1 id="greeting">Merhaba 👋</h1>
                 <p id="todayDate">—</p>
             </div>
-            <button class="tb-circle light" id="bellBtn" aria-label="Bildirimler"><span class="material-icons">notifications_none</span></button>
+            <button class="tb-circle light" id="bellBtn" aria-label="Bildirimler"><span class="material-icons">notifications_none</span><span class="notif-dot" id="notifDot" hidden></span></button>
         </header>
 
         <main class="main">
@@ -82,13 +82,23 @@
                     <h3 id="anMonth">—</h3>
                     <button id="anNext"><span class="material-icons">chevron_right</span></button>
                 </div>
+                <div class="trio">
+                    <div class="trio-item"><span class="trio-label">Gelir</span><span class="trio-val income" id="anIncome">₺0</span></div>
+                    <div class="trio-item"><span class="trio-label">Gider</span><span class="trio-val" id="anExpenseMini">₺0</span></div>
+                    <div class="trio-item"><span class="trio-label">Net</span><span class="trio-val" id="anNet">₺0</span></div>
+                </div>
                 <div class="analytics-card">
-                    <div class="big-num" id="anExpense">₺0,00</div>
-                    <div class="sub-num">Bu ay toplam harcama</div>
-                    <div class="bars" id="anBars"></div>
+                    <div class="donut-wrap">
+                        <div class="donut" id="anDonut"><div class="donut-hole"><span id="anExpense">₺0</span><small>harcama</small></div></div>
+                        <div class="legend" id="anLegend"></div>
+                    </div>
                 </div>
                 <div class="row-head"><h3>İşlemler</h3></div>
-                <div class="tx-list" id="allTx"></div>
+                <div class="search">
+                    <span class="material-icons">search</span>
+                    <input type="text" id="anSearch" placeholder="İşlem ara...">
+                </div>
+                <div id="allTx"></div>
             </section>
 
             <!-- ============ HEDEFLER ============ -->
@@ -119,6 +129,39 @@
         </nav>
     </div>
 
+    <!-- ============ EKLE MENÜSÜ ============ -->
+    <div class="modal" id="addMenuModal">
+        <div class="sheet">
+            <h2 style="text-align:center">Ekle</h2>
+            <div class="add-menu">
+                <button class="am-tile am-green" data-add="income">
+                    <span class="am-ic"><span class="material-icons">arrow_circle_up</span></span>
+                    <b>Gelir Ekle</b><small>Maaş, ek gelir vb.</small>
+                </button>
+                <button class="am-tile am-red" data-add="expense">
+                    <span class="am-ic"><span class="material-icons">arrow_circle_down</span></span>
+                    <b>Gider Ekle</b><small>Harcama kaydet</small>
+                </button>
+                <button class="am-tile am-purple" data-add="transfer">
+                    <span class="am-ic"><span class="material-icons">swap_horiz</span></span>
+                    <b>Transfer</b><small>Hesaplar arası aktarım</small>
+                </button>
+                <button class="am-tile am-orange" data-add="account">
+                    <span class="am-ic"><span class="material-icons">credit_card</span></span>
+                    <b>Hesap / Kart Ekle</b><small>Yeni hesap veya kart</small>
+                </button>
+                <button class="am-tile am-blue" data-add="goal">
+                    <span class="am-ic"><span class="material-icons">flag</span></span>
+                    <b>Bütçe Hedefi Ekle</b><small>Bir hedef oluştur</small>
+                </button>
+                <button class="am-tile am-gray" data-add="other">
+                    <span class="am-ic"><span class="material-icons">more_horiz</span></span>
+                    <b>Diğer</b><small>Not, borç, yatırım vb.</small>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- ============ İŞLEM EKLE ============ -->
     <div class="modal" id="txModal">
         <div class="sheet">
@@ -127,6 +170,7 @@
             <div class="seg" id="txTypeSeg">
                 <button type="button" class="active" data-type="expense">Gider</button>
                 <button type="button" data-type="income">Gelir</button>
+                <button type="button" data-type="transfer">Transfer</button>
             </div>
             <div class="field amount-field" style="margin-top:14px">
                 <label>Tutar</label>
@@ -138,8 +182,12 @@
             </div>
             <input type="hidden" id="txCategory">
             <div class="field">
-                <label>Hesap</label>
+                <label id="txAccountLabel">Hesap</label>
                 <select id="txAccount"></select>
+            </div>
+            <div class="field" id="txTargetField" style="display:none">
+                <label>Hedef Hesap</label>
+                <select id="txTarget"></select>
             </div>
             <div class="field">
                 <label>Açıklama (opsiyonel)</label>
@@ -235,7 +283,10 @@
             <h2 id="txDetailTitle"></h2>
             <div class="big-num" id="txDetailAmount"></div>
             <div class="sub-num" id="txDetailMeta" style="margin-bottom:16px"></div>
-            <button class="btn btn-danger" id="txDelete">İşlemi Sil</button>
+            <div class="btn-row">
+                <button class="btn btn-ghost" id="txEdit">Düzenle</button>
+                <button class="btn btn-danger" id="txDelete">Sil</button>
+            </div>
         </div>
     </div>
 
@@ -251,6 +302,15 @@
             <button class="btn btn-primary" id="saveLimit" style="margin-bottom:10px">Limiti Kaydet</button>
             <button class="btn btn-ghost" id="themeBtn" style="margin-bottom:10px">Temayı Değiştir</button>
             <button class="btn btn-danger" id="logoutBtn">Çıkış Yap</button>
+        </div>
+    </div>
+
+    <!-- ============ BİLDİRİMLER ============ -->
+    <div class="modal" id="notifModal">
+        <div class="sheet">
+            <button class="x-btn" data-close><span class="material-icons">close</span></button>
+            <h2>Bildirimler</h2>
+            <div id="notifList"></div>
         </div>
     </div>
 

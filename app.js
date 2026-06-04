@@ -16,6 +16,7 @@ const CATS = [
 ];
 const CAT_MAP = Object.fromEntries(CATS.map(c => [c.key, c]));
 const INCOME_CAT = { key: 'Gelir', icon: 'trending_up', bg: '#DEF7E6', fg: '#2FBF71' };
+const TRANSFER_CAT = { key: 'Transfer', icon: 'swap_horiz', bg: '#ECECEF', fg: '#6B7280' };
 const ACCOUNT_COLORS = ['#2FBF71', '#4A90E2', '#9B6BE3', '#F2994A', '#EB5757', '#1B1C1F'];
 const ACCOUNT_ICONS = { 'Banka': 'account_balance', 'Kredi Kartı': 'credit_card', 'Nakit': 'payments' };
 const MONTHS = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
@@ -32,6 +33,7 @@ let accColor = ACCOUNT_COLORS[0];
 let accType = 'Banka';
 let openAccountId = null;
 let openGoalId = null;
+let editingTxId = null;
 
 /* ---------- Yardımcılar ---------- */
 function fmt(n) {
@@ -110,6 +112,7 @@ function renderAll() {
     renderAnalytics();
     renderGoals();
     renderWallet();
+    renderNotifBadge();
 }
 
 function renderHeader() {
@@ -173,53 +176,84 @@ function renderCatScroll() {
     }).join('');
 }
 
-function renderTxList(wrap, list, allowEmpty) {
-    if (!list.length) {
-        wrap.innerHTML = `<div class="empty"><span class="material-icons">receipt_long</span><p>Henüz işlem yok</p></div>`;
-        return;
-    }
-    wrap.innerHTML = list.map(t => {
-        const c = t.type === 'income' ? INCOME_CAT : catOf(t.category);
-        const title = t.note || (t.type === 'income' ? 'Gelir' : t.category);
-        const sign = t.type === 'income' ? '+' : '−';
-        return `
+function txRow(t) {
+    const c = t.type === 'income' ? INCOME_CAT : t.type === 'transfer' ? TRANSFER_CAT : catOf(t.category);
+    const title = t.note || (t.type === 'income' ? 'Gelir' : t.type === 'transfer' ? 'Transfer' : t.category);
+    const sub = t.type === 'transfer' ? `${t.accountName} → ${t.targetName}` : (t.type === 'income' ? 'Gelir' : t.category);
+    const sign = t.type === 'income' ? '+' : t.type === 'expense' ? '−' : '';
+    return `
         <div class="tx" data-tx="${t.id}">
           <div class="tx-ic" style="background:${c.bg};color:${c.fg}"><span class="material-icons">${c.icon}</span></div>
           <div class="tx-main">
             <div class="tx-title">${title}</div>
-            <div class="tx-cat">${t.type === 'income' ? 'Gelir' : t.category}</div>
+            <div class="tx-cat">${sub}</div>
           </div>
           <div class="tx-right">
             <div class="tx-amt ${t.type}">${sign}${fmt(t.amount)}</div>
             <div class="tx-date">${shortDate(t.date)}</div>
           </div>
         </div>`;
-    }).join('');
+}
+
+function renderTxList(wrap, list) {
+    if (!list.length) { wrap.innerHTML = `<div class="empty"><span class="material-icons">receipt_long</span><p>Henüz işlem yok</p></div>`; return; }
+    wrap.innerHTML = list.map(txRow).join('');
+}
+
+function renderTxGroups(wrap, list) {
+    if (!list.length) { wrap.innerHTML = `<div class="empty"><span class="material-icons">receipt_long</span><p>İşlem bulunamadı</p></div>`; return; }
+    const groups = [];
+    list.forEach(t => {
+        const label = shortDate(t.date);
+        let g = groups.find(x => x.label === label);
+        if (!g) { g = { label, items: [] }; groups.push(g); }
+        g.items.push(t);
+    });
+    wrap.innerHTML = groups.map(g =>
+        `<div class="tx-group-label">${g.label}</div><div class="tx-list">${g.items.map(txRow).join('')}</div>`
+    ).join('');
 }
 
 function renderAnalytics() {
     $('#anMonth').textContent = `${MONTHS[anDate.getMonth()]} ${anDate.getFullYear()}`;
-    const exp = transactions.filter(t => t.type === 'expense' && sameMonth(t.date, anDate));
-    const total = exp.reduce((s, t) => s + t.amount, 0);
-    $('#anExpense').textContent = fmt(total);
+    const income = monthIncome(anDate);
+    const expense = monthExpense(anDate);
+    const net = income - expense;
+    $('#anIncome').textContent = fmt(income);
+    $('#anExpenseMini').textContent = fmt(expense);
+    const netEl = $('#anNet');
+    netEl.textContent = (net >= 0 ? '+' : '−') + fmt(Math.abs(net));
+    netEl.className = 'trio-val ' + (net >= 0 ? 'income' : 'neg');
 
+    // Donut: kategori harcamaları
+    const exp = transactions.filter(t => t.type === 'expense' && sameMonth(t.date, anDate));
     const sums = {};
     exp.forEach(t => { sums[t.category] = (sums[t.category] || 0) + t.amount; });
-    const list = Object.entries(sums).sort((a, b) => b[1] - a[1]);
-    const bars = $('#anBars');
-    bars.innerHTML = list.length ? list.map(([key, val]) => {
-        const c = catOf(key);
-        const pct = total > 0 ? (val / total) * 100 : 0;
-        return `
-        <div class="bar-row">
-          <span>${key}</span>
-          <div class="bar-track"><span style="width:${pct}%;background:${c.fg}"></span></div>
-          <b>${fmt(val)}</b>
-        </div>`;
-    }).join('') : `<p class="sub-num">Bu ay harcama kaydı yok.</p>`;
+    const segs = Object.entries(sums).sort((a, b) => b[1] - a[1]);
+    const donut = $('#anDonut');
+    const legend = $('#anLegend');
+    $('#anExpense').textContent = fmt(expense);
+    if (!expense) {
+        donut.style.background = 'conic-gradient(var(--line) 0 100%)';
+        legend.innerHTML = `<p class="sub-num">Bu ay harcama kaydı yok.</p>`;
+    } else {
+        let acc = 0;
+        const parts = segs.map(([key, val]) => {
+            const c = catOf(key); const s = (acc / expense) * 100; acc += val; const e = (acc / expense) * 100;
+            return { key, val, c, s, e };
+        });
+        donut.style.background = `conic-gradient(${parts.map(p => `${p.c.fg} ${p.s}% ${p.e}%`).join(', ')})`;
+        legend.innerHTML = parts.map(p =>
+            `<div class="legend-item"><span class="legend-dot" style="background:${p.c.fg}"></span><span class="legend-name">${p.key}</span><span class="legend-pct">%${Math.round((p.val / expense) * 100)}</span></div>`
+        ).join('');
+    }
 
-    const monthTx = transactions.filter(t => sameMonth(t.date, anDate)).sort(byDate);
-    renderTxList($('#allTx'), monthTx);
+    // İşlem listesi (arama + tarih gruplu)
+    const q = ($('#anSearch')?.value || '').toLowerCase();
+    const monthTx = transactions.filter(t => sameMonth(t.date, anDate))
+        .filter(t => ((t.note || '') + ' ' + (t.category || '') + (t.type === 'income' ? ' gelir' : '') + (t.type === 'transfer' ? ' transfer' : '')).toLowerCase().includes(q))
+        .sort(byDate);
+    renderTxGroups($('#allTx'), monthTx);
 }
 
 function renderGoals() {
@@ -270,56 +304,101 @@ function buildAccColors() {
         `<button type="button" class="color-dot" data-acc-color="${c}" style="background:${c};width:38px;height:38px;border-radius:50%;border:3px solid transparent;cursor:pointer"></button>`
     ).join('');
 }
-function fillAccountSelect() {
-    $('#txAccount').innerHTML = accounts.map(a => `<option value="${a.id}">${a.name} (${fmt(a.balance)})</option>`).join('');
+function fillAccountSelects() {
+    const opts = accounts.map(a => `<option value="${a.id}">${a.name} (${fmt(a.balance)})</option>`).join('');
+    $('#txAccount').innerHTML = opts;
+    $('#txTarget').innerHTML = opts;
 }
 
 /* ============================================================
-   İşlem ekle
+   İşlem ekle / düzenle / transfer
    ============================================================ */
-function openTxModal() {
+function applyTx(t) {
+    const from = accounts.find(a => a.id === t.accountId);
+    if (!from) return;
+    if (t.type === 'income') from.balance += t.amount;
+    else if (t.type === 'expense') from.balance -= t.amount;
+    else if (t.type === 'transfer') { from.balance -= t.amount; const to = accounts.find(a => a.id === t.targetId); if (to) to.balance += t.amount; }
+}
+function revertTx(t) {
+    const from = accounts.find(a => a.id === t.accountId);
+    if (!from) return;
+    if (t.type === 'income') from.balance -= t.amount;
+    else if (t.type === 'expense') from.balance += t.amount;
+    else if (t.type === 'transfer') { from.balance += t.amount; const to = accounts.find(a => a.id === t.targetId); if (to) to.balance -= t.amount; }
+}
+
+function setTxType(type) {
+    txType = type;
+    $$('#txTypeSeg button').forEach(b => b.classList.toggle('active', b.dataset.type === type));
+    $('#txCatField').style.display = type === 'expense' ? 'block' : 'none';
+    $('#txTargetField').style.display = type === 'transfer' ? 'block' : 'none';
+    $('#txAccountLabel').textContent = type === 'transfer' ? 'Kaynak Hesap' : 'Hesap';
+}
+
+function openTxModal(tx, preset) {
     if (!accounts.length) { toast('Önce bir hesap ekleyin'); openAccountModal(); return; }
-    txType = 'expense';
-    $$('#txTypeSeg button').forEach(b => b.classList.toggle('active', b.dataset.type === 'expense'));
-    $('#txCatField').style.display = 'block';
-    $('#txAmount').value = '';
-    $('#txNote').value = '';
-    $('#txCategory').value = '';
-    $$('#txCatPicker .cat-opt').forEach(b => b.classList.remove('selected'));
-    $('#txDate').value = todayISO();
-    fillAccountSelect();
+    preset = preset || {};
+    if (preset.type === 'transfer' && accounts.length < 2) { toast('Transfer için en az 2 hesap gerekli'); return; }
+    editingTxId = tx ? tx.id : null;
+    const type = tx ? tx.type : (preset.type || 'expense');
+    const cat = tx && tx.type === 'expense' ? tx.category : (preset.category || '');
+    $('#txModal h2').textContent = tx ? 'İşlemi Düzenle' : 'İşlem Ekle';
+    setTxType(type);
+    $('#txAmount').value = tx ? String(tx.amount).replace('.', ',') : '';
+    $('#txNote').value = tx ? (tx.note || '') : '';
+    $('#txDate').value = tx ? tx.date : todayISO();
+    $('#txCategory').value = cat;
+    $$('#txCatPicker .cat-opt').forEach(b => b.classList.toggle('selected', cat && b.dataset.cat === cat));
+    fillAccountSelects();
+    if (tx) {
+        $('#txAccount').value = tx.accountId;
+        if (tx.type === 'transfer') $('#txTarget').value = tx.targetId;
+    }
     openModal('txModal');
 }
+
 function saveTx() {
     const amount = parseNum($('#txAmount').value);
-    const accId = Number($('#txAccount').value);
-    const acc = accounts.find(a => a.id === accId);
+    const acc = accounts.find(a => a.id === Number($('#txAccount').value));
     if (amount <= 0) return toast('Geçerli tutar girin');
     if (!acc) return toast('Hesap seçin');
-    if (txType === 'expense' && !$('#txCategory').value) return toast('Kategori seçin');
 
     const tx = {
-        id: Date.now(), type: txType, amount,
-        category: txType === 'expense' ? $('#txCategory').value : 'Gelir',
+        id: editingTxId || Date.now(), type: txType, amount,
         accountId: acc.id, accountName: acc.name,
         note: $('#txNote').value.trim(),
         date: $('#txDate').value || todayISO()
     };
-    acc.balance += txType === 'income' ? amount : -amount;
+    if (txType === 'expense') {
+        if (!$('#txCategory').value) return toast('Kategori seçin');
+        tx.category = $('#txCategory').value;
+    } else if (txType === 'income') {
+        tx.category = 'Gelir';
+    } else if (txType === 'transfer') {
+        const tgt = accounts.find(a => a.id === Number($('#txTarget').value));
+        if (!tgt || tgt.id === acc.id) return toast('Farklı hedef hesap seçin');
+        tx.category = 'Transfer'; tx.targetId = tgt.id; tx.targetName = tgt.name;
+    }
+
+    if (editingTxId) { const old = transactions.find(x => x.id === editingTxId); if (old) revertTx(old); transactions = transactions.filter(x => x.id !== editingTxId); }
+    applyTx(tx);
     transactions.push(tx);
     save(); renderAll(); closeAll();
-    toast(txType === 'income' ? 'Gelir eklendi' : 'Gider eklendi');
+    toast(editingTxId ? 'İşlem güncellendi' : (txType === 'income' ? 'Gelir eklendi' : txType === 'transfer' ? 'Transfer yapıldı' : 'Gider eklendi'));
+    editingTxId = null;
 }
 
 function openTxDetail(id) {
     const t = transactions.find(x => x.id === id); if (!t) return;
-    $('#txDetailTitle').textContent = t.note || (t.type === 'income' ? 'Gelir' : t.category);
-    $('#txDetailAmount').textContent = (t.type === 'income' ? '+' : '−') + fmt(t.amount);
+    $('#txDetailTitle').textContent = t.note || (t.type === 'income' ? 'Gelir' : t.type === 'transfer' ? 'Transfer' : t.category);
+    $('#txDetailAmount').textContent = (t.type === 'income' ? '+' : t.type === 'expense' ? '−' : '') + fmt(t.amount);
     $('#txDetailAmount').style.color = t.type === 'income' ? 'var(--green)' : 'var(--ink)';
-    $('#txDetailMeta').textContent = `${t.type === 'income' ? 'Gelir' : t.category} · ${t.accountName} · ${shortDate(t.date)}`;
+    const meta = t.type === 'transfer' ? `${t.accountName} → ${t.targetName}` : `${t.type === 'income' ? 'Gelir' : t.category} · ${t.accountName}`;
+    $('#txDetailMeta').textContent = `${meta} · ${shortDate(t.date)}`;
+    $('#txEdit').onclick = () => { closeAll(); openTxModal(t); };
     $('#txDelete').onclick = () => {
-        const acc = accounts.find(a => a.id === t.accountId);
-        if (acc) acc.balance += t.type === 'income' ? -t.amount : t.amount;
+        revertTx(t);
         transactions = transactions.filter(x => x.id !== id);
         save(); renderAll(); closeAll(); toast('İşlem silindi');
     };
@@ -348,8 +427,8 @@ function openAccDetail(id) {
     $('#accDetailName').textContent = a.name;
     $('#accDetailBal').textContent = fmt(a.balance);
     $('#accDetailType').textContent = a.type;
-    const txs = transactions.filter(t => t.accountId === id).sort(byDate).slice(0, 8);
-    renderTxList($('#accDetailTx'), txs);
+    const txs = transactions.filter(t => t.accountId === id || t.targetId === id).sort(byDate).slice(0, 12);
+    renderTxGroups($('#accDetailTx'), txs);
     openModal('accDetailModal');
 }
 function deleteAccount() {
@@ -390,6 +469,48 @@ function deleteGoal() {
     save(); renderGoals(); closeAll(); toast('Hedef silindi');
 }
 
+function openGoalModal() { $('#goalName').value = ''; $('#goalTarget').value = ''; openModal('goalModal'); }
+
+/* ============================================================
+   Ekle menüsü
+   ============================================================ */
+function openAddMenu() { openModal('addMenuModal'); }
+function handleAdd(kind) {
+    closeAll();
+    if (kind === 'income') openTxModal(null, { type: 'income' });
+    else if (kind === 'expense') openTxModal(null, { type: 'expense' });
+    else if (kind === 'transfer') openTxModal(null, { type: 'transfer' });
+    else if (kind === 'account') openAccountModal();
+    else if (kind === 'goal') openGoalModal();
+    else if (kind === 'other') openTxModal(null, { type: 'expense', category: 'Diğer' });
+}
+
+/* ============================================================
+   Bildirimler
+   ============================================================ */
+function computeNotifs() {
+    const list = [];
+    const spend = monthExpense();
+    const limit = Number(settings.monthlyLimit) || 0;
+    if (limit > 0 && spend > limit)
+        list.push({ icon: 'warning', bg: '#FBE0E0', fg: '#EB5757', title: 'Aylık limit aşıldı', sub: `${fmt(spend)} / ${fmt(limit)}` });
+    else if (limit > 0 && spend >= limit * 0.8)
+        list.push({ icon: 'info', bg: '#FFEAD2', fg: '#F2994A', title: 'Limite yaklaşıyorsun', sub: `%${Math.round(spend / limit * 100)} kullanıldı` });
+    goals.filter(g => g.target > 0 && g.saved >= g.target)
+        .forEach(g => list.push({ icon: 'emoji_events', bg: '#DEF7E6', fg: '#2FBF71', title: `${g.name} hedefine ulaştın 🎉`, sub: fmt(g.saved) }));
+    if (monthIncome() === 0 && spend > 0)
+        list.push({ icon: 'savings', bg: '#EBE4FB', fg: '#9B6BE3', title: 'Bu ay gelir kaydın yok', sub: 'Bir gelir eklemek ister misin?' });
+    return list;
+}
+function renderNotifBadge() { const d = $('#notifDot'); if (d) d.hidden = computeNotifs().length === 0; }
+function openNotif() {
+    const n = computeNotifs();
+    $('#notifList').innerHTML = n.length ? n.map(x =>
+        `<div class="notif-item"><div class="notif-ic" style="background:${x.bg};color:${x.fg}"><span class="material-icons">${x.icon}</span></div><div class="notif-text"><b>${x.title}</b><span>${x.sub}</span></div></div>`
+    ).join('') : `<div class="empty"><span class="material-icons">notifications_off</span><p>Yeni bildirim yok</p></div>`;
+    openModal('notifModal');
+}
+
 /* ============================================================
    Navigasyon
    ============================================================ */
@@ -407,14 +528,15 @@ function wire() {
     // Tablar
     $$('.tab').forEach(t => t.addEventListener('click', () => go(t.dataset.screen)));
     $$('[data-go]').forEach(b => b.addEventListener('click', () => go(b.dataset.go)));
-    $('#fabAdd').addEventListener('click', openTxModal);
+    $('#fabAdd').addEventListener('click', openAddMenu);
+    $$('#addMenuModal .am-tile').forEach(t => t.addEventListener('click', () => handleAdd(t.dataset.add)));
 
     // Üst bar
     $('#menuBtn').addEventListener('click', () => {
         $('#limitInput').value = settings.monthlyLimit ? String(settings.monthlyLimit).replace('.', ',') : '';
         openModal('menuModal');
     });
-    $('#bellBtn').addEventListener('click', () => toast('Yeni bildirim yok'));
+    $('#bellBtn').addEventListener('click', openNotif);
     $('#shareBtn').addEventListener('click', () => toast('Bakiye: ' + fmt(totalBalance())));
     $('#eyeBtn').addEventListener('click', () => {
         balanceHidden = !balanceHidden;
@@ -429,11 +551,7 @@ function wire() {
     });
 
     // İşlem ekle modalı
-    $$('#txTypeSeg button').forEach(b => b.addEventListener('click', () => {
-        txType = b.dataset.type;
-        $$('#txTypeSeg button').forEach(x => x.classList.toggle('active', x === b));
-        $('#txCatField').style.display = txType === 'expense' ? 'block' : 'none';
-    }));
+    $$('#txTypeSeg button').forEach(b => b.addEventListener('click', () => setTxType(b.dataset.type)));
     $('#txCatPicker').addEventListener('click', e => {
         const opt = e.target.closest('.cat-opt'); if (!opt) return;
         $$('#txCatPicker .cat-opt').forEach(x => x.classList.remove('selected'));
@@ -455,14 +573,15 @@ function wire() {
     $('#accDelete').addEventListener('click', deleteAccount);
 
     // Hedef
-    $('#addGoalBtn').addEventListener('click', () => { $('#goalName').value = ''; $('#goalTarget').value = ''; openModal('goalModal'); });
+    $('#addGoalBtn').addEventListener('click', openGoalModal);
     $('#goalSave').addEventListener('click', saveGoal);
     $('#goalAddSave').addEventListener('click', saveGoalAdd);
     $('#goalDelete').addEventListener('click', deleteGoal);
 
-    // Analizler ay gezinme
+    // Analizler ay gezinme + arama
     $('#anPrev').addEventListener('click', () => { anDate.setMonth(anDate.getMonth() - 1); renderAnalytics(); });
     $('#anNext').addEventListener('click', () => { anDate.setMonth(anDate.getMonth() + 1); renderAnalytics(); });
+    $('#anSearch').addEventListener('input', renderAnalytics);
 
     // Ayarlar
     $('#saveLimit').addEventListener('click', () => { settings.monthlyLimit = parseNum($('#limitInput').value); save(); renderHome(); closeAll(); toast('Limit kaydedildi'); });

@@ -200,6 +200,65 @@ body { background: var(--bg); color: var(--ink); }
 .big-num { font-size: 2rem; font-weight: 800; letter-spacing: -0.02em; }
 .sub-num { color: var(--muted); font-size: 0.9rem; margin-top: 2px; }
 
+/* ---------- Ekle menüsü ---------- */
+.add-menu { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 6px; }
+.am-tile {
+    border: none; cursor: pointer; text-align: center;
+    border-radius: 20px; padding: 22px 12px;
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    color: var(--ink);
+}
+.am-tile b { font-size: 0.98rem; font-weight: 700; }
+.am-tile small { font-size: 0.76rem; color: var(--muted); }
+.am-ic { width: 54px; height: 54px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 8px; background: rgba(255,255,255,0.6); }
+.am-ic .material-icons { font-size: 30px; }
+.am-tile:active { transform: scale(0.97); }
+.am-green { background: #E4F7EB; } .am-green .am-ic { color: #2FBF71; }
+.am-red { background: #FCE6E6; } .am-red .am-ic { color: #EB5757; }
+.am-purple { background: #ECE7FB; } .am-purple .am-ic { color: #7C5CE0; }
+.am-orange { background: #FDEFD9; } .am-orange .am-ic { color: #F2994A; }
+.am-blue { background: #E2EEFD; } .am-blue .am-ic { color: #4A90E2; }
+.am-gray { background: #EEEEF1; } .am-gray .am-ic { color: #8A8A92; }
+[data-theme="dark"] .am-tile { color: var(--ink); }
+[data-theme="dark"] .am-tile small { color: rgba(0,0,0,0.45); }
+
+/* ---------- Analizler: gelir/gider/net ---------- */
+.trio { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
+.trio-item { background: var(--surface); border-radius: var(--radius-sm); box-shadow: var(--shadow-sm); padding: 14px 10px; text-align: center; }
+.trio-label { font-size: 0.75rem; color: var(--muted); }
+.trio-val { display: block; font-size: 1.02rem; font-weight: 800; margin-top: 5px; letter-spacing: -0.01em; }
+.trio-val.income { color: var(--green); }
+.trio-val.neg { color: var(--red); }
+
+/* ---------- Donut ---------- */
+.donut-wrap { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; justify-content: center; }
+.donut { width: 138px; height: 138px; border-radius: 50%; position: relative; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: conic-gradient(var(--line) 0 100%); }
+.donut-hole { width: 92px; height: 92px; border-radius: 50%; background: var(--surface); display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.donut-hole span { font-weight: 800; font-size: 0.92rem; }
+.donut-hole small { color: var(--muted); font-size: 0.66rem; }
+.legend { flex: 1; min-width: 150px; display: flex; flex-direction: column; gap: 8px; }
+.legend-item { display: flex; align-items: center; gap: 9px; font-size: 0.85rem; }
+.legend-dot { width: 11px; height: 11px; border-radius: 4px; flex-shrink: 0; }
+.legend-name { flex: 1; }
+.legend-pct { font-weight: 700; color: var(--muted); }
+
+/* ---------- Arama ---------- */
+.search { display: flex; align-items: center; gap: 8px; background: var(--surface); border-radius: 14px; box-shadow: var(--shadow-sm); padding: 11px 14px; margin-bottom: 12px; }
+.search .material-icons { color: var(--muted); font-size: 20px; }
+.search input { flex: 1; border: none; background: none; outline: none; font-size: 0.95rem; color: var(--ink); }
+
+/* ---------- Tarih grup başlığı ---------- */
+.tx-group-label { font-size: 0.8rem; font-weight: 700; color: var(--muted); margin: 16px 4px 8px; }
+
+/* ---------- Bildirim noktası ---------- */
+.tb-circle { position: relative; }
+.notif-dot { position: absolute; top: 9px; right: 11px; width: 9px; height: 9px; border-radius: 50%; background: var(--red); border: 2px solid var(--surface); }
+.notif-item { display: flex; gap: 12px; align-items: flex-start; padding: 14px 4px; border-bottom: 1px solid var(--line); }
+.notif-item:last-child { border-bottom: none; }
+.notif-ic { width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.notif-text b { display: block; font-size: 0.95rem; }
+.notif-text span { font-size: 0.82rem; color: var(--muted); }
+
 /* ---------- Alt navigasyon ---------- */
 .tabbar {
     position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
