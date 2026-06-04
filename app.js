@@ -21,7 +21,18 @@ const ACCOUNT_COLORS = ['#2FBF71', '#4A90E2', '#9B6BE3', '#F2994A', '#EB5757', '
 const ACCOUNT_ICONS = { 'Banka': 'account_balance', 'Kredi Kartı': 'credit_card', 'Nakit': 'payments' };
 const MONTHS = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
 
+const CURRENCIES = {
+    TRY: { sym: '₺', icon: 'account_balance_wallet', bg: '#DEF7E6', fg: '#2FBF71' },
+    USD: { sym: '$', icon: 'attach_money', bg: '#EBE4FB', fg: '#7C5CE0' },
+    EUR: { sym: '€', icon: 'euro', bg: '#FDEFD9', fg: '#F2994A' },
+    GBP: { sym: '£', icon: 'currency_pound', bg: '#E2EEFD', fg: '#4A90E2' }
+};
+const CARD_THEMES = ['black', 'purple', 'white', 'navy', 'green', 'rose'];
+const NETWORKS = ['visa', 'mastercard', 'troy', 'amex'];
+let ratesTRY = { TRY: 1, USD: 32.5, EUR: 35.5, GBP: 41 }; // canlı kur gelene kadar varsayılan
+
 /* ---------- Durum ---------- */
+let cards = [];
 let accounts = [];
 let transactions = [];
 let goals = [];
@@ -31,15 +42,35 @@ let anDate = new Date();           // analizler ay seçimi
 let txType = 'expense';
 let accColor = ACCOUNT_COLORS[0];
 let accType = 'Banka';
+let accCurrency = 'TRY';
+let cardTheme = 'black';
+let cardNetwork = 'visa';
+let editingCardId = null;
+let activeCardIdx = 0;
 let openAccountId = null;
 let openGoalId = null;
 let editingTxId = null;
 
 /* ---------- Yardımcılar ---------- */
-function fmt(n) {
-    return '₺' + (Number(n) || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+function nfmt(n) { return (Number(n) || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+function fmt(n) { return '₺' + nfmt(n); }
+function fmtC(n, ccy) { const c = CURRENCIES[ccy] || CURRENCIES.TRY; return c.sym + nfmt(n); }
+function toTRY(n, ccy) { return (Number(n) || 0) * (ratesTRY[ccy] || 1); }
+function mask(text) { return balanceHidden ? '••••••' : text; }
+
+async function updateRates() {
+    try {
+        const res = await fetch('https://api.exchangerate-api.com/v4/latest/TRY');
+        const d = await res.json();
+        ratesTRY = {
+            TRY: 1,
+            USD: 1 / d.rates.USD,
+            EUR: 1 / d.rates.EUR,
+            GBP: 1 / d.rates.GBP
+        };
+        renderWallet(); renderHome();
+    } catch (e) { console.warn('Kur alınamadı, varsayılan kullanılıyor'); }
 }
-function mask(text) { return balanceHidden ? '₺ ••••••' : text; }
 function parseNum(v) {
     if (typeof v !== 'string') return Number(v) || 0;
     return parseFloat(v.replace(/\./g, '').replace(',', '.')) || 0;
@@ -76,7 +107,7 @@ async function save() {
     const u = firebase.auth().currentUser; if (!u) return;
     try {
         await firebase.firestore().collection('users').doc(u.uid).set({
-            accounts, transactions, goals, settings,
+            cards, accounts, transactions, goals, settings,
             lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
         }, { merge: true });
     } catch (e) { console.error(e); toast('Kaydedilemedi'); }
@@ -86,21 +117,22 @@ async function load() {
     try {
         const doc = await firebase.firestore().collection('users').doc(u.uid).get();
         const d = doc.exists ? doc.data() : {};
-        accounts = d.accounts || [];
-        transactions = d.transactions || [];
+        cards = d.cards || [];
+        accounts = (d.accounts || []).map(a => Object.assign({ currency: 'TRY' }, a));
+        transactions = (d.transactions || []).map(t => Object.assign({ currency: 'TRY' }, t));
         goals = d.goals || [];
         settings = Object.assign({ monthlyLimit: 0, displayName: '' }, d.settings || {});
     } catch (e) { console.error(e); }
     renderAll();
 }
 
-/* ---------- Hesaplamalar ---------- */
-const totalBalance = () => accounts.reduce((s, a) => s + (Number(a.balance) || 0), 0);
+/* ---------- Hesaplamalar (hepsi TRY'ye çevrilir) ---------- */
+const totalBalance = () => accounts.reduce((s, a) => s + toTRY(a.balance, a.currency || 'TRY'), 0);
 function monthExpense(ref = new Date()) {
-    return transactions.filter(t => t.type === 'expense' && sameMonth(t.date, ref)).reduce((s, t) => s + t.amount, 0);
+    return transactions.filter(t => t.type === 'expense' && sameMonth(t.date, ref)).reduce((s, t) => s + toTRY(t.amount, t.currency || 'TRY'), 0);
 }
 function monthIncome(ref = new Date()) {
-    return transactions.filter(t => t.type === 'income' && sameMonth(t.date, ref)).reduce((s, t) => s + t.amount, 0);
+    return transactions.filter(t => t.type === 'income' && sameMonth(t.date, ref)).reduce((s, t) => s + toTRY(t.amount, t.currency || 'TRY'), 0);
 }
 
 /* ============================================================
@@ -157,9 +189,9 @@ function byDate(a, b) { return new Date(b.date) - new Date(a.date) || b.id - a.i
 function renderCatScroll() {
     const ref = new Date();
     const exp = transactions.filter(t => t.type === 'expense' && sameMonth(t.date, ref));
-    const total = exp.reduce((s, t) => s + t.amount, 0);
+    const total = exp.reduce((s, t) => s + toTRY(t.amount, t.currency || 'TRY'), 0);
     const sums = {};
-    exp.forEach(t => { sums[t.category] = (sums[t.category] || 0) + t.amount; });
+    exp.forEach(t => { sums[t.category] = (sums[t.category] || 0) + toTRY(t.amount, t.currency || 'TRY'); });
     const list = Object.entries(sums).sort((a, b) => b[1] - a[1]);
     const wrap = $('#catScroll');
     if (!list.length) { wrap.innerHTML = `<div class="empty" style="width:100%"><span class="material-icons">donut_large</span><p>Bu ay harcama yok</p></div>`; return; }
@@ -189,7 +221,7 @@ function txRow(t) {
             <div class="tx-cat">${sub}</div>
           </div>
           <div class="tx-right">
-            <div class="tx-amt ${t.type}">${sign}${fmt(t.amount)}</div>
+            <div class="tx-amt ${t.type}">${sign}${fmtC(t.amount, t.currency || 'TRY')}</div>
             <div class="tx-date">${shortDate(t.date)}</div>
           </div>
         </div>`;
@@ -228,7 +260,7 @@ function renderAnalytics() {
     // Donut: kategori harcamaları
     const exp = transactions.filter(t => t.type === 'expense' && sameMonth(t.date, anDate));
     const sums = {};
-    exp.forEach(t => { sums[t.category] = (sums[t.category] || 0) + t.amount; });
+    exp.forEach(t => { sums[t.category] = (sums[t.category] || 0) + toTRY(t.amount, t.currency || 'TRY'); });
     const segs = Object.entries(sums).sort((a, b) => b[1] - a[1]);
     const donut = $('#anDonut');
     const legend = $('#anLegend');
@@ -273,17 +305,65 @@ function renderGoals() {
     }).join('');
 }
 
+/* ---------- Gerçekçi kart görseli ---------- */
+function networkMark(net) {
+    if (net === 'mastercard') return `<span class="net-mc"><i></i><i></i></span>`;
+    if (net === 'visa') return `<span class="net-visa">VISA</span>`;
+    if (net === 'troy') return `<span class="net-troy">troy</span>`;
+    if (net === 'amex') return `<span class="net-amex">AMEX</span>`;
+    return '';
+}
+function cardEl(c) {
+    return `
+      <div class="rcard theme-${c.theme}" data-card="${c.id}">
+        <div class="rc-blob"></div>
+        <div class="rc-row1">
+          <span class="rc-bank">${c.bank}</span>
+          <span class="rc-net">${networkMark(c.network)}</span>
+        </div>
+        <div class="rc-row2">
+          <span class="rc-chip"></span>
+          <span class="rc-nfc"><svg viewBox="0 0 24 24" fill="none"><path d="M6 8c2.5 2.2 2.5 5.8 0 8M10 6c4 3.4 4 8.6 0 12M14 4c5.5 4.6 5.5 11.4 0 16" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></span>
+        </div>
+        <div class="rc-number">•••• ${c.last4 || '••••'}</div>
+        <div class="rc-holder">${(c.holder || '').toUpperCase()}</div>
+      </div>`;
+}
 function renderWallet() {
+    // Kartlar
+    const carousel = $('#cardCarousel');
+    const dots = $('#cardDots');
+    if (carousel) {
+        carousel.innerHTML = cards.map(cardEl).join('') +
+            `<button class="rcard rcard-add" data-add-card><span class="material-icons">add</span><span>Kart Ekle</span></button>`;
+        dots.innerHTML = cards.map((c, i) => `<span class="card-dot${i === activeCardIdx ? ' on' : ''}"></span>`).join('');
+    }
+
+    // Hesaplar (çoklu para birimi + TL karşılığı)
+    $('#walletTotal').textContent = mask(fmt(totalBalance()));
     const wrap = $('#accountsList');
-    if (!accounts.length) { wrap.innerHTML = `<div class="empty"><span class="material-icons">account_balance_wallet</span><p>Henüz hesap yok. İlk hesabını ekle!</p></div>`; return; }
-    wrap.innerHTML = accounts.map(a => `
-        <div class="acct" data-acct="${a.id}">
-          <div class="acct-left">
-            <div class="acct-dot" style="background:${a.color}"><span class="material-icons">${ACCOUNT_ICONS[a.type] || 'account_balance'}</span></div>
-            <div><div class="acct-name">${a.name}</div><div class="acct-type">${a.type}</div></div>
-          </div>
-          <div class="acct-bal">${mask(fmt(a.balance))}</div>
-        </div>`).join('');
+    if (!accounts.length) {
+        wrap.innerHTML = `<div class="empty"><span class="material-icons">account_balance_wallet</span><p>Henüz hesap yok. İlk hesabını ekle!</p></div>`;
+    } else {
+        wrap.innerHTML = accounts.map(a => {
+            const cu = CURRENCIES[a.currency] || CURRENCIES.TRY;
+            const eq = a.currency !== 'TRY' ? `<div class="acct-eq">${fmt(toTRY(a.balance, a.currency))}</div>` : '';
+            return `
+            <div class="acct" data-acct="${a.id}">
+              <div class="acct-left">
+                <div class="acct-dot" style="background:${cu.bg};color:${cu.fg}"><span class="material-icons">${cu.icon}</span></div>
+                <div><div class="acct-name">${a.name}</div><div class="acct-type">${a.bank || a.type}</div></div>
+              </div>
+              <div class="acct-right">
+                <div class="acct-bal">${mask(fmtC(a.balance, a.currency))}</div>
+                ${balanceHidden ? '' : eq}
+              </div>
+            </div>`;
+        }).join('');
+    }
+
+    // Son işlemler
+    renderTxList($('#walletRecent'), transactions.slice().sort(byDate).slice(0, 4));
 }
 
 /* ============================================================
@@ -304,8 +384,14 @@ function buildAccColors() {
         `<button type="button" class="color-dot" data-acc-color="${c}" style="background:${c};width:38px;height:38px;border-radius:50%;border:3px solid transparent;cursor:pointer"></button>`
     ).join('');
 }
+function buildCardPickers() {
+    const tr = $('#cardThemeRow');
+    if (tr) tr.innerHTML = CARD_THEMES.map(t => `<button type="button" class="ct-dot theme-${t}${t === 'black' ? ' selected' : ''}" data-theme="${t}" aria-label="${t}"></button>`).join('');
+    const nr = $('#cardNetRow');
+    if (nr) nr.innerHTML = NETWORKS.map(n => `<button type="button" class="chip${n === 'visa' ? ' active' : ''}" data-net="${n}">${n.toUpperCase()}</button>`).join('');
+}
 function fillAccountSelects() {
-    const opts = accounts.map(a => `<option value="${a.id}">${a.name} (${fmt(a.balance)})</option>`).join('');
+    const opts = accounts.map(a => `<option value="${a.id}">${a.name} (${fmtC(a.balance, a.currency)})</option>`).join('');
     $('#txAccount').innerHTML = opts;
     $('#txTarget').innerHTML = opts;
 }
@@ -313,19 +399,20 @@ function fillAccountSelects() {
 /* ============================================================
    İşlem ekle / düzenle / transfer
    ============================================================ */
+function convert(n, from, to) { return toTRY(n, from) / (ratesTRY[to] || 1); }
 function applyTx(t) {
     const from = accounts.find(a => a.id === t.accountId);
     if (!from) return;
     if (t.type === 'income') from.balance += t.amount;
     else if (t.type === 'expense') from.balance -= t.amount;
-    else if (t.type === 'transfer') { from.balance -= t.amount; const to = accounts.find(a => a.id === t.targetId); if (to) to.balance += t.amount; }
+    else if (t.type === 'transfer') { from.balance -= t.amount; const to = accounts.find(a => a.id === t.targetId); if (to) to.balance += convert(t.amount, from.currency || 'TRY', to.currency || 'TRY'); }
 }
 function revertTx(t) {
     const from = accounts.find(a => a.id === t.accountId);
     if (!from) return;
     if (t.type === 'income') from.balance -= t.amount;
     else if (t.type === 'expense') from.balance += t.amount;
-    else if (t.type === 'transfer') { from.balance += t.amount; const to = accounts.find(a => a.id === t.targetId); if (to) to.balance -= t.amount; }
+    else if (t.type === 'transfer') { from.balance += t.amount; const to = accounts.find(a => a.id === t.targetId); if (to) to.balance -= convert(t.amount, from.currency || 'TRY', to.currency || 'TRY'); }
 }
 
 function setTxType(type) {
@@ -366,6 +453,7 @@ function saveTx() {
 
     const tx = {
         id: editingTxId || Date.now(), type: txType, amount,
+        currency: acc.currency || 'TRY',
         accountId: acc.id, accountName: acc.name,
         note: $('#txNote').value.trim(),
         date: $('#txDate').value || todayISO()
@@ -392,7 +480,7 @@ function saveTx() {
 function openTxDetail(id) {
     const t = transactions.find(x => x.id === id); if (!t) return;
     $('#txDetailTitle').textContent = t.note || (t.type === 'income' ? 'Gelir' : t.type === 'transfer' ? 'Transfer' : t.category);
-    $('#txDetailAmount').textContent = (t.type === 'income' ? '+' : t.type === 'expense' ? '−' : '') + fmt(t.amount);
+    $('#txDetailAmount').textContent = (t.type === 'income' ? '+' : t.type === 'expense' ? '−' : '') + fmtC(t.amount, t.currency || 'TRY');
     $('#txDetailAmount').style.color = t.type === 'income' ? 'var(--green)' : 'var(--ink)';
     const meta = t.type === 'transfer' ? `${t.accountName} → ${t.targetName}` : `${t.type === 'income' ? 'Gelir' : t.category} · ${t.accountName}`;
     $('#txDetailMeta').textContent = `${meta} · ${shortDate(t.date)}`;
@@ -409,27 +497,73 @@ function openTxDetail(id) {
    Hesap
    ============================================================ */
 function openAccountModal() {
-    accType = 'Banka'; accColor = ACCOUNT_COLORS[0];
-    $('#accName').value = ''; $('#accBalance').value = '';
+    accType = 'Banka'; accColor = ACCOUNT_COLORS[0]; accCurrency = 'TRY';
+    $('#accName').value = ''; $('#accBank').value = ''; $('#accBalance').value = '';
     $$('#accTypeSeg button').forEach(b => b.classList.toggle('active', b.dataset.type === 'Banka'));
+    $$('#accCurrency button').forEach(b => b.classList.toggle('active', b.dataset.ccy === 'TRY'));
     $$('#accColors .color-dot').forEach((b, i) => b.style.borderColor = i === 0 ? 'var(--ink)' : 'transparent');
     openModal('accountModal');
 }
 function saveAccount() {
     const name = $('#accName').value.trim();
     if (!name) return toast('Hesap adı girin');
-    accounts.push({ id: Date.now(), name, type: accType, color: accColor, balance: parseNum($('#accBalance').value) });
+    accounts.push({ id: Date.now(), name, bank: $('#accBank').value.trim(), type: accType, currency: accCurrency, color: accColor, balance: parseNum($('#accBalance').value) });
     save(); renderAll(); closeAll(); toast('Hesap eklendi');
 }
 function openAccDetail(id) {
     const a = accounts.find(x => x.id === id); if (!a) return;
     openAccountId = id;
     $('#accDetailName').textContent = a.name;
-    $('#accDetailBal').textContent = fmt(a.balance);
-    $('#accDetailType').textContent = a.type;
+    $('#accDetailBal').textContent = fmtC(a.balance, a.currency) + (a.currency !== 'TRY' ? ` · ${fmt(toTRY(a.balance, a.currency))}` : '');
+    $('#accDetailType').textContent = `${a.bank ? a.bank + ' · ' : ''}${a.type} · ${a.currency}`;
     const txs = transactions.filter(t => t.accountId === id || t.targetId === id).sort(byDate).slice(0, 12);
     renderTxGroups($('#accDetailTx'), txs);
     openModal('accDetailModal');
+}
+
+/* ============================================================
+   Kartlar (görsel)
+   ============================================================ */
+function openCardModal(card) {
+    editingCardId = card ? card.id : null;
+    cardTheme = card ? card.theme : 'black';
+    cardNetwork = card ? card.network : 'visa';
+    $('#cardModalTitle').textContent = card ? 'Kartı Düzenle' : 'Kart Ekle';
+    $('#cardBank').value = card ? card.bank : '';
+    $('#cardLast4').value = card ? card.last4 : '';
+    $('#cardHolder').value = card ? card.holder : (settings.displayName || '');
+    $('#cardDelete').style.display = card ? 'block' : 'none';
+    $$('#cardThemeRow .ct-dot').forEach(b => b.classList.toggle('selected', b.dataset.theme === cardTheme));
+    $$('#cardNetRow button').forEach(b => b.classList.toggle('active', b.dataset.net === cardNetwork));
+    openModal('cardModal');
+}
+function saveCard() {
+    const bank = $('#cardBank').value.trim();
+    if (!bank) return toast('Banka adı girin');
+    const data = {
+        bank, network: cardNetwork, theme: cardTheme,
+        last4: $('#cardLast4').value.replace(/\D/g, '').slice(0, 4),
+        holder: $('#cardHolder').value.trim()
+    };
+    if (editingCardId) { const c = cards.find(x => x.id === editingCardId); if (c) Object.assign(c, data); }
+    else cards.push(Object.assign({ id: Date.now() }, data));
+    save(); renderWallet(); closeAll(); toast(editingCardId ? 'Kart güncellendi' : 'Kart eklendi');
+}
+function deleteCard() {
+    if (!confirm('Kartı silmek istediğinize emin misiniz?')) return;
+    cards = cards.filter(c => c.id !== editingCardId);
+    if (activeCardIdx >= cards.length) activeCardIdx = Math.max(0, cards.length - 1);
+    save(); renderWallet(); closeAll(); toast('Kart silindi');
+}
+function activeCard() { return cards[activeCardIdx]; }
+function openCardDetail() {
+    const c = activeCard();
+    if (!c) { toast('Önce kart ekleyin'); return openCardModal(null); }
+    $('#cardDetailBody').innerHTML = cardEl(c) +
+        `<div class="detail-line" style="margin-top:14px">${c.bank} · ${c.network.toUpperCase()}</div>
+         <div class="detail-line">Kart no: •••• •••• •••• ${c.last4 || '••••'}</div>
+         <div class="detail-line">Sahibi: ${(c.holder || '-').toUpperCase()}</div>`;
+    openModal('cardDetailModal');
 }
 function deleteAccount() {
     if (!confirm('Hesabı ve ona ait işlemleri silmek istediğinize emin misiniz?')) return;
@@ -564,6 +698,9 @@ function wire() {
     $$('#accTypeSeg button').forEach(b => b.addEventListener('click', () => {
         accType = b.dataset.type; $$('#accTypeSeg button').forEach(x => x.classList.toggle('active', x === b));
     }));
+    $$('#accCurrency button').forEach(b => b.addEventListener('click', () => {
+        accCurrency = b.dataset.ccy; $$('#accCurrency button').forEach(x => x.classList.toggle('active', x === b));
+    }));
     $('#accColors').addEventListener('click', e => {
         const dot = e.target.closest('[data-acc-color]'); if (!dot) return;
         accColor = dot.dataset.accColor;
@@ -571,6 +708,37 @@ function wire() {
     });
     $('#accSave').addEventListener('click', saveAccount);
     $('#accDelete').addEventListener('click', deleteAccount);
+
+    // Kartlar + hızlı eylemler
+    $('#addCardBtn').addEventListener('click', () => openCardModal(null));
+    $('#walletEye').addEventListener('click', () => {
+        balanceHidden = !balanceHidden;
+        $('#walletEye .material-icons').textContent = balanceHidden ? 'visibility_off' : 'visibility';
+        renderWallet(); renderHome();
+    });
+    $('#qaSend').addEventListener('click', () => openTxModal(null, { type: 'transfer' }));
+    $('#qaLoad').addEventListener('click', () => openTxModal(null, { type: 'income' }));
+    $('#qaDetail').addEventListener('click', openCardDetail);
+    $('#qaSettings').addEventListener('click', () => { const c = activeCard(); c ? openCardModal(c) : openCardModal(null); });
+    $('#cardThemeRow').addEventListener('click', e => {
+        const d = e.target.closest('.ct-dot'); if (!d) return;
+        cardTheme = d.dataset.theme; $$('#cardThemeRow .ct-dot').forEach(x => x.classList.toggle('selected', x === d));
+    });
+    $('#cardNetRow').addEventListener('click', e => {
+        const b = e.target.closest('button'); if (!b) return;
+        cardNetwork = b.dataset.net; $$('#cardNetRow button').forEach(x => x.classList.toggle('active', x === b));
+    });
+    $('#cardSave').addEventListener('click', saveCard);
+    $('#cardDelete').addEventListener('click', deleteCard);
+    // Carousel kaydırınca aktif kart noktasını güncelle
+    const carousel = $('#cardCarousel');
+    carousel.addEventListener('scroll', () => {
+        const idx = Math.round(carousel.scrollLeft / (carousel.firstElementChild ? carousel.firstElementChild.offsetWidth + 12 : 1));
+        if (idx !== activeCardIdx && idx < cards.length) {
+            activeCardIdx = idx;
+            $$('#cardDots .card-dot').forEach((d, i) => d.classList.toggle('on', i === activeCardIdx));
+        }
+    });
 
     // Hedef
     $('#addGoalBtn').addEventListener('click', openGoalModal);
@@ -591,8 +759,11 @@ function wire() {
             firebase.auth().signOut().then(() => { localStorage.removeItem('isLoggedIn'); location.href = 'index.html'; });
     });
 
-    // Delegasyon: işlem / hesap / hedef tıklama
+    // Delegasyon: işlem / hesap / hedef / kart tıklama
     document.addEventListener('click', e => {
+        if (e.target.closest('[data-add-card]')) return openCardModal(null);
+        const card = e.target.closest('[data-card]');
+        if (card) { activeCardIdx = cards.findIndex(c => c.id === Number(card.dataset.card)); return openCardDetail(); }
         const tx = e.target.closest('[data-tx]'); if (tx) return openTxDetail(Number(tx.dataset.tx));
         const acc = e.target.closest('[data-acct]'); if (acc) return openAccDetail(Number(acc.dataset.acct));
         const goal = e.target.closest('[data-goal]'); if (goal) return openGoalAdd(Number(goal.dataset.goal));
@@ -606,8 +777,11 @@ document.addEventListener('DOMContentLoaded', () => {
     initTheme();
     buildCatPicker();
     buildAccColors();
+    buildCardPickers();
     renderHeader();
     wire();
+    updateRates();
+    setInterval(updateRates, 3600000);
 
     firebase.auth().onAuthStateChanged(user => {
         if (user) load();
