@@ -27,17 +27,31 @@
                 <input type="text" id="username" placeholder="kullaniciadi" autocomplete="username" required>
             </div>
             <div class="field">
-                <label>Şifre</label>
-                <div class="auth-pass">
-                    <input type="password" id="password" placeholder="En az 6 karakter" autocomplete="new-password" required minlength="6">
-                    <button type="button" class="toggle" data-toggle><span class="material-icons">visibility_off</span></button>
+                <label>6 Haneli PIN Belirle</label>
+                <div class="pin-field">
+                    <div class="pin-boxes">
+                        <input type="password" inputmode="numeric" maxlength="1" class="pin-box" autocomplete="off" aria-label="PIN 1">
+                        <input type="password" inputmode="numeric" maxlength="1" class="pin-box" autocomplete="off" aria-label="PIN 2">
+                        <input type="password" inputmode="numeric" maxlength="1" class="pin-box" autocomplete="off" aria-label="PIN 3">
+                        <input type="password" inputmode="numeric" maxlength="1" class="pin-box" autocomplete="off" aria-label="PIN 4">
+                        <input type="password" inputmode="numeric" maxlength="1" class="pin-box" autocomplete="off" aria-label="PIN 5">
+                        <input type="password" inputmode="numeric" maxlength="1" class="pin-box" autocomplete="off" aria-label="PIN 6">
+                    </div>
+                    <input type="hidden" id="password">
                 </div>
             </div>
             <div class="field">
-                <label>Şifre Tekrar</label>
-                <div class="auth-pass">
-                    <input type="password" id="passwordConfirm" placeholder="Şifreyi tekrar gir" autocomplete="new-password" required minlength="6">
-                    <button type="button" class="toggle" data-toggle><span class="material-icons">visibility_off</span></button>
+                <label>PIN Tekrar</label>
+                <div class="pin-field">
+                    <div class="pin-boxes">
+                        <input type="password" inputmode="numeric" maxlength="1" class="pin-box" autocomplete="off" aria-label="PIN tekrar 1">
+                        <input type="password" inputmode="numeric" maxlength="1" class="pin-box" autocomplete="off" aria-label="PIN tekrar 2">
+                        <input type="password" inputmode="numeric" maxlength="1" class="pin-box" autocomplete="off" aria-label="PIN tekrar 3">
+                        <input type="password" inputmode="numeric" maxlength="1" class="pin-box" autocomplete="off" aria-label="PIN tekrar 4">
+                        <input type="password" inputmode="numeric" maxlength="1" class="pin-box" autocomplete="off" aria-label="PIN tekrar 5">
+                        <input type="password" inputmode="numeric" maxlength="1" class="pin-box" autocomplete="off" aria-label="PIN tekrar 6">
+                    </div>
+                    <input type="hidden" id="passwordConfirm">
                 </div>
             </div>
             <div class="field">
