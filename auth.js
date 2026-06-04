@@ -9,15 +9,36 @@
         if (type === 'error') setTimeout(() => { box.innerHTML = ''; }, 4000);
     }
 
-    // Şifre göster/gizle
-    document.querySelectorAll('[data-toggle]').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const input = btn.parentElement.querySelector('input');
-            const show = input.type === 'password';
-            input.type = show ? 'text' : 'password';
-            btn.querySelector('.material-icons').textContent = show ? 'visibility' : 'visibility_off';
+    // 6 haneli PIN giriş bileşeni
+    function initPinFields() {
+        document.querySelectorAll('.pin-field').forEach(field => {
+            const boxes = Array.from(field.querySelectorAll('.pin-box'));
+            const hidden = field.querySelector('input[type="hidden"]');
+            if (!boxes.length || !hidden) return;
+            const sync = () => { hidden.value = boxes.map(b => b.value).join(''); };
+            boxes.forEach((box, i) => {
+                box.addEventListener('input', () => {
+                    box.value = box.value.replace(/\D/g, '').slice(0, 1);
+                    box.classList.toggle('filled', box.value !== '');
+                    if (box.value && i < boxes.length - 1) boxes[i + 1].focus();
+                    sync();
+                });
+                box.addEventListener('keydown', e => {
+                    if (e.key === 'Backspace' && !box.value && i > 0) boxes[i - 1].focus();
+                });
+                box.addEventListener('focus', () => box.select());
+                box.addEventListener('paste', e => {
+                    e.preventDefault();
+                    const digits = (e.clipboardData.getData('text') || '').replace(/\D/g, '').slice(0, boxes.length);
+                    if (!digits) return;
+                    digits.split('').forEach((d, idx) => { if (boxes[idx]) { boxes[idx].value = d; boxes[idx].classList.add('filled'); } });
+                    boxes[Math.min(digits.length, boxes.length - 1)].focus();
+                    sync();
+                });
+            });
         });
-    });
+    }
+    initPinFields();
 
     async function emailForUsername(username) {
         const snap = await db().collection('users').doc(username).get();
@@ -31,6 +52,7 @@
             e.preventDefault();
             const username = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value;
+            if (!/^\d{6}$/.test(password)) { showMsg('6 haneli PIN kodunu girin.', 'error'); return; }
             try {
                 const email = await emailForUsername(username);
                 if (!email) { showMsg('Kullanıcı bulunamadı.', 'error'); return; }
@@ -38,8 +60,8 @@
                 location.href = 'dashboard.html';
             } catch (err) {
                 const map = {
-                    'auth/wrong-password': 'Hatalı şifre.',
-                    'auth/invalid-credential': 'Kullanıcı adı veya şifre hatalı.',
+                    'auth/wrong-password': 'Hatalı PIN.',
+                    'auth/invalid-credential': 'Kullanıcı adı veya PIN hatalı.',
                     'auth/too-many-requests': 'Çok fazla deneme. Sonra tekrar deneyin.'
                 };
                 showMsg(map[err.code] || 'Giriş yapılamadı.', 'error');
@@ -71,8 +93,8 @@
             const captchaInput = document.getElementById('captchaInput').value.trim();
 
             if (!/^[a-zA-Z0-9_]{3,20}$/.test(username)) { showMsg('Kullanıcı adı 3-20 karakter; harf, rakam, _', 'error'); return; }
-            if (password.length < 6) { showMsg('Şifre en az 6 karakter olmalı.', 'error'); return; }
-            if (password !== confirm) { showMsg('Şifreler eşleşmiyor.', 'error'); return; }
+            if (!/^\d{6}$/.test(password)) { showMsg('PIN 6 haneli ve yalnızca rakam olmalı.', 'error'); return; }
+            if (password !== confirm) { showMsg('PIN kodları eşleşmiyor.', 'error'); return; }
             if (captchaInput.toUpperCase() !== captcha) { showMsg('Güvenlik kodu hatalı.', 'error'); genCaptcha(); return; }
 
             try {
@@ -91,7 +113,7 @@
             } catch (err) {
                 const map = {
                     'auth/email-already-in-use': 'Sistem hatası, tekrar deneyin.',
-                    'auth/weak-password': 'Şifre çok zayıf.',
+                    'auth/weak-password': 'PIN çok zayıf, farklı bir PIN deneyin.',
                     'auth/operation-not-allowed': 'Kayıt şu anda kapalı.'
                 };
                 showMsg(map[err.code] || 'Kayıt yapılamadı.', 'error');
