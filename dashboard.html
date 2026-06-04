@@ -113,10 +113,31 @@
             <!-- ============ CÜZDAN ============ -->
             <section class="screen" id="screen-wallet">
                 <div class="row-head">
-                    <h3>Hesaplarım</h3>
-                    <button class="see-all" id="addAccountBtn">Ekle <span class="material-icons">add</span></button>
+                    <h3>Kartlarım</h3>
+                    <button class="see-all" id="addCardBtn">Ekle <span class="material-icons">add</span></button>
                 </div>
-                <div id="accountsList"></div>
+                <div class="card-carousel" id="cardCarousel"></div>
+                <div class="card-dots" id="cardDots"></div>
+
+                <div class="quick-actions">
+                    <button class="qa" id="qaSend"><span class="qa-ic qa-green"><span class="material-icons">send</span></span>Para Gönder</button>
+                    <button class="qa" id="qaLoad"><span class="qa-ic qa-purple"><span class="material-icons">download</span></span>Para Yükle</button>
+                    <button class="qa" id="qaDetail"><span class="qa-ic qa-orange"><span class="material-icons">credit_card</span></span>Kart Detay</button>
+                    <button class="qa" id="qaSettings"><span class="qa-ic qa-blue"><span class="material-icons">settings</span></span>Kart Ayarları</button>
+                </div>
+
+                <div class="accounts-card">
+                    <div class="acc-head">
+                        <h3>Hesaplarım</h3>
+                        <button class="acc-total-toggle" id="walletEye">Toplam Bakiye <span class="material-icons">visibility</span></button>
+                    </div>
+                    <div class="acc-total" id="walletTotal">₺0,00</div>
+                    <div id="accountsList"></div>
+                    <button class="acc-add" id="addAccountBtn"><span class="material-icons">add</span> Hesap Ekle</button>
+                </div>
+
+                <div class="row-head"><h3>Son İşlemler</h3></div>
+                <div id="walletRecent"></div>
             </section>
         </main>
 
@@ -127,6 +148,45 @@
             <button class="tab" data-screen="goals"><span class="material-icons">flag</span>Hedefler</button>
             <button class="tab" data-screen="wallet"><span class="material-icons">account_balance_wallet</span>Cüzdan</button>
         </nav>
+    </div>
+
+    <!-- ============ KART EKLE/DÜZENLE ============ -->
+    <div class="modal" id="cardModal">
+        <div class="sheet">
+            <button class="x-btn" data-close><span class="material-icons">close</span></button>
+            <h2 id="cardModalTitle">Kart Ekle</h2>
+            <div class="field">
+                <label>Banka</label>
+                <input type="text" id="cardBank" placeholder="Örn. Garanti BBVA">
+            </div>
+            <div class="field">
+                <label>Kart Ağı</label>
+                <div class="seg" id="cardNetRow"></div>
+            </div>
+            <div class="field">
+                <label>Son 4 Hane</label>
+                <input type="text" id="cardLast4" inputmode="numeric" maxlength="4" placeholder="1234">
+            </div>
+            <div class="field">
+                <label>Kart Sahibi</label>
+                <input type="text" id="cardHolder" placeholder="Örn. ECE YILMAZ">
+            </div>
+            <div class="field">
+                <label>Kart Rengi</label>
+                <div class="ct-row" id="cardThemeRow"></div>
+            </div>
+            <button class="btn btn-primary" id="cardSave">Kaydet</button>
+            <button class="btn btn-danger" id="cardDelete" style="margin-top:10px;display:none">Kartı Sil</button>
+        </div>
+    </div>
+
+    <!-- ============ KART DETAY ============ -->
+    <div class="modal" id="cardDetailModal">
+        <div class="sheet">
+            <button class="x-btn" data-close><span class="material-icons">close</span></button>
+            <h2>Kart Detayı</h2>
+            <div id="cardDetailBody"></div>
+        </div>
     </div>
 
     <!-- ============ EKLE MENÜSÜ ============ -->
@@ -208,7 +268,20 @@
             <h2>Hesap Ekle</h2>
             <div class="field">
                 <label>Hesap Adı</label>
-                <input type="text" id="accName" placeholder="Örn. Maaş Hesabı">
+                <input type="text" id="accName" placeholder="Örn. TL Hesabım">
+            </div>
+            <div class="field">
+                <label>Banka (opsiyonel)</label>
+                <input type="text" id="accBank" placeholder="Örn. Garanti BBVA">
+            </div>
+            <div class="field">
+                <label>Para Birimi</label>
+                <div class="seg" id="accCurrency">
+                    <button type="button" class="active" data-ccy="TRY">₺ TL</button>
+                    <button type="button" data-ccy="USD">$ USD</button>
+                    <button type="button" data-ccy="EUR">€ EUR</button>
+                    <button type="button" data-ccy="GBP">£ GBP</button>
+                </div>
             </div>
             <div class="field">
                 <label>Tür</label>
