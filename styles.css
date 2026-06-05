@@ -262,7 +262,7 @@ body { background: var(--bg); color: var(--ink); }
 /* ============================================================
    Cüzdan — gerçekçi kartlar
    ============================================================ */
-.card-carousel { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 6px 0 4px; scrollbar-width: none; }
+.card-carousel { display: flex; align-items: flex-start; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 6px 0 4px; scrollbar-width: none; }
 .card-carousel::-webkit-scrollbar { display: none; }
 
 .rcard-wrap {
