@@ -435,8 +435,8 @@ function revertTx(t) {
 function setTxType(type) {
     txType = type;
     $$('#txTypeSeg button').forEach(b => b.classList.toggle('active', b.dataset.type === type));
-    $('#txCatField').style.display = type === 'expense' ? 'block' : 'none';
-    $('#txTargetField').style.display = type === 'transfer' ? 'block' : 'none';
+    $('#txCatField').style.display = type === 'expense' ? '' : 'none';
+    $('#txTargetField').style.display = type === 'transfer' ? '' : 'none';
     $('#txAccountLabel').textContent = type === 'transfer' ? 'Kaynak Hesap' : 'Hesap';
 }
 
@@ -447,7 +447,7 @@ function openTxModal(tx, preset) {
     editingTxId = tx ? tx.id : null;
     const type = tx ? tx.type : (preset.type || 'expense');
     const cat = tx && tx.type === 'expense' ? tx.category : (preset.category || '');
-    $('#txModal h2').textContent = tx ? 'İşlemi Düzenle' : 'İşlem Ekle';
+    $('#txModalTitle').textContent = tx ? 'İşlemi Düzenle' : 'İşlem Ekle';
     setTxType(type);
     $('#txAmount').value = tx ? String(tx.amount).replace('.', ',') : '';
     $('#txNote').value = tx ? (tx.note || '') : '';

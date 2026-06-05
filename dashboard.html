@@ -33,11 +33,6 @@
             <!-- ============ ANA SAYFA ============ -->
             <section class="screen active" id="screen-home">
                 <div class="balance-card">
-                    <svg class="balance-blob" viewBox="0 0 210 200" fill="none">
-                        <path d="M150 20c35 5 55 40 50 80s-45 70-90 65-75-40-60-85S100 13 150 20z" fill="var(--green-soft)"/>
-                        <path d="M30 130c25-5 30-45 60-45s35 30 70 5" stroke="var(--ink)" stroke-width="3" stroke-linecap="round" fill="none"/>
-                        <circle cx="160" cy="92" r="7" fill="var(--ink)"/>
-                    </svg>
                     <button class="bc-share" id="shareBtn"><span class="material-icons">ios_share</span></button>
                     <div class="bc-head">
                         <h2>Toplam Bakiye</h2>
@@ -137,7 +132,7 @@
                 </div>
 
                 <div class="row-head"><h3>Son İşlemler</h3></div>
-                <div id="walletRecent"></div>
+                <div class="tx-list" id="walletRecent"></div>
             </section>
         </main>
 
@@ -150,53 +145,14 @@
         </nav>
     </div>
 
-    <!-- ============ KART EKLE/DÜZENLE ============ -->
-    <div class="modal" id="cardModal">
-        <div class="sheet">
-            <button class="x-btn" data-close><span class="material-icons">close</span></button>
-            <h2 id="cardModalTitle">Kart Ekle</h2>
-            <div class="field">
-                <label>Bağlı Hesap</label>
-                <select id="cardAccount" class="select"></select>
-            </div>
-            <div class="field">
-                <label>Banka</label>
-                <input type="text" id="cardBank" placeholder="Örn. Garanti BBVA">
-            </div>
-            <div class="field">
-                <label>Kart Ağı</label>
-                <div class="seg" id="cardNetRow"></div>
-            </div>
-            <div class="field">
-                <label>Son 4 Hane</label>
-                <input type="text" id="cardLast4" inputmode="numeric" maxlength="4" placeholder="1234">
-            </div>
-            <div class="field">
-                <label>Kart Sahibi</label>
-                <input type="text" id="cardHolder" placeholder="Örn. ECE YILMAZ">
-            </div>
-            <div class="field">
-                <label>Kart Rengi</label>
-                <div class="ct-row" id="cardThemeRow"></div>
-            </div>
-            <button class="btn btn-primary" id="cardSave">Kaydet</button>
-            <button class="btn btn-danger" id="cardDelete" style="margin-top:10px;display:none">Kartı Sil</button>
-        </div>
-    </div>
-
-    <!-- ============ KART DETAY ============ -->
-    <div class="modal" id="cardDetailModal">
-        <div class="sheet">
-            <button class="x-btn" data-close><span class="material-icons">close</span></button>
-            <h2>Kart Detayı</h2>
-            <div id="cardDetailBody"></div>
-        </div>
-    </div>
-
     <!-- ============ EKLE MENÜSÜ ============ -->
     <div class="modal" id="addMenuModal">
         <div class="sheet">
-            <h2 style="text-align:center">Ekle</h2>
+            <div class="sheet-head">
+                <span class="sh-spacer"></span>
+                <span class="sh-title">Ekle</span>
+                <button class="sh-action" data-close>Bitti</button>
+            </div>
             <div class="add-menu">
                 <button class="am-tile am-green" data-add="income">
                     <span class="am-ic"><span class="material-icons">arrow_circle_up</span></span>
@@ -229,69 +185,77 @@
     <!-- ============ İŞLEM EKLE ============ -->
     <div class="modal" id="txModal">
         <div class="sheet">
-            <button class="x-btn" data-close><span class="material-icons">close</span></button>
-            <h2>İşlem Ekle</h2>
+            <div class="sheet-head">
+                <button class="sh-cancel" data-close>İptal</button>
+                <span class="sh-title" id="txModalTitle">İşlem Ekle</span>
+                <button class="sh-action primary" id="txSave">Kaydet</button>
+            </div>
             <div class="seg" id="txTypeSeg">
                 <button type="button" class="active" data-type="expense">Gider</button>
                 <button type="button" data-type="income">Gelir</button>
                 <button type="button" data-type="transfer">Transfer</button>
             </div>
-            <div class="field amount-field" style="margin-top:14px">
-                <label>Tutar</label>
-                <input type="text" id="txAmount" inputmode="decimal" placeholder="0,00">
+            <div class="field amount-field">
+                <input type="text" id="txAmount" inputmode="decimal" placeholder="₺0,00">
             </div>
             <div class="field" id="txCatField">
                 <label>Kategori</label>
                 <div class="cat-picker" id="txCatPicker"></div>
             </div>
             <input type="hidden" id="txCategory">
-            <div class="field">
-                <label id="txAccountLabel">Hesap</label>
-                <select id="txAccount"></select>
+            <div class="group">
+                <div class="row-field">
+                    <label id="txAccountLabel">Hesap</label>
+                    <select id="txAccount"></select>
+                </div>
+                <div class="row-field" id="txTargetField" style="display:none">
+                    <label>Hedef Hesap</label>
+                    <select id="txTarget"></select>
+                </div>
+                <div class="row-field">
+                    <label>Açıklama</label>
+                    <input type="text" id="txNote" placeholder="İsteğe bağlı">
+                </div>
+                <div class="row-field">
+                    <label>Tarih</label>
+                    <input type="date" id="txDate">
+                </div>
             </div>
-            <div class="field" id="txTargetField" style="display:none">
-                <label>Hedef Hesap</label>
-                <select id="txTarget"></select>
-            </div>
-            <div class="field">
-                <label>Açıklama (opsiyonel)</label>
-                <input type="text" id="txNote" placeholder="Örn. Trendyol siparişi">
-            </div>
-            <div class="field">
-                <label>Tarih</label>
-                <input type="date" id="txDate">
-            </div>
-            <button class="btn btn-primary" id="txSave">Kaydet</button>
         </div>
     </div>
 
     <!-- ============ HESAP EKLE ============ -->
     <div class="modal" id="accountModal">
         <div class="sheet">
-            <button class="x-btn" data-close><span class="material-icons">close</span></button>
-            <h2>Hesap Ekle</h2>
-            <div class="field">
-                <label>Hesap Adı</label>
-                <input type="text" id="accName" placeholder="Örn. TL Hesabım">
+            <div class="sheet-head">
+                <button class="sh-cancel" data-close>İptal</button>
+                <span class="sh-title">Hesap Ekle</span>
+                <button class="sh-action primary" id="accSave">Kaydet</button>
             </div>
-            <div class="field">
-                <label>Banka (opsiyonel)</label>
-                <input type="text" id="accBank" placeholder="Örn. Garanti BBVA">
+            <div class="group">
+                <div class="row-field">
+                    <label>Hesap Adı</label>
+                    <input type="text" id="accName" placeholder="Örn. TL Hesabım">
+                </div>
+                <div class="row-field">
+                    <label>Banka</label>
+                    <input type="text" id="accBank" placeholder="İsteğe bağlı">
+                </div>
             </div>
             <div class="field">
                 <label>Para Birimi</label>
                 <div class="seg" id="accCurrency">
-                    <button type="button" class="active" data-ccy="TRY">₺ TL</button>
-                    <button type="button" data-ccy="USD">$ USD</button>
-                    <button type="button" data-ccy="EUR">€ EUR</button>
-                    <button type="button" data-ccy="GBP">£ GBP</button>
+                    <button type="button" class="active" data-ccy="TRY">₺</button>
+                    <button type="button" data-ccy="USD">$</button>
+                    <button type="button" data-ccy="EUR">€</button>
+                    <button type="button" data-ccy="GBP">£</button>
                 </div>
             </div>
             <div class="field">
                 <label>Tür</label>
                 <div class="seg" id="accTypeSeg">
                     <button type="button" class="active" data-type="Banka">Banka</button>
-                    <button type="button" data-type="Kredi Kartı">Kredi Kartı</button>
+                    <button type="button" data-type="Kredi Kartı">Kredi K.</button>
                     <button type="button" data-type="Nakit">Nakit</button>
                 </div>
             </div>
@@ -300,66 +264,126 @@
                 <div class="color-row" id="accColors"></div>
             </div>
             <div class="field amount-field">
-                <label>Başlangıç Bakiyesi</label>
-                <input type="text" id="accBalance" inputmode="decimal" placeholder="0,00">
+                <input type="text" id="accBalance" inputmode="decimal" placeholder="₺0,00 başlangıç bakiyesi">
             </div>
-            <button class="btn btn-primary" id="accSave">Kaydet</button>
         </div>
     </div>
 
     <!-- ============ HESAP DETAY ============ -->
     <div class="modal" id="accDetailModal">
         <div class="sheet">
-            <button class="x-btn" data-close><span class="material-icons">close</span></button>
-            <h2 id="accDetailName"></h2>
-            <div class="big-num" id="accDetailBal"></div>
-            <div class="sub-num" id="accDetailType" style="margin-bottom:16px"></div>
-            <div class="row-head"><h3>Son işlemler</h3></div>
-            <div class="tx-list" id="accDetailTx"></div>
-            <button class="btn btn-danger" id="accDelete" style="margin-top:16px">Hesabı Sil</button>
+            <div class="sheet-head">
+                <span class="sh-spacer"></span>
+                <span class="sh-title" id="accDetailName"></span>
+                <button class="sh-action" data-close>Bitti</button>
+            </div>
+            <div class="detail-hero">
+                <div class="big-num" id="accDetailBal"></div>
+                <div class="sub-num" id="accDetailType"></div>
+            </div>
+            <p class="group-label">Son İşlemler</p>
+            <div id="accDetailTx"></div>
+            <button class="btn btn-danger" id="accDelete">Hesabı Sil</button>
+        </div>
+    </div>
+
+    <!-- ============ KART EKLE/DÜZENLE ============ -->
+    <div class="modal" id="cardModal">
+        <div class="sheet">
+            <div class="sheet-head">
+                <button class="sh-cancel" data-close>İptal</button>
+                <span class="sh-title" id="cardModalTitle">Kart Ekle</span>
+                <button class="sh-action primary" id="cardSave">Kaydet</button>
+            </div>
+            <div class="group">
+                <div class="row-field">
+                    <label>Bağlı Hesap</label>
+                    <select id="cardAccount"></select>
+                </div>
+                <div class="row-field">
+                    <label>Banka</label>
+                    <input type="text" id="cardBank" placeholder="Örn. Garanti BBVA">
+                </div>
+                <div class="row-field">
+                    <label>Son 4 Hane</label>
+                    <input type="text" id="cardLast4" inputmode="numeric" maxlength="4" placeholder="1234">
+                </div>
+                <div class="row-field">
+                    <label>Kart Sahibi</label>
+                    <input type="text" id="cardHolder" placeholder="ECE YILMAZ">
+                </div>
+            </div>
+            <div class="field">
+                <label>Kart Ağı</label>
+                <div class="seg" id="cardNetRow"></div>
+            </div>
+            <div class="field">
+                <label>Kart Rengi</label>
+                <div class="ct-row" id="cardThemeRow"></div>
+            </div>
+            <button class="btn btn-danger" id="cardDelete" style="display:none">Kartı Sil</button>
+        </div>
+    </div>
+
+    <!-- ============ KART DETAY ============ -->
+    <div class="modal" id="cardDetailModal">
+        <div class="sheet">
+            <div class="sheet-head">
+                <span class="sh-spacer"></span>
+                <span class="sh-title">Kart Detayı</span>
+                <button class="sh-action" data-close>Bitti</button>
+            </div>
+            <div id="cardDetailBody"></div>
         </div>
     </div>
 
     <!-- ============ HEDEF EKLE ============ -->
     <div class="modal" id="goalModal">
         <div class="sheet">
-            <button class="x-btn" data-close><span class="material-icons">close</span></button>
-            <h2>Hedef Ekle</h2>
-            <div class="field">
-                <label>Hedef Adı</label>
-                <input type="text" id="goalName" placeholder="Örn. Tatil">
+            <div class="sheet-head">
+                <button class="sh-cancel" data-close>İptal</button>
+                <span class="sh-title">Hedef Ekle</span>
+                <button class="sh-action primary" id="goalSave">Oluştur</button>
+            </div>
+            <div class="group">
+                <div class="row-field">
+                    <label>Hedef Adı</label>
+                    <input type="text" id="goalName" placeholder="Örn. Tatil">
+                </div>
             </div>
             <div class="field amount-field">
-                <label>Hedef Tutar</label>
-                <input type="text" id="goalTarget" inputmode="decimal" placeholder="0,00">
+                <input type="text" id="goalTarget" inputmode="decimal" placeholder="₺0,00 hedef tutar">
             </div>
-            <button class="btn btn-primary" id="goalSave">Oluştur</button>
         </div>
     </div>
 
     <!-- ============ HEDEFE PARA EKLE ============ -->
     <div class="modal" id="goalAddModal">
         <div class="sheet">
-            <button class="x-btn" data-close><span class="material-icons">close</span></button>
-            <h2 id="goalAddTitle">Para Ekle</h2>
+            <div class="sheet-head">
+                <button class="sh-cancel" data-close>İptal</button>
+                <span class="sh-title" id="goalAddTitle">Para Ekle</span>
+                <button class="sh-action primary" id="goalAddSave">Ekle</button>
+            </div>
             <div class="field amount-field">
-                <label>Eklenecek Tutar</label>
-                <input type="text" id="goalAddAmount" inputmode="decimal" placeholder="0,00">
+                <input type="text" id="goalAddAmount" inputmode="decimal" placeholder="₺0,00">
             </div>
-            <div class="btn-row">
-                <button class="btn btn-danger" id="goalDelete">Hedefi Sil</button>
-                <button class="btn btn-primary" id="goalAddSave">Ekle</button>
-            </div>
+            <button class="btn btn-danger" id="goalDelete">Hedefi Sil</button>
         </div>
     </div>
 
     <!-- ============ İŞLEM DETAY ============ -->
     <div class="modal" id="txDetailModal">
         <div class="sheet">
-            <button class="x-btn" data-close><span class="material-icons">close</span></button>
-            <h2 id="txDetailTitle"></h2>
-            <div class="big-num" id="txDetailAmount"></div>
-            <div class="sub-num" id="txDetailMeta" style="margin-bottom:16px"></div>
+            <div class="sheet-head">
+                <span class="sh-spacer"></span>
+                <span class="sh-title" id="txDetailTitle"></span>
+                <button class="sh-action" data-close>Bitti</button>
+            </div>
+            <div class="detail-hero">
+                <div class="big-num" id="txDetailAmount"></div>
+                <div class="sub-num" id="txDetailMeta"></div>
+            </div>
             <div class="btn-row">
                 <button class="btn btn-ghost" id="txEdit">Düzenle</button>
                 <button class="btn btn-danger" id="txDelete">Sil</button>
@@ -370,14 +394,16 @@
     <!-- ============ MENÜ / AYARLAR ============ -->
     <div class="modal" id="menuModal">
         <div class="sheet">
-            <button class="x-btn" data-close><span class="material-icons">close</span></button>
-            <h2>Ayarlar</h2>
-            <div class="field amount-field">
-                <label>Aylık Harcama Limiti (0 = kapalı)</label>
-                <input type="text" id="limitInput" inputmode="decimal" placeholder="0,00">
+            <div class="sheet-head">
+                <span class="sh-spacer"></span>
+                <span class="sh-title">Ayarlar</span>
+                <button class="sh-action" data-close>Bitti</button>
             </div>
-            <button class="btn btn-primary" id="saveLimit" style="margin-bottom:10px">Limiti Kaydet</button>
-            <button class="btn btn-ghost" id="themeBtn" style="margin-bottom:10px">Temayı Değiştir</button>
+            <div class="field amount-field">
+                <input type="text" id="limitInput" inputmode="decimal" placeholder="₺0,00 aylık limit">
+            </div>
+            <button class="btn btn-primary" id="saveLimit">Limiti Kaydet</button>
+            <button class="btn btn-ghost" id="themeBtn">Temayı Değiştir</button>
             <button class="btn btn-danger" id="logoutBtn">Çıkış Yap</button>
         </div>
     </div>
@@ -385,8 +411,11 @@
     <!-- ============ BİLDİRİMLER ============ -->
     <div class="modal" id="notifModal">
         <div class="sheet">
-            <button class="x-btn" data-close><span class="material-icons">close</span></button>
-            <h2>Bildirimler</h2>
+            <div class="sheet-head">
+                <span class="sh-spacer"></span>
+                <span class="sh-title">Bildirimler</span>
+                <button class="sh-action" data-close>Bitti</button>
+            </div>
             <div id="notifList"></div>
         </div>
     </div>

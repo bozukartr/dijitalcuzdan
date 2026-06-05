@@ -1,5 +1,5 @@
 // Dijital Cüzdan - Service Worker
-const CACHE = 'dijital-cuzdan-v9';
+const CACHE = 'dijital-cuzdan-v10';
 const SHELL = [
     './', 'index.html', 'register.html', 'dashboard.html',
     'styles.css', 'auth.js', 'app.js', 'pwa.js',
