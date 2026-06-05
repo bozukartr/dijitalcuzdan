@@ -314,19 +314,36 @@ function networkMark(net) {
     return '';
 }
 function cardEl(c) {
+    const acc = accounts.find(a => a.id === c.accountId);
+    const accLabel = acc ? `${acc.name} · ${mask(fmtC(acc.balance, acc.currency))}` : 'Hesap bağlı değil';
     return `
-      <div class="rcard theme-${c.theme}" data-card="${c.id}">
-        <div class="rc-blob"></div>
-        <div class="rc-row1">
-          <span class="rc-bank">${c.bank}</span>
-          <span class="rc-net">${networkMark(c.network)}</span>
+      <div class="rcard-wrap" data-card-id="${c.id}">
+        <div class="rcard-inner">
+          <div class="rcard front theme-${c.theme}">
+            <div class="rc-blob"></div>
+            <div class="rc-row1">
+              <span class="rc-bank">${c.bank}</span>
+              <span class="rc-net">${networkMark(c.network)}</span>
+            </div>
+            <div class="rc-row2">
+              <span class="rc-chip"></span>
+              <span class="rc-nfc"><svg viewBox="0 0 24 24" fill="none"><path d="M6 8c2.5 2.2 2.5 5.8 0 8M10 6c4 3.4 4 8.6 0 12M14 4c5.5 4.6 5.5 11.4 0 16" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></span>
+            </div>
+            <div class="rc-number">•••• ${c.last4 || '••••'}</div>
+            <div class="rc-holder">${(c.holder || '').toUpperCase()}</div>
+          </div>
+          <div class="rcard back theme-${c.theme}">
+            <div class="rc-blob"></div>
+            <p class="rc-back-acc">${accLabel}</p>
+            <div class="rc-actions">
+              <button data-cact="load"><span class="material-icons">add</span>Para Ekle</button>
+              <button data-cact="spend"><span class="material-icons">shopping_cart</span>Harcama</button>
+              <button data-cact="transfer"><span class="material-icons">swap_horiz</span>Transfer</button>
+              <button data-cact="edit"><span class="material-icons">edit</span>Düzenle</button>
+              <button data-cact="delete" class="danger"><span class="material-icons">delete</span>Sil</button>
+            </div>
+          </div>
         </div>
-        <div class="rc-row2">
-          <span class="rc-chip"></span>
-          <span class="rc-nfc"><svg viewBox="0 0 24 24" fill="none"><path d="M6 8c2.5 2.2 2.5 5.8 0 8M10 6c4 3.4 4 8.6 0 12M14 4c5.5 4.6 5.5 11.4 0 16" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></span>
-        </div>
-        <div class="rc-number">•••• ${c.last4 || '••••'}</div>
-        <div class="rc-holder">${(c.holder || '').toUpperCase()}</div>
       </div>`;
 }
 function renderWallet() {
@@ -441,6 +458,12 @@ function openTxModal(tx, preset) {
     if (tx) {
         $('#txAccount').value = tx.accountId;
         if (tx.type === 'transfer') $('#txTarget').value = tx.targetId;
+    } else if (preset.accountId) {
+        $('#txAccount').value = preset.accountId;
+        if (type === 'transfer') {
+            const other = accounts.find(a => a.id !== preset.accountId);
+            if (other) $('#txTarget').value = other.id;
+        }
     }
     openModal('txModal');
 }
@@ -525,10 +548,13 @@ function openAccDetail(id) {
    Kartlar (görsel)
    ============================================================ */
 function openCardModal(card) {
+    if (!accounts.length) { toast('Kart için önce hesap ekleyin'); openAccountModal(); return; }
     editingCardId = card ? card.id : null;
     cardTheme = card ? card.theme : 'black';
     cardNetwork = card ? card.network : 'visa';
     $('#cardModalTitle').textContent = card ? 'Kartı Düzenle' : 'Kart Ekle';
+    $('#cardAccount').innerHTML = accounts.map(a => `<option value="${a.id}">${a.name} (${a.currency})</option>`).join('');
+    $('#cardAccount').value = card ? card.accountId : accounts[0].id;
     $('#cardBank').value = card ? card.bank : '';
     $('#cardLast4').value = card ? card.last4 : '';
     $('#cardHolder').value = card ? card.holder : (settings.displayName || '');
@@ -539,9 +565,11 @@ function openCardModal(card) {
 }
 function saveCard() {
     const bank = $('#cardBank').value.trim();
+    const accountId = Number($('#cardAccount').value);
+    if (!accountId) return toast('Bağlı hesap seçin');
     if (!bank) return toast('Banka adı girin');
     const data = {
-        bank, network: cardNetwork, theme: cardTheme,
+        bank, accountId, network: cardNetwork, theme: cardTheme,
         last4: $('#cardLast4').value.replace(/\D/g, '').slice(0, 4),
         holder: $('#cardHolder').value.trim()
     };
@@ -549,25 +577,37 @@ function saveCard() {
     else cards.push(Object.assign({ id: Date.now() }, data));
     save(); renderWallet(); closeAll(); toast(editingCardId ? 'Kart güncellendi' : 'Kart eklendi');
 }
-function deleteCard() {
-    if (!confirm('Kartı silmek istediğinize emin misiniz?')) return;
-    cards = cards.filter(c => c.id !== editingCardId);
+function deleteCardById(id) {
+    if (!confirm('Kartı silmek istediğinize emin misiniz? (Bağlı hesap silinmez)')) return;
+    cards = cards.filter(c => c.id !== id);
     if (activeCardIdx >= cards.length) activeCardIdx = Math.max(0, cards.length - 1);
-    save(); renderWallet(); closeAll(); toast('Kart silindi');
+    save(); renderWallet(); toast('Kart silindi');
 }
+function deleteCard() { if (editingCardId) { closeAll(); deleteCardById(editingCardId); } }
 function activeCard() { return cards[activeCardIdx]; }
+
+// Kart arkasındaki butonların işlemleri (bağlı hesap üzerinden)
+function handleCardAction(act, cardId) {
+    const card = cards.find(c => c.id === cardId); if (!card) return;
+    activeCardIdx = cards.findIndex(c => c.id === cardId);
+    if (act === 'edit') return openCardModal(card);
+    if (act === 'delete') return deleteCardById(cardId);
+    const acc = accounts.find(a => a.id === card.accountId);
+    if (!acc) return toast('Bağlı hesap bulunamadı');
+    if (act === 'load') return openTxModal(null, { type: 'income', accountId: acc.id });
+    if (act === 'spend') return openTxModal(null, { type: 'expense', accountId: acc.id });
+    if (act === 'transfer') return openTxModal(null, { type: 'transfer', accountId: acc.id });
+}
 function openCardDetail() {
     const c = activeCard();
     if (!c) { toast('Önce kart ekleyin'); return openCardModal(null); }
-    $('#cardDetailBody').innerHTML = cardEl(c) +
-        `<div class="detail-line" style="margin-top:14px">${c.bank} · ${c.network.toUpperCase()}</div>
-         <div class="detail-line">Kart no: •••• •••• •••• ${c.last4 || '••••'}</div>
-         <div class="detail-line">Sahibi: ${(c.holder || '-').toUpperCase()}</div>`;
-    openModal('cardDetailModal');
+    const wrap = $(`[data-card-id="${c.id}"]`);
+    if (wrap) wrap.classList.toggle('flipped');
 }
 function deleteAccount() {
-    if (!confirm('Hesabı ve ona ait işlemleri silmek istediğinize emin misiniz?')) return;
-    transactions = transactions.filter(t => t.accountId !== openAccountId);
+    if (!confirm('Hesabı, ona ait kart ve işlemleri silmek istediğinize emin misiniz?')) return;
+    transactions = transactions.filter(t => t.accountId !== openAccountId && t.targetId !== openAccountId);
+    cards = cards.filter(c => c.accountId !== openAccountId);
     accounts = accounts.filter(a => a.id !== openAccountId);
     save(); renderAll(); closeAll(); toast('Hesap silindi');
 }
@@ -716,8 +756,9 @@ function wire() {
         $('#walletEye .material-icons').textContent = balanceHidden ? 'visibility_off' : 'visibility';
         renderWallet(); renderHome();
     });
-    $('#qaSend').addEventListener('click', () => openTxModal(null, { type: 'transfer' }));
-    $('#qaLoad').addEventListener('click', () => openTxModal(null, { type: 'income' }));
+    const accOfActiveCard = () => { const c = activeCard(); return c ? accounts.find(a => a.id === c.accountId) : null; };
+    $('#qaSend').addEventListener('click', () => { const a = accOfActiveCard(); openTxModal(null, { type: 'transfer', accountId: a && a.id }); });
+    $('#qaLoad').addEventListener('click', () => { const a = accOfActiveCard(); openTxModal(null, { type: 'income', accountId: a && a.id }); });
     $('#qaDetail').addEventListener('click', openCardDetail);
     $('#qaSettings').addEventListener('click', () => { const c = activeCard(); c ? openCardModal(c) : openCardModal(null); });
     $('#cardThemeRow').addEventListener('click', e => {
@@ -739,6 +780,16 @@ function wire() {
             $$('#cardDots .card-dot').forEach((d, i) => d.classList.toggle('on', i === activeCardIdx));
         }
     });
+    // Karta tıklama: arka buton → işlem; boşluk → çevir
+    carousel.addEventListener('click', e => {
+        if (e.target.closest('[data-add-card]')) return openCardModal(null);
+        const wrap = e.target.closest('[data-card-id]');
+        if (!wrap) return;
+        const id = Number(wrap.dataset.cardId);
+        const actBtn = e.target.closest('[data-cact]');
+        if (actBtn) { handleCardAction(actBtn.dataset.cact, id); return; }
+        wrap.classList.toggle('flipped');
+    });
 
     // Hedef
     $('#addGoalBtn').addEventListener('click', openGoalModal);
@@ -759,11 +810,8 @@ function wire() {
             firebase.auth().signOut().then(() => { localStorage.removeItem('isLoggedIn'); location.href = 'index.html'; });
     });
 
-    // Delegasyon: işlem / hesap / hedef / kart tıklama
+    // Delegasyon: işlem / hesap / hedef tıklama
     document.addEventListener('click', e => {
-        if (e.target.closest('[data-add-card]')) return openCardModal(null);
-        const card = e.target.closest('[data-card]');
-        if (card) { activeCardIdx = cards.findIndex(c => c.id === Number(card.dataset.card)); return openCardDetail(); }
         const tx = e.target.closest('[data-tx]'); if (tx) return openTxDetail(Number(tx.dataset.tx));
         const acc = e.target.closest('[data-acct]'); if (acc) return openAccDetail(Number(acc.dataset.acct));
         const goal = e.target.closest('[data-goal]'); if (goal) return openGoalAdd(Number(goal.dataset.goal));
