@@ -38,7 +38,10 @@
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+    font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    letter-spacing: -0.01em; }
+
+body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
 
 body { background: var(--bg); color: var(--ink); }
 
@@ -357,16 +360,26 @@ body { background: var(--bg); color: var(--ink); }
 .acc-add { width: 100%; margin-top: 12px; background: var(--bg); border: none; border-radius: 14px; padding: 12px; color: var(--ink); font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
 .acc-add .material-icons { font-size: 20px; }
 
-/* kart rengi seçici */
-.ct-row { display: flex; gap: 10px; flex-wrap: wrap; }
-.ct-dot { width: 38px; height: 38px; border-radius: 50%; cursor: pointer; border: 3px solid transparent; }
-.ct-dot.selected { border-color: var(--ink); }
-.ct-dot.theme-black { background: #222; }
-.ct-dot.theme-purple { background: #6b4fb0; }
-.ct-dot.theme-white { background: #fff; box-shadow: inset 0 0 0 1px var(--line); }
-.ct-dot.theme-navy { background: #22344f; }
-.ct-dot.theme-green { background: #2f9e6e; }
-.ct-dot.theme-rose { background: #d76d8b; }
+/* kart rengi seçici — ferah, kart önizlemeli swatch'lar */
+.ct-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.ct-dot {
+    position: relative; height: 52px; border-radius: 12px; cursor: pointer; border: none;
+    box-shadow: var(--shadow-sm); transition: transform 0.15s ease;
+}
+.ct-dot:active { transform: scale(0.96); }
+.ct-dot.selected { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--green); }
+.ct-dot.selected::after {
+    content: 'check'; font-family: 'Material Icons'; font-size: 20px;
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.35);
+}
+.ct-dot.theme-black { background: linear-gradient(135deg, #34343a, #0d0d10); }
+.ct-dot.theme-purple { background: linear-gradient(135deg, #8064cf, #4d388f); }
+.ct-dot.theme-white { background: linear-gradient(135deg, #ffffff, #eceef1); box-shadow: inset 0 0 0 1px var(--line); }
+.ct-dot.theme-white.selected::after { color: var(--ink); text-shadow: none; }
+.ct-dot.theme-navy { background: linear-gradient(135deg, #2c3e60, #15233d); }
+.ct-dot.theme-green { background: linear-gradient(135deg, #2f9e6e, #1d6646); }
+.ct-dot.theme-rose { background: linear-gradient(135deg, #db6f8d, #9f3d5d); }
 
 /* ---------- Alt navigasyon ---------- */
 .tabbar {
