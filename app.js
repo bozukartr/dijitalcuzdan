@@ -352,7 +352,7 @@ function renderWallet() {
     const dots = $('#cardDots');
     if (carousel) {
         carousel.innerHTML = cards.map(cardEl).join('') +
-            `<button class="rcard rcard-add" data-add-card><span class="material-icons">add</span><span>Kart Ekle</span></button>`;
+            `<button class="rcard-add" data-add-card><span class="material-icons">add</span><span>Kart Ekle</span></button>`;
         dots.innerHTML = cards.map((c, i) => `<span class="card-dot${i === activeCardIdx ? ' on' : ''}"></span>`).join('');
     }
 
