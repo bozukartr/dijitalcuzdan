@@ -9,6 +9,9 @@
     <title>Dijital Cüzdan</title>
     <link rel="icon" type="image/png" href="applogo.png">
     <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#F4F5F7">
@@ -264,7 +267,8 @@
                 <div class="color-row" id="accColors"></div>
             </div>
             <div class="field amount-field">
-                <input type="text" id="accBalance" inputmode="decimal" placeholder="₺0,00 başlangıç bakiyesi">
+                <label>Başlangıç Bakiyesi</label>
+                <input type="text" id="accBalance" inputmode="decimal" placeholder="₺0,00">
             </div>
         </div>
     </div>
@@ -352,7 +356,8 @@
                 </div>
             </div>
             <div class="field amount-field">
-                <input type="text" id="goalTarget" inputmode="decimal" placeholder="₺0,00 hedef tutar">
+                <label>Hedef Tutar</label>
+                <input type="text" id="goalTarget" inputmode="decimal" placeholder="₺0,00">
             </div>
         </div>
     </div>
@@ -366,6 +371,7 @@
                 <button class="sh-action primary" id="goalAddSave">Ekle</button>
             </div>
             <div class="field amount-field">
+                <label>Eklenecek Tutar</label>
                 <input type="text" id="goalAddAmount" inputmode="decimal" placeholder="₺0,00">
             </div>
             <button class="btn btn-danger" id="goalDelete">Hedefi Sil</button>
@@ -400,7 +406,8 @@
                 <button class="sh-action" data-close>Bitti</button>
             </div>
             <div class="field amount-field">
-                <input type="text" id="limitInput" inputmode="decimal" placeholder="₺0,00 aylık limit">
+                <label>Aylık Harcama Limiti</label>
+                <input type="text" id="limitInput" inputmode="decimal" placeholder="₺0,00">
             </div>
             <button class="btn btn-primary" id="saveLimit">Limiti Kaydet</button>
             <button class="btn btn-ghost" id="themeBtn">Temayı Değiştir</button>
